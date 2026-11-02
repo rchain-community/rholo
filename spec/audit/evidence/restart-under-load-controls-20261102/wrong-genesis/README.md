@@ -21,7 +21,7 @@ untouched?
 | source | `d8b19154c4fdfd6a5321610f51935ae8d5fc24e4` |
 | binary | `d8bcc09158115cdded6b5b692808743fb5bea60b9616d959efc42a6e9a99d611` |
 | run | local disposable devnet; no Actions run URL |
-| packaged | `2026-11-02T11:31:43+00:00` |
+| packaged | `2026-11-02T11:31:22+00:00` |
 | verdict | **PASS** |
 
 Every file listed in `manifest.json` is hashed in `SHA256SUMS.json`. **`execution_proven` is

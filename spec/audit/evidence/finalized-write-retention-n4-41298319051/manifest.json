@@ -1,0 +1,85 @@
+{
+  "arms": [],
+  "binary_sha256": "408527817d29e707b7cb72c2811fb9f0e5f05a827ad3f7aaf531dc2dce2d6101",
+  "execution_proven": false,
+  "files": [
+    {
+      "bytes": 9601,
+      "kind": "json",
+      "path": "raw/causal/comparison.json",
+      "sha256": "463208d62e139f66b62ee691536969c17ed280d1ba2866823a27724fe00f9c17"
+    },
+    {
+      "bytes": 9012,
+      "kind": "json",
+      "path": "raw/causal/manifest.json",
+      "sha256": "97cf2102056c780a7fce4a28db76bda04eb19f419b3c6147a749ee1647e3e048"
+    },
+    {
+      "bytes": 14276,
+      "kind": "json",
+      "path": "raw/container-0.json",
+      "sha256": "a2beea25a25753cca3001f9126557b31d96d1bb6c304b9025b4abe9408564105"
+    },
+    {
+      "bytes": 14023,
+      "kind": "json",
+      "path": "raw/container-1.json",
+      "sha256": "68360246ecc318f0a18042aa4558082704eb2af15de256eb6e440846fcc4c071"
+    },
+    {
+      "bytes": 13247,
+      "kind": "json",
+      "path": "raw/container-2.json",
+      "sha256": "864226eea7195ce578c7db38acbe27d6d256d0134fa24d583f4cda18d4ba9190"
+    },
+    {
+      "bytes": 13247,
+      "kind": "json",
+      "path": "raw/container-3.json",
+      "sha256": "72875a9762d39c82fce9e2e74dcec018343dd689509ce1f144565b36bfe0cffe"
+    },
+    {
+      "bytes": 2104,
+      "kind": "log",
+      "path": "raw/n4-campaign.log",
+      "sha256": "68ddad16e1aca321f1dcb9ef67aad852d04cca8ac268ba0e1264f87fe0e68b5e"
+    },
+    {
+      "bytes": 1738,
+      "kind": "log",
+      "path": "raw/n4-start.log",
+      "sha256": "3261f073c84afc3472988e491ef0d8aff34a3fcf21ddd874d975ff399e307d6a"
+    },
+    {
+      "bytes": 530917,
+      "kind": "jsonl",
+      "path": "raw/observations.jsonl",
+      "sha256": "84b88e2a62abc2d9c4fc87330ef5d04feaea0c545c1a3f85200812e6b0432765"
+    },
+    {
+      "bytes": 1233,
+      "kind": "json",
+      "path": "raw/workload-result.json",
+      "sha256": "60f9cfb325bfed79ebba94022bdff1c2cecaabaf5d4bdeef6ae046675191cbb7"
+    }
+  ],
+  "gate_id": "finalized-write-retention-n4",
+  "locality": "local-devnet",
+  "packer": {
+    "packaged_at": "2026-11-02T11:00:42+00:00",
+    "tool": "evidence-pack",
+    "version": 1
+  },
+  "redactions": [
+    "causal/node-*.json",
+    "causal/node-*.log"
+  ],
+  "run": {
+    "attempt": "1",
+    "url": "https://github.com/rhovision-org/rholo/actions/runs/41298319051/attempts/1"
+  },
+  "schema": 1,
+  "source_sha": "1705392df24210fdfebae9635d42bc86c3f1a570",
+  "verdict": "PASS"
+}

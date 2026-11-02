@@ -1,0 +1,26 @@
+==> devnet: 4 validator(s) + 0 observer(s)
+    autopropose=false propose-on-deploy=true admin=true deployer=true
+    pos: epoch-length=10 active-validators=default
+==> starting acceptance-bootstrap (validator 0, standalone, creates genesis)
+534c7db0ee79ae2b778c2c7358e80ea192c1d99d6a7f5b8f9dfe7312aaebfb39
+==> bootstrap id: e893018d1486dd3ac2c8856bccbd02e9561a32c3
+==> acceptance-bootstrap has committed genesis (latestBlockNumber=1); starting the network
+==> starting acceptance-validator-1 (validator 1, bootstraps from acceptance-bootstrap)
+56d3ef05eee3c558ae1c97e0c92908c124c9f424e756a1fdf33a9b08432f13ca
+==> starting acceptance-validator-2 (validator 2, bootstraps from acceptance-bootstrap)
+e4368f1de552e4e4cc0fc3a0d1f6c2aa758db78e8bb544ad5d929c8cbc08d499
+==> starting acceptance-validator-3 (validator 3, bootstraps from acceptance-bootstrap)
+85957cdcd2bd08c6fd676cb0425770e5fa65f1f5180111c8e871e8b2429671d1
+==> acceptance-bootstrap serving /api/v1/status (autopropose off; block production is manual)
+==> acceptance-validator-1 synced genesis and serves /api/v1/status (latestBlockNumber=1 port=41403)
+==> acceptance-validator-2 synced genesis and serves /api/v1/status (latestBlockNumber=1 port=42403)
+==> acceptance-validator-3 synced genesis and serves /api/v1/status (latestBlockNumber=1 port=43403)
+
+==> up. Interact with:
+    tools/devnet.sh deploy <contract.rho>   # signed deploy to acceptance-bootstrap
+    tools/devnet.sh query <name>            # listen for data at a public name
+    tools/devnet.sh propose [--admin]       # force a block
+    tools/devnet.sh status | logs <node> | diagnose | down
+
+    Public HTTP API:  http://localhost:40403/api/v1/status
+    Admin HTTP API:   http://localhost:40405/api/v1/propose

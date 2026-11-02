@@ -1,0 +1,90 @@
+{
+  "result": "pass",
+  "validators": 8,
+  "initial_finalized": [
+    {
+      "node": 0,
+      "height": 2,
+      "hash": "d58f1011ee0efed5b37d2eb8496a3853da3d653c4e3cf8db34a4925a63b72af5"
+    },
+    {
+      "node": 1,
+      "height": 2,
+      "hash": "d58f1011ee0efed5b37d2eb8496a3853da3d653c4e3cf8db34a4925a63b72af5"
+    },
+    {
+      "node": 2,
+      "height": 2,
+      "hash": "d58f1011ee0efed5b37d2eb8496a3853da3d653c4e3cf8db34a4925a63b72af5"
+    },
+    {
+      "node": 3,
+      "height": 2,
+      "hash": "d58f1011ee0efed5b37d2eb8496a3853da3d653c4e3cf8db34a4925a63b72af5"
+    },
+    {
+      "node": 4,
+      "height": 2,
+      "hash": "d58f1011ee0efed5b37d2eb8496a3853da3d653c4e3cf8db34a4925a63b72af5"
+    },
+    {
+      "node": 5,
+      "height": 2,
+      "hash": "d58f1011ee0efed5b37d2eb8496a3853da3d653c4e3cf8db34a4925a63b72af5"
+    },
+    {
+      "node": 6,
+      "height": 2,
+      "hash": "d58f1011ee0efed5b37d2eb8496a3853da3d653c4e3cf8db34a4925a63b72af5"
+    },
+    {
+      "node": 7,
+      "height": 2,
+      "hash": "d58f1011ee0efed5b37d2eb8496a3853da3d653c4e3cf8db34a4925a63b72af5"
+    }
+  ],
+  "final_finalized": [
+    {
+      "node": 0,
+      "height": 24,
+      "hash": "f32e4b73a5bd2761b4520c18868773c20cd3ec2b8b21d76f2c381becadfc75af"
+    },
+    {
+      "node": 1,
+      "height": 24,
+      "hash": "f32e4b73a5bd2761b4520c18868773c20cd3ec2b8b21d76f2c381becadfc75af"
+    },
+    {
+      "node": 2,
+      "height": 24,
+      "hash": "f32e4b73a5bd2761b4520c18868773c20cd3ec2b8b21d76f2c381becadfc75af"
+    },
+    {
+      "node": 3,
+      "height": 24,
+      "hash": "f32e4b73a5bd2761b4520c18868773c20cd3ec2b8b21d76f2c381becadfc75af"
+    },
+    {
+      "node": 4,
+      "height": 24,
+      "hash": "f32e4b73a5bd2761b4520c18868773c20cd3ec2b8b21d76f2c381becadfc75af"
+    },
+    {
+      "node": 5,
+      "height": 24,
+      "hash": "f32e4b73a5bd2761b4520c18868773c20cd3ec2b8b21d76f2c381becadfc75af"
+    },
+    {
+      "node": 6,
+      "height": 24,
+      "hash": "f32e4b73a5bd2761b4520c18868773c20cd3ec2b8b21d76f2c381becadfc75af"
+    },
+    {
+      "node": 7,
+      "height": 24,
+      "hash": "f32e4b73a5bd2761b4520c18868773c20cd3ec2b8b21d76f2c381becadfc75af"
+    }
+  ],
+  "target_height": 24,
+  "boundary": "finite devnet witness; no universal safety theorem"
+}

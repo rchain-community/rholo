@@ -54,6 +54,62 @@ def test_a_silent_restart_is_not_a_proposal():
     assert controls.proposed_after_restart("proposed and added block #12 (seq 3)")
 
 
+def test_receiver_verdict_accepts_a_coherent_reading_below_the_cap():
+    good = {"capacity": 1024, "pending": 3, "sampledPeak": 7}
+    assert controls.receiver_verdict({"blockPipeline": good}) is None
+    assert controls.receiver_verdict({"blockPipeline": good}, allow_full=True) is None
+
+
+def test_receiver_verdict_rejects_each_bad_shape():
+    good = {"capacity": 1024, "pending": 3, "sampledPeak": 7}
+    for bad in [
+        None,
+        {},
+        {"blockPipeline": None},
+        {"blockPipeline": {**good, "capacity": 512}},
+        {"blockPipeline": {**good, "pending": -1}},
+        {"blockPipeline": {**good, "sampledPeak": 1025}},
+        {"blockPipeline": {**good, "sampledPeak": 2}},
+        {"blockPipeline": {**good, "pending": 1024}},
+        {"blockPipeline": {**good, "pending": True}},
+    ]:
+        assert controls.receiver_verdict(bad) is not None, bad
+    full = {"blockPipeline": {**good, "pending": 1024, "sampledPeak": 1024}}
+    assert controls.receiver_verdict(full, allow_full=True) is None
+
+
+def test_wrong_genesis_requires_a_named_refusal_and_no_running_state():
+    log = ("restored genesis 11 differs from pinned genesis 22; refusing to enter Running")
+    assert controls.wrong_genesis_verdict(1, log, False) is None
+    assert controls.wrong_genesis_verdict(0, log, False) is not None
+    assert controls.wrong_genesis_verdict(1, "", False) is not None
+    assert controls.wrong_genesis_verdict(1, log, True) is not None
+    lfs = ("LFS state sync failed: recovery genesis 11 differs from pinned genesis 22\n"
+           "Fatal: NodeLaunch exited with error: LFS state sync is terminal")
+    assert controls.wrong_genesis_verdict(1, lfs, False) is None
+
+
+def test_incomplete_ancestry_requires_the_missing_fringe_refusal():
+    log = ("LFS bootstrap supplied no authenticated nonempty fringe after 10 requests; "
+           "refusing to enter Running")
+    assert controls.incomplete_ancestry_verdict(1, log, False) is None
+    assert controls.incomplete_ancestry_verdict(0, log, False) is not None
+    assert controls.incomplete_ancestry_verdict(1, "refusing to enter Running", False) is not None
+    assert controls.incomplete_ancestry_verdict(1, log, True) is not None
+
+
+def test_interrupted_restart_requires_the_expected_sequence():
+    assert controls.interrupted_restart_verdict(["1-1", "2-2", "3-3"], "recovered") is None
+    assert controls.interrupted_restart_verdict(["1-1", "2-2"], "recovered") is not None
+    assert controls.interrupted_restart_verdict(["1-1", "2-2", "3-3"], "recovered",
+                                                ready_error="timeout") is not None
+    assert controls.interrupted_restart_verdict(["1-1", "2-2"], "detected",
+                                                ready_error="timeout") is None
+    assert controls.interrupted_restart_verdict(["1-1", "2-2"], "detected") is not None
+    assert controls.interrupted_restart_verdict([], "recovered") is not None
+    assert controls.interrupted_restart_verdict(["1-1", "2-2"], "other") is not None
+
+
 if __name__ == "__main__":
     # Runnable without pytest: every predicate's failing sample is asserted here too.
     for name, fn in sorted(globals().items()):

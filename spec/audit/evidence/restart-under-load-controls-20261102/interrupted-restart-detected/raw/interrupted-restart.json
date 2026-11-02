@@ -1,0 +1,30 @@
+{
+  "control": "interrupted-restart",
+  "result": "PASS",
+  "error": null,
+  "boot_ids": [
+    "1-1793619033257",
+    "1-1793619043086",
+    "1-1793619062535"
+  ],
+  "final": [
+    [
+      17,
+      "ea80ae6952789582b647fe7d0656e22960b51b4ee629de4223a983708a471534"
+    ],
+    [
+      17,
+      "ea80ae6952789582b647fe7d0656e22960b51b4ee629de4223a983708a471534"
+    ],
+    [
+      17,
+      "ea80ae6952789582b647fe7d0656e22960b51b4ee629de4223a983708a471534"
+    ],
+    [
+      17,
+      "ea80ae6952789582b647fe7d0656e22960b51b4ee629de4223a983708a471534"
+    ]
+  ],
+  "ready_error": "validator 1 did not become ready before the deadline",
+  "interrupt_expect": "detected"
+}

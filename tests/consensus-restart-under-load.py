@@ -50,8 +50,19 @@ def node_name(i):
     return f"{PREFIX}-bootstrap" if i == 0 else f"{PREFIX}-validator-{i}"
 
 
+HTTP_BASE = int(__import__("os").environ.get("DEVNET_HTTP_BASE", "40403"))
+ADMIN_BASE = int(__import__("os").environ.get("DEVNET_ADMIN_BASE", "40405"))
+
+
+def get(i, path, body=None, admin=False, timeout=10):
+    """The devnet's HTTP path, honouring the port bases the network was actually started with."""
+    port = (ADMIN_BASE if admin else HTTP_BASE) + i * 1000
+    return drill.fuzz.http_json(f"http://127.0.0.1:{port}{path}",
+                                "POST" if body is not None else "GET", body, timeout=timeout)[1]
+
+
 def health(i):
-    return drill.get(i, "/health")
+    return get(i, "/health")
 
 
 def docker(*args, timeout=60):
@@ -61,6 +72,31 @@ def docker(*args, timeout=60):
 def record(path, **event):
     with path.open("a") as f:
         f.write(json.dumps({"utc": time.time(), **event}) + "\n")
+
+
+def boot_id(i):
+    """The process identity `/health` publishes (`<pid>-<start-millis>`)."""
+    value = health(i).get("bootId")
+    if not isinstance(value, str) or not value:
+        raise RuntimeError(f"validator {i} reports no bootId")
+    return value
+
+
+def wait_new_boot(i, previous, deadline, events):
+    """Wait until the restarted victim is a *different process*, not merely a started container."""
+    last = previous
+    while time.monotonic() < deadline:
+        try:
+            value = boot_id(i)
+            if value != previous:
+                record(events, node=i, previous_boot_id=previous, new_boot_id=value)
+                return value
+            last = value
+        except (OSError, ValueError) as error:
+            last = repr(error)
+        time.sleep(0.5)
+    record(events, wait_new_boot=i, previous=previous, last=last)
+    raise RuntimeError(f"validator {i} did not restart with a new bootId")
 
 
 def wait_ready(i, deadline, events):
@@ -80,7 +116,7 @@ def wait_ready(i, deadline, events):
 
 def deploy_on(i, term):
     """Submit a signed deploy through validator `i`'s own CLI; return its deploy id."""
-    status = drill.get(i, "/api/v1/status")
+    status = get(i, "/api/v1/status")
     node = node_name(i)
     path = f"/tmp/restart-under-load-{uuid.uuid4().hex}.rho"
     write = subprocess.run(
@@ -112,7 +148,7 @@ def deploy_on(i, term):
 
 
 def finalized(i):
-    return drill.finalized_identity(drill.get(i, "/api/last-finalized-block"))
+    return drill.finalized_identity(get(i, "/api/last-finalized-block"))
 
 
 def agreement(validators):
@@ -163,7 +199,7 @@ def wait_deploys_resolved(validators, submitted, deadline, events, last):
         for i in range(validators):
             for deploy_id, _, _, _ in submitted:
                 try:
-                    status = drill.get(i, f"/api/v1/deploy-status/{deploy_id}")
+                    status = get(i, f"/api/v1/deploy-status/{deploy_id}")
                 except (OSError, ValueError) as error:
                     unresolved.append((i, deploy_id, repr(error)))
                     continue
@@ -211,7 +247,9 @@ def run_cycle(args, victim, cycle, events):
     baseline = wait_baseline(args.validators, time.monotonic() + args.window, events)
     base_height = baseline[0][0]
     last = dict(enumerate(baseline))
-    record(events, cycle=cycle, baseline=baseline, victim=victim, streams=4)
+    victim_boot = boot_id(victim)
+    record(events, cycle=cycle, baseline=baseline, victim=victim, victim_boot_id=victim_boot,
+           streams=4)
 
     # Four independent CLI streams must be active when the SIGKILL occurs.
     # Target the three surviving validators: a killed node is not a valid
@@ -254,8 +292,9 @@ def run_cycle(args, victim, cycle, events):
         if after.returncode or before.stdout.strip() != after.stdout.strip():
             raise RuntimeError("restart did not reuse the original container and store")
         deadline = time.monotonic() + args.window
+        restarted_boot = wait_new_boot(victim, victim_boot, deadline, events)
         record(events, cycle=cycle, killed=victim, killed_at=started_utc, restarted_at=restarted_utc,
-               container=before.stdout.strip())
+               container=before.stdout.strip(), restarted_boot_id=restarted_boot)
         submitted = []
         for future in futures:
             submitted.extend(future.result(timeout=max(1, deadline - time.monotonic())))
@@ -272,11 +311,22 @@ def run_cycle(args, victim, cycle, events):
     identities = wait_agreement(args.validators, base_height + 3, deadline, events, last)
     record(events, cycle=cycle, final_agreement=identities)
 
+    pipelines = {}
     for i in range(args.validators):
         body = health(i)
         verdict = controls.health_verdict(body)
         if verdict is not None:
             raise RuntimeError(f"validator {i}: {verdict}")
+        pipeline = body.get("blockPipeline") if isinstance(body, dict) else None
+        if pipeline is None:
+            # Absent is unknown, never zero: the arm must not claim a capacity reading it did not take.
+            record(events, cycle=cycle, node=i, block_pipeline_absent=True)
+        else:
+            pipeline_verdict = controls.receiver_verdict(body)
+            if pipeline_verdict is not None:
+                raise RuntimeError(f"validator {i}: {pipeline_verdict}")
+            pipelines[i] = pipeline
+            record(events, cycle=cycle, node=i, block_pipeline=pipeline)
         record(events, cycle=cycle, node=i, health=body)
         all_logs = docker("logs", node_name(i))
         if all_logs.returncode:
@@ -290,6 +340,222 @@ def run_cycle(args, victim, cycle, events):
     if not controls.proposed_after_restart(since.stdout + since.stderr):
         raise RuntimeError("the victim did not propose after restart")
 
+    return {
+        "cycle": cycle,
+        "result": "PASS",
+        "victim": victim,
+        "base_height": base_height,
+        "final": identities,
+        "boot_ids": [victim_boot, restarted_boot],
+        "stream_counts": counts,
+        "block_pipeline": pipelines,
+    }
+
+
+NETWORK = __import__("os").environ.get("DEVNET_NETWORK", "devnet")
+IMAGE = __import__("os").environ.get("RNODE_IMAGE", "rnode:local")
+
+
+def control_node_spec():
+    """A running validator's argv, minus its validator identity.
+
+    The control node joins the same Docker network and bootstraps from the same container, but a
+    negative-control node must not sign blocks: it is not a validator and must never be counted as
+    one. The image's entrypoint is used unchanged.
+    """
+    # A validator, not the genesis master: only a validator carries `--bootstrap`, and the control
+    # node must join the existing chain rather than create a second genesis of its own.
+    raw = docker("inspect", node_name(1))
+    if raw.returncode:
+        raise RuntimeError(f"cannot inspect validator 1: {raw.stderr}")
+    config = json.loads(raw.stdout)[0]["Config"]
+    entrypoint = config.get("Entrypoint") or []
+    cmd = list(config.get("Cmd") or [])
+    # A control node must not sign, propose, deploy or reuse a peer hostname.
+    drop = {
+        "--validator-private-key", "--validator-private-key-path", "--validator-public-key",
+        "--validator-key-file", "--deployer-private-key", "--autopropose", "--propose-on-deploy",
+        "--host",
+    }
+    cleaned = []
+    skip = False
+    for item in cmd:
+        if skip:
+            skip = False
+            continue
+        if item in drop:
+            skip = True
+            continue
+        if any(item.startswith(f + "=") for f in drop):
+            continue
+        cleaned.append(item)
+    if not entrypoint:
+        entrypoint = ["rnode"]
+    return entrypoint, cleaned
+
+
+def genesis_hash():
+    blocks = get(0, "/api/blocks/1")
+    if not isinstance(blocks, list) or not blocks:
+        raise RuntimeError("the bootstrap serves no anchor block")
+    value = blocks[0].get("blockHash")
+    if not isinstance(value, str) or len(value) != 64:
+        raise RuntimeError("the bootstrap's anchor is not a 32-byte block hash")
+    return value
+
+
+def flipped(hash_hex):
+    """A deterministic, absent hash of the same shape: flip the first nibble."""
+    first = "0" if hash_hex[0] != "0" else "1"
+    return first + hash_hex[1:]
+
+
+def shared_mounts():
+    """The genesis and contracts binds the running validators use, by destination."""
+    raw = docker("inspect", "-f", "{{json .Mounts}}", node_name(1))
+    if raw.returncode:
+        raise RuntimeError(f"cannot inspect validator 1 mounts: {raw.stderr}")
+    out = []
+    for mount in json.loads(raw.stdout):
+        if mount.get("Destination") in ("/genesis", "/contracts"):
+            mode = "ro" if not mount.get("RW") else "rw"
+            out += ["-v", f"{mount['Source']}:{mount['Destination']}:{mode}"]
+    return out
+
+
+def control_container(name, extra, volume):
+    entrypoint, cmd = control_node_spec()
+    docker("rm", "-f", name)
+    docker("volume", "rm", "-f", volume)
+    launched = docker(
+        "run", "-d", "--name", name, "--network", NETWORK,
+        "-v", f"{volume}:/var/lib/rnode", *shared_mounts(),
+        "--entrypoint", entrypoint[0], IMAGE, *entrypoint[1:], *cmd, "--host", name, *extra,
+    )
+    if launched.returncode:
+        raise RuntimeError(f"cannot start control node {name}: {launched.stderr}")
+    return launched.stdout.strip()
+
+
+def wait_control_exit(name, deadline):
+    """Wait for a control container to stop; return (exit_code, log, entered_running)."""
+    last = None
+    while time.monotonic() < deadline:
+        state = docker("inspect", "-f", "{{.State.Running}} {{.State.ExitCode}}", name)
+        if state.returncode:
+            last = state.stderr
+        else:
+            running, code = state.stdout.split()
+            logs = docker("logs", name)
+            text = logs.stdout + logs.stderr
+            entered = "Making a transition to Running state" in text
+            if running == "false":
+                return int(code), text, entered
+            last = f"running; exit={code}"
+        time.sleep(1)
+    raise RuntimeError(f"control node {name} did not stop before the deadline: {last}")
+
+
+def run_control(args, out, events):
+    name = f"{PREFIX}-control-{args.control}"
+    volume = f"{PREFIX}-control-{args.control}-data"
+    if args.control == "interrupted-restart":
+        verdict, detail = interrupted_restart(args, events)
+        record(events, control=args.control, verdict=verdict, **detail)
+        (out / f"{args.control}.json").write_text(json.dumps(
+            {"control": args.control, "result": "PASS" if verdict is None else "FAIL",
+             "error": verdict, **detail}, indent=2))
+        return verdict
+    try:
+        if args.control == "wrong-genesis":
+            wrong = flipped(genesis_hash())
+            control_container(name, ["--expected-genesis-hash", wrong], volume)
+            code, log, entered = wait_control_exit(name, time.monotonic() + args.control_window)
+            verdict = controls.wrong_genesis_verdict(code, log, entered)
+            detail = {"wrong_genesis": wrong, "exit_code": code, "entered_running": entered}
+        else:
+            absent = flipped(genesis_hash())
+            control_container(name, ["--sync-anchor", absent], volume)
+            code, log, entered = wait_control_exit(name, time.monotonic() + args.control_window)
+            verdict = controls.incomplete_ancestry_verdict(code, log, entered)
+            detail = {"absent_anchor": absent, "exit_code": code, "entered_running": entered}
+    finally:
+        # Preserve the whole control log and inspect before removing the container — including on a
+        # timeout, so a control that never refuses leaves its evidence rather than a stray container.
+        logs = docker("logs", name)
+        (out / f"{args.control}.log").write_text(logs.stdout + logs.stderr)
+        inspect = docker("inspect", name)
+        (out / f"{args.control}-inspect.json").write_text(inspect.stdout)
+        docker("rm", "-f", name)
+        docker("volume", "rm", "-f", volume)
+    record(events, control=args.control, verdict=verdict, **detail)
+    (out / f"{args.control}.json").write_text(json.dumps(
+        {"control": args.control, "result": "PASS" if verdict is None else "FAIL",
+         "error": verdict, **detail}, indent=2))
+    return verdict
+
+
+def interrupted_restart(args, events):
+    """Kill the victim, start it, kill it again before it can recover, then start it."""
+    for i in range(args.validators):
+        wait_ready(i, time.monotonic() + args.control_window, events)
+    baseline = wait_baseline(args.validators, time.monotonic() + args.control_window, events)
+    base_height = baseline[0][0]
+    last = dict(enumerate(baseline))
+    victim = 1
+    node = node_name(victim)
+    boot_ids = [boot_id(victim)]
+
+    first_kill = docker("kill", "--signal", "KILL", node)
+    if first_kill.returncode:
+        raise RuntimeError(f"first kill failed: {first_kill.stderr}")
+    first_start = docker("start", node)
+    if first_start.returncode:
+        raise RuntimeError(f"first start failed: {first_start.stderr}")
+    deadline = time.monotonic() + args.control_window
+    boot_ids.append(wait_new_boot(victim, boot_ids[-1], deadline, events))
+
+    second_kill = docker("kill", "--signal", "KILL", node)
+    if second_kill.returncode:
+        raise RuntimeError(f"second kill failed: {second_kill.stderr}")
+
+    ready_error = None
+    if args.interrupt_expect == "detected":
+        try:
+            wait_ready(victim, time.monotonic() + min(15, args.control_window), events)
+        except RuntimeError as error:
+            ready_error = str(error)
+
+    second_start = docker("start", node)
+    if second_start.returncode:
+        raise RuntimeError(f"second start failed: {second_start.stderr}")
+    deadline = time.monotonic() + args.control_window
+    boot_ids.append(wait_new_boot(victim, boot_ids[-1], deadline, events))
+    wait_ready(victim, deadline, events)
+    identities = wait_agreement(args.validators, base_height + 3, deadline, events, last)
+    detail = {"boot_ids": boot_ids, "final": identities, "ready_error": ready_error,
+              "interrupt_expect": args.interrupt_expect}
+    return controls.interrupted_restart_verdict(boot_ids, args.interrupt_expect, ready_error), detail
+
+
+def provenance(validators, args):
+    source = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+    binary = docker("exec", node_name(0), "sha256sum", "/usr/local/bin/rnode")
+    if binary.returncode:
+        raise RuntimeError(f"cannot hash the running binary: {binary.stderr}")
+    image = docker("inspect", "-f", "{{.Id}}", node_name(0))
+    return {
+        "source_sha": source,
+        "binary_sha256": binary.stdout.split()[0],
+        "container_image": image.stdout.strip() if image.returncode == 0 else None,
+        "genesis_hash": genesis_hash(),
+        "validators": validators,
+        "window": args.window,
+        "load_seconds": args.load_seconds,
+        "prefix": PREFIX,
+        "network": NETWORK,
+    }
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -298,12 +564,43 @@ def main():
     parser.add_argument("--window", type=int, default=240)
     parser.add_argument("--load-seconds", type=int, default=20)
     parser.add_argument("--out", default="target/restart-under-load")
+    parser.add_argument("--control",
+                        choices=["wrong-genesis", "incomplete-ancestry", "interrupted-restart"])
+    parser.add_argument("--control-window", type=int, default=240)
+    parser.add_argument("--interrupt-expect", choices=["recovered", "detected"],
+                        default="recovered")
     args = parser.parse_args()
 
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     events = out / "observations.jsonl"
     events.write_text("")
+
+    if args.control:
+        if args.validators < 2:
+            raise SystemExit("a control needs validator 1 to supply the node argv")
+        try:
+            verdict = run_control(args, out, events)
+            result = {"verdict": "PASS" if verdict is None else "FAIL",
+                      "control": args.control, "error": verdict}
+        except Exception as error:  # noqa: BLE001 - the verdict is the output
+            rows, capture_error = drill.failure_envelope.best_effort_health(
+                health, range(args.validators))
+            try:
+                last_events = events.read_text().splitlines()[-20:]
+            except OSError:
+                last_events = []
+            drill.failure_envelope.write(
+                out, "FAIL", error, phase="control", arm=args.control,
+                health=rows, events=last_events, capture_error=capture_error)
+            result = {"verdict": "FAIL", "control": args.control, "error": str(error)}
+        (out / "campaign.json").write_text(json.dumps(
+            {"gate_id": f"n4-restart-under-load-{args.control}",
+             "cycles": [{"control": args.control, "result": result["verdict"]}]}, indent=2))
+        (out / "result.json").write_text(json.dumps(result, indent=2))
+        print(json.dumps(result))
+        return 0 if result["verdict"] == "PASS" else 1
+
     # The container walk is only valid for the devnet naming.
     if args.cycles != 2 or args.load_seconds < 8 or args.load_seconds >= args.window:
         raise SystemExit("issue #522 requires two cycles and 8 <= load-seconds < window")
@@ -311,10 +608,19 @@ def main():
         raise SystemExit("a restart-under-load arm needs at least three validators")
 
     try:
+        pin = provenance(args.validators, args)
+    except Exception as error:  # noqa: BLE001 - a provenance failure is recorded, not a verdict
+        pin = {"error": f"{type(error).__name__}: {error}"}
+        record(events, provenance_error=pin["error"])
+
+    arms = []
+    try:
         for cycle in range(args.cycles):
             victim = victim_for_cycle(cycle)
-            run_cycle(args, victim, cycle, events)
+            arms.append(run_cycle(args, victim, cycle, events))
         result = {"verdict": "PASS", "cycles": args.cycles, "validators": args.validators}
+        (out / "campaign.json").write_text(json.dumps(
+            {"gate_id": "n4-restart-under-load", "provenance": pin, "cycles": arms}, indent=2))
     except Exception as error:  # noqa: BLE001 - the verdict is the output
         # **The structured envelope** (M): class, arm, phase, the health rows at the failure and the
         # last observations. A capture failure is data, never a replacement for the primary error.

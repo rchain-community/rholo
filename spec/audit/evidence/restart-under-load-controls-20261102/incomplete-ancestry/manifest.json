@@ -1,0 +1,63 @@
+{
+  "arms": [
+    {
+      "control": "incomplete-ancestry",
+      "result": "PASS"
+    }
+  ],
+  "binary_sha256": "d8bcc09158115cdded6b5b692808743fb5bea60b9616d959efc42a6e9a99d611",
+  "execution_proven": false,
+  "files": [
+    {
+      "bytes": 154,
+      "kind": "json",
+      "path": "raw/campaign.json",
+      "sha256": "76d4a2318efeadc8becd4de5e86690d4e2b24be0386056d22e7a876858885303"
+    },
+    {
+      "bytes": 15292,
+      "kind": "json",
+      "path": "raw/incomplete-ancestry-inspect.json",
+      "sha256": "252d319996be6e428bf68caa164c7734167a266e0003300806269e4f7d07a33d"
+    },
+    {
+      "bytes": 208,
+      "kind": "json",
+      "path": "raw/incomplete-ancestry.json",
+      "sha256": "361f07ae71191f3a715b070e01452b4553e37396e7468069633d8bc914c412d4"
+    },
+    {
+      "bytes": 109469,
+      "kind": "log",
+      "path": "raw/incomplete-ancestry.log",
+      "sha256": "e23f5b568e81ba715e583c362ed3b76cf7f5d44f206b59d01c3d9bb5fb8d8901"
+    },
+    {
+      "bytes": 206,
+      "kind": "jsonl",
+      "path": "raw/observations.jsonl",
+      "sha256": "ed671e83d64c9297fbcf1f9156db74a5cbdd59a13007f6241105efda7d27c338"
+    },
+    {
+      "bytes": 76,
+      "kind": "json",
+      "path": "raw/result.json",
+      "sha256": "dc764448ed6102214ffdd9af10fde879646fad3e6d472b96e883a318ee52a09c"
+    }
+  ],
+  "gate_id": "n4-restart-under-load-incomplete-ancestry",
+  "locality": "local-devnet",
+  "packer": {
+    "packaged_at": "2026-11-02T11:31:26+00:00",
+    "tool": "evidence-pack",
+    "version": 1
+  },
+  "redactions": [],
+  "run": {
+    "attempt": null,
+    "url": null
+  },
+  "schema": 1,
+  "source_sha": "d8b19154c4fdfd6a5321610f51935ae8d5fc24e4",
+  "verdict": "PASS"
+}

@@ -1,0 +1,153 @@
+{
+  "arms": [
+    {
+      "base_height": 7,
+      "block_pipeline": {
+        "0": {
+          "capacity": 1024,
+          "pending": 0,
+          "sampledPeak": 1
+        },
+        "1": {
+          "capacity": 1024,
+          "pending": 0,
+          "sampledPeak": 1
+        },
+        "2": {
+          "capacity": 1024,
+          "pending": 0,
+          "sampledPeak": 1
+        },
+        "3": {
+          "capacity": 1024,
+          "pending": 0,
+          "sampledPeak": 1
+        }
+      },
+      "boot_ids": [
+        "1-1793618550236",
+        "1-1793618561656"
+      ],
+      "cycle": 0,
+      "final": [
+        [
+          33,
+          "f036a1ba1b960ed9806571a2de695712c01cc72fc380706c137c5bf48bedf16d"
+        ],
+        [
+          33,
+          "f036a1ba1b960ed9806571a2de695712c01cc72fc380706c137c5bf48bedf16d"
+        ],
+        [
+          33,
+          "f036a1ba1b960ed9806571a2de695712c01cc72fc380706c137c5bf48bedf16d"
+        ],
+        [
+          33,
+          "f036a1ba1b960ed9806571a2de695712c01cc72fc380706c137c5bf48bedf16d"
+        ]
+      ],
+      "result": "PASS",
+      "stream_counts": {
+        "0": 50,
+        "1": 50,
+        "2": 50,
+        "3": 50
+      },
+      "victim": 1
+    },
+    {
+      "base_height": 33,
+      "block_pipeline": {
+        "0": {
+          "capacity": 1024,
+          "pending": 1,
+          "sampledPeak": 2
+        },
+        "1": {
+          "capacity": 1024,
+          "pending": 0,
+          "sampledPeak": 5
+        },
+        "2": {
+          "capacity": 1024,
+          "pending": 0,
+          "sampledPeak": 2
+        },
+        "3": {
+          "capacity": 1024,
+          "pending": 0,
+          "sampledPeak": 1
+        }
+      },
+      "boot_ids": [
+        "1-1793618550234",
+        "1-1793618596558"
+      ],
+      "cycle": 1,
+      "final": [
+        [
+          48,
+          "bb966245aad8f15dcbba7a454f833aa1a9f0b14894d59d7f1fd1c9053d121aad"
+        ],
+        [
+          48,
+          "bb966245aad8f15dcbba7a454f833aa1a9f0b14894d59d7f1fd1c9053d121aad"
+        ],
+        [
+          48,
+          "bb966245aad8f15dcbba7a454f833aa1a9f0b14894d59d7f1fd1c9053d121aad"
+        ],
+        [
+          48,
+          "bb966245aad8f15dcbba7a454f833aa1a9f0b14894d59d7f1fd1c9053d121aad"
+        ]
+      ],
+      "result": "PASS",
+      "stream_counts": {
+        "0": 50,
+        "1": 50,
+        "2": 50,
+        "3": 50
+      },
+      "victim": 0
+    }
+  ],
+  "binary_sha256": "d8bcc09158115cdded6b5b692808743fb5bea60b9616d959efc42a6e9a99d611",
+  "execution_proven": false,
+  "files": [
+    {
+      "bytes": 2948,
+      "kind": "json",
+      "path": "raw/campaign.json",
+      "sha256": "748d0c73fd93986ab5e22d8081dcd34b55cc2c261965c8f23b318ac041abc06b"
+    },
+    {
+      "bytes": 134377,
+      "kind": "jsonl",
+      "path": "raw/observations.jsonl",
+      "sha256": "a18240aed43c8d7b102f293078ff39eccdc93fd67e31e1dfe2aeff40f7779d7a"
+    },
+    {
+      "bytes": 57,
+      "kind": "json",
+      "path": "raw/result.json",
+      "sha256": "3f2cf5b440a2349008857836ad7c37db23de59e10cf6f5b99c574e10b43748ef"
+    }
+  ],
+  "gate_id": "n4-restart-under-load",
+  "locality": "local-devnet",
+  "packer": {
+    "packaged_at": "2026-11-02T11:31:43+00:00",
+    "tool": "evidence-pack",
+    "version": 1
+  },
+  "redactions": [],
+  "run": {
+    "attempt": null,
+    "url": null
+  },
+  "schema": 1,
+  "source_sha": "d8b19154c4fdfd6a5321610f51935ae8d5fc24e4",
+  "verdict": "PASS"
+}

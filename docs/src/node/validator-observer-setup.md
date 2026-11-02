@@ -9,6 +9,18 @@ the boundary in [ringfencing](resource-ringfence.md), pay and penalties in
 [validator economics](validator-economics.md), the live net's record in [the public testnet](testnet.md),
 and the join's trust boundary in [what a joining node trusts](../spec/trust-model.md).
 
+### Choose the path you need
+
+- **Run `rnode` locally as a standalone node:** start with
+  [Operating the node — Start a node](operating.md#start-a-node), then read the
+  [standalone genesis prerequisites](operating.md#standalone-genesis-prerequisites).
+- **Create your own testnet:** use [§5, Creating a network](#5-creating-a-network-the-genesis-master)
+  for the standalone genesis master, then [§6, Joining a running chain](#6-joining-a-running-chain-observer-first)
+  for each additional node.
+- **Connect to the live public testnet:** use [The public testnet — Connect](testnet.md#connect) for
+  the current endpoint, ports and chain details. Its concrete validator topology, genesis and recovery
+  record are on the same [public-testnet page](testnet.md).
+
 ## 1. The two roles
 
 | | Observer | Validator |

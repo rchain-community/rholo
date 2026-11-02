@@ -1,0 +1,46 @@
+{
+  "arms": [],
+  "binary_sha256": "2726acea179dd4817fcb2af9b35a60f173181bf0d61aeb4c321b84b0be8262db",
+  "execution_proven": false,
+  "files": [
+    {
+      "bytes": 65,
+      "kind": "txt",
+      "path": "raw/binary-sha256.txt",
+      "sha256": "2d4259f62c3945068cc720087c3b41cd97d891b19363b37178af89e78e2a5124"
+    },
+    {
+      "bytes": 106,
+      "kind": "json",
+      "path": "raw/result.json",
+      "sha256": "892a104ea6f3c8913faf2201f508818aaaeda922449b269a6d1fbb8adfffe87d"
+    },
+    {
+      "bytes": 527,
+      "kind": "log",
+      "path": "raw/run.log",
+      "sha256": "ea3eeb62653abc2f88b4f0fec9983f9e7d87c92f04419b818d4acefb1b925e76"
+    },
+    {
+      "bytes": 41,
+      "kind": "txt",
+      "path": "raw/source-sha.txt",
+      "sha256": "2035cf237064a85cd222368ae666e5a32bb84bb31c9d3af50879bdf955448a32"
+    }
+  ],
+  "gate_id": "n522-capacity-reoffer",
+  "locality": "local-devnet",
+  "packer": {
+    "packaged_at": "2026-11-02T12:34:19+00:00",
+    "tool": "evidence-pack",
+    "version": 1
+  },
+  "redactions": [],
+  "run": {
+    "attempt": null,
+    "url": null
+  },
+  "schema": 1,
+  "source_sha": "b0303c8f5dbfbd4d7f9a4956f72750d4b2821d23",
+  "verdict": "PASS"
+}

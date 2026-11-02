@@ -63,6 +63,11 @@ issues — and so had **no owner, no measurement and no falsifier**.
 | **2** | Validators can be dropped and joined without risk | the survivors finalise **past** the kill; the rejoiner resumes with no operator action; a new validator **bonds onto a running net** and produces |
 | **3** | Every attack vector is handled | a **rate and a class census** against a bounded-adversary statement. Not a pass/fail item, and it must not be reported as one |
 
+**Admission is not criterion 1.** `acceptsDeploys` on `/api/v1/status` is pool capacity (Law 86a),
+not finality availability, and a `ProcessedWithSuccess` deploy is included/executed, not settled. The
+witness above is the finalized block; the client contract for reading it is
+[Finality is not admission](../node/admission.md#finality-is-not-admission).
+
 ## 0.2 The verdict, as of the tree under audit
 
 | Criterion | Verdict | Basis |

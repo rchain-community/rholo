@@ -1,0 +1,64 @@
+{
+  "arms": [],
+  "binary_sha256": "64abf7d434501d622c692f12811806f32af448734ed45369e3e4b8839c9f6705",
+  "execution_proven": false,
+  "files": [
+    {
+      "bytes": 293,
+      "kind": "txt",
+      "path": "raw/binary-sha256.txt",
+      "sha256": "10dff07d452003be12c9d54cd273d60a6fe3b311f9f91efe2d8158fd3762b093"
+    },
+    {
+      "bytes": 341,
+      "kind": "json",
+      "path": "raw/campaign.json",
+      "sha256": "a23418279f1ce5b7cf44588f5aadf315cb04f20e11916eff3f13c9050c5b7891"
+    },
+    {
+      "bytes": 1648,
+      "kind": "log",
+      "path": "raw/cargo-casper.log",
+      "sha256": "2f7534f857812384cf792367ed1729a02a36c4b3d69788553f1ec6373b6c7e0d"
+    },
+    {
+      "bytes": 750,
+      "kind": "log",
+      "path": "raw/cargo-envelope.log",
+      "sha256": "0ea958aa9eb7f1f4468779f66cff6362c9dc03ad35b2d7820128e36e411ad0d1"
+    },
+    {
+      "bytes": 4198,
+      "kind": "log",
+      "path": "raw/cargo-node.log",
+      "sha256": "211cad07db4fc23d479156cf9cd8d16ea6d742d28a6b1cd141850f3b437d430e"
+    },
+    {
+      "bytes": 68,
+      "kind": "json",
+      "path": "raw/result.json",
+      "sha256": "e6c846e255646ed1e5eb6b6b61ff13e402cde30a56b455aac12edb1ac35fc0e2"
+    },
+    {
+      "bytes": 41,
+      "kind": "txt",
+      "path": "raw/source-sha.txt",
+      "sha256": "69b285d77dd3c30ce5a3433a551762b276eeb77cb4b3afd4396457d9304e41d0"
+    }
+  ],
+  "gate_id": "n485-self-validation-refusal",
+  "locality": "local-devnet",
+  "packer": {
+    "packaged_at": "2026-11-02T14:34:33+00:00",
+    "tool": "evidence-pack",
+    "version": 1
+  },
+  "redactions": [],
+  "run": {
+    "attempt": null,
+    "url": null
+  },
+  "schema": 1,
+  "source_sha": "80d2a8fac21bc5c4a4e3e2ff782ba101e2981e19",
+  "verdict": "PASS"
+}

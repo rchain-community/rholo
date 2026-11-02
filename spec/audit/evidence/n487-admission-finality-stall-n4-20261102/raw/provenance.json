@@ -1,0 +1,19 @@
+{
+  "source_sha": "80d2a8fac21bc5c4a4e3e2ff782ba101e2981e19",
+  "image": "rnode:487-local",
+  "image_id": "sha256:a585d6ac1626caad2e6a9066c5cad37c113d1524ed53eb5edab4c8f05ef21c7d",
+  "binary_sha256": "0f07efeab722cabc30ace442c0fbb0bfd0e35569771175407c084334d1bf226a",
+  "validators": 4,
+  "stakes": [
+    100,
+    100,
+    50,
+    50
+  ],
+  "genesis": {
+    "bonds": "",
+    "wallets": ""
+  },
+  "prefix": "admissionstall",
+  "network": "admissionstall"
+}

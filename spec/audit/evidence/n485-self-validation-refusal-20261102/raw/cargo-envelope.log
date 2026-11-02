@@ -1,0 +1,11 @@
+   Compiling rchain-node v0.1.0 (/home/patrick/RNodeRust/.claude/worktrees/close-485-487/node)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 22.35s
+warning: the following packages contain code that will be rejected by a future version of Rust: nom v4.2.3
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running tests/lean_envelope_corpus.rs (/home/patrick/RNodeRust/.claude/worktrees/close-485-487/target/debug/deps/lean_envelope_corpus-48058cdf485535af)
+
+running 1 test
+test every_envelope_is_the_lean_catalogs_and_the_served_schemas ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+

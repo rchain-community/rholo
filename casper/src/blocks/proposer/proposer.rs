@@ -30,6 +30,7 @@ use rchain_shared::refined::{BlockHeight, NonNegI64};
 
 use super::block_creator::BlockCreator;
 use super::propose_result::{BlockCreatorResult, ProposeResult, ProposeStatus};
+use crate::api::block_api::SelfValidationRefusalSink;
 use crate::interpreter_util::ShardHealth;
 use crate::merging::BlockIndex;
 use crate::multi_parent_casper::{get_pre_state_for_new_block, ValidateError, DEPLOY_LIFESPAN};
@@ -167,6 +168,9 @@ pub struct Proposer {
     validator: ValidatorIdentity,
     log: Arc<dyn Log>,
     consecutive_failures: Arc<AtomicU64>,
+    /// **Why the counted failure happened** (#485). `new` starts with an isolated sink; the node
+    /// wires the shared one with [`Self::with_self_validation_refusal`].
+    self_validation_refusal: SelfValidationRefusalSink,
     stale_snapshot_equivocations: Arc<AtomicU64>,
     /// Broadcast a twin of every block this node creates (see `CasperConf::equivocation_injection`).
     equivocation_injection: bool,
@@ -217,6 +221,7 @@ impl Proposer {
             validator,
             log,
             consecutive_failures,
+            self_validation_refusal: SelfValidationRefusalSink::default(),
             stale_snapshot_equivocations,
             equivocation_injection,
             block_store,
@@ -227,6 +232,12 @@ impl Proposer {
     /// Set the execution batch cap (a node builder; `new` defaults to 1).
     pub fn with_batch_cap(mut self, cap: usize) -> Self {
         self.batch_cap = cap.max(1);
+        self
+    }
+
+    /// Share the node's refusal sink (the one `ProposeHealth` snapshots) rather than a private one.
+    pub fn with_self_validation_refusal(mut self, sink: SelfValidationRefusalSink) -> Self {
+        self.self_validation_refusal = sink;
         self
     }
 
@@ -305,6 +316,7 @@ impl Proposer {
             BlockCreatorResult::Created(block) => match (self.validate_block)(&block).await {
                 Ok(()) => {
                     self.consecutive_failures.store(0, Ordering::Relaxed);
+                    self.self_validation_refusal.clear();
                     (self.propose_effect)(&block).await;
                     // **The equivocation injection**, when armed: a second, equally valid block at the
                     // same `(sender, seq_num)`. Loud on every block, because a node that is doing this
@@ -392,6 +404,11 @@ impl Proposer {
                     // node's state accounting is inconsistent — surface it loudly (with the exact
                     // status + block/seq) and count it so the caller can halt autopropose.
                     self.consecutive_failures.fetch_add(1, Ordering::Relaxed);
+                    self.self_validation_refusal.note(
+                        status.code(),
+                        i64::from(block.block_number),
+                        i64::from(block.seq_num),
+                    );
                     self.log.error(
                         LogSource::new("casper.blocks.Proposer"),
                         &format!(
@@ -432,6 +449,11 @@ impl Proposer {
                 }
                 Err(ValidateError::Internal(e)) => {
                     self.consecutive_failures.fetch_add(1, Ordering::Relaxed);
+                    self.self_validation_refusal.note(
+                        "internal-error",
+                        i64::from(block.block_number),
+                        i64::from(block.seq_num),
+                    );
                     self.log.error(
                         LogSource::new("casper.blocks.Proposer"),
                         &format!(
@@ -518,6 +540,7 @@ impl Proposer {
         propose_effect: Arc<dyn Fn(&BlockMessage) -> BoxFuture<()> + Send + Sync>,
         log: Arc<dyn Log>,
         consecutive_failures: Arc<AtomicU64>,
+        self_validation_refusal: SelfValidationRefusalSink,
         stale_snapshot_equivocations: Arc<AtomicU64>,
         equivocation_injection: bool,
         // **This shard's finality-and-merge health** (W-N10-02/03), held like the two counters above:
@@ -721,6 +744,7 @@ impl Proposer {
             block_store,
         )
         .with_batch_cap(batch_cap)
+        .with_self_validation_refusal(self_validation_refusal)
     }
 }
 
@@ -2365,6 +2389,48 @@ mod tests {
         )
     }
 
+    /// A proposer whose validator returns an internal error — the second counted arm (#485).
+    fn proposer_failing_internal() -> Proposer {
+        let get_seq: Arc<dyn Fn(Validator) -> BoxFuture<i64> + Send + Sync> =
+            Arc::new(|_v| Box::pin(async { 0i64 }));
+        let check_active: Arc<
+            dyn Fn(&ValidatorIdentity) -> BoxFuture<Result<bool, String>> + Send + Sync,
+        > = Arc::new(|_v| Box::pin(async { Ok(true) }));
+        let create_block: Arc<
+            dyn Fn(
+                    &ValidatorIdentity,
+                    ProposeSource,
+                    Option<usize>,
+                ) -> BoxFuture<Result<BlockCreatorResult, String>>
+                + Send
+                + Sync,
+        > = Arc::new(|_v, _source, _limit| {
+            Box::pin(async { Ok(BlockCreatorResult::Created(block())) })
+        });
+        let validate: Arc<
+            dyn Fn(&BlockMessage) -> BoxFuture<Result<(), ValidateError>> + Send + Sync,
+        > = Arc::new(|_b| Box::pin(async { Err(ValidateError::Internal("boom".to_string())) }));
+        let effect: Arc<dyn Fn(&BlockMessage) -> BoxFuture<()> + Send + Sync> =
+            Arc::new(|_b| Box::pin(async {}));
+        let validator = ValidatorIdentity::from_hex(
+            "67e56582298859ddae725f972992a07c6c4fb9f62a8fff58ce3ca926a1063530",
+        )
+        .unwrap();
+        Proposer::new(
+            get_seq,
+            check_active,
+            create_block,
+            validate,
+            effect,
+            validator,
+            Arc::new(rchain_shared::log::NopLog),
+            Arc::new(AtomicU64::new(0)),
+            Arc::new(AtomicU64::new(0)),
+            false,
+            block_store(),
+        )
+    }
+
     /// A block store for tests that never read it — this file's tests run with the injection off.
     fn block_store() -> BlockStore {
         use rchain_block_storage::dag::codecs::{BlockHashCodec, BlockMessageCodec};
@@ -2458,6 +2524,10 @@ mod tests {
             0,
             "the counter the autopropose timer halts on must not move — this is the whole claim"
         );
+        assert!(
+            p.self_validation_refusal.snapshot().is_none(),
+            "a divergence is not a counted refusal, so it must not name one"
+        );
         assert!(matches!(rx.await.unwrap(), ProposerResult::Failure { .. }));
     }
 
@@ -2481,6 +2551,62 @@ mod tests {
             1,
             "a block-fault failure still counts toward the halt"
         );
+    }
+
+    /// **#485: the counted refusal carries *why* and *which block*.** The counter alone could not
+    /// tell an operator that the height-3122 wedge was a justification regression; only the log line
+    /// could. This asserts the diagnostic names it, without parsing stderr.
+    #[tokio::test]
+    async fn a_self_validation_refusal_records_its_code_and_block() {
+        let p =
+            proposer_failing_validation(crate::block_status::BlockStatus::JustificationRegression);
+        assert!(
+            p.self_validation_refusal.snapshot().is_none(),
+            "nothing stands before the attempt"
+        );
+        let (tx, _rx) = tokio::sync::oneshot::channel();
+        let _ = p
+            .propose(ProposeSource::Explicit { is_async: false }, tx)
+            .await;
+        let refusal = p
+            .self_validation_refusal
+            .snapshot()
+            .expect("the refusal is recorded");
+        assert_eq!(refusal.code, "justification-regression");
+        assert_eq!(refusal.block_number, 0);
+        assert_eq!(refusal.seq_num, 0);
+        assert_eq!(p.consecutive_failures.load(Ordering::Relaxed), 1);
+    }
+
+    /// The same success that clears the counter clears the reason: "consecutive" is the whole
+    /// quantity, so a recovered node must not keep naming the failure it recovered from.
+    #[tokio::test]
+    async fn a_successful_propose_clears_the_refusal() {
+        let p = proposer(BlockCreatorResult::Created(block()));
+        p.self_validation_refusal
+            .note("justification-regression", 0, 0);
+        assert!(p.self_validation_refusal.snapshot().is_some());
+        let (tx, _rx) = tokio::sync::oneshot::channel();
+        let _ = p
+            .propose(ProposeSource::Explicit { is_async: false }, tx)
+            .await;
+        assert!(
+            p.self_validation_refusal.snapshot().is_none(),
+            "a successful propose clears the reason beside the counter"
+        );
+    }
+
+    /// The internal-error arm has no `BlockStatus`, so it records its own closed code.
+    #[tokio::test]
+    async fn an_internal_error_records_internal_error() {
+        let p = proposer_failing_internal();
+        let (tx, _rx) = tokio::sync::oneshot::channel();
+        let _ = p
+            .propose(ProposeSource::Explicit { is_async: false }, tx)
+            .await;
+        let refusal = p.self_validation_refusal.snapshot().expect("recorded");
+        assert_eq!(refusal.code, "internal-error");
+        assert_eq!(p.consecutive_failures.load(Ordering::Relaxed), 1);
     }
 
     /// **The falsifier for the §48 race fix.** A self-created block whose insert collides as an
@@ -2517,6 +2643,7 @@ mod tests {
         let log: Arc<dyn Log> = Arc::new(rchain_shared::log::NopLog);
         let consecutive_failures = Arc::new(AtomicU64::new(0));
         let stale_snapshot_equivocations = Arc::new(AtomicU64::new(0));
+        let refusal = SelfValidationRefusalSink::default();
 
         let p = Proposer::new(
             get_seq,
@@ -2530,7 +2657,8 @@ mod tests {
             stale_snapshot_equivocations.clone(),
             false,
             block_store(),
-        );
+        )
+        .with_self_validation_refusal(refusal.clone());
 
         let (tx, rx) = tokio::sync::oneshot::channel();
         let (result, block_opt) = p
@@ -2547,6 +2675,10 @@ mod tests {
             consecutive_failures.load(Ordering::Relaxed),
             0,
             "the race must not count toward the timer halt"
+        );
+        assert!(
+            refusal.snapshot().is_none(),
+            "a self-equivocation is not a counted self-validation refusal"
         );
         assert_eq!(
             stale_snapshot_equivocations.load(Ordering::Relaxed),

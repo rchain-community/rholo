@@ -1,0 +1,22 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.48s
+     Running unittests src/lib.rs (/home/patrick/RNodeRust/.claude/worktrees/close-485-487/target/debug/deps/rchain_casper-ed9d25e6a074f420)
+
+running 15 tests
+test block_status::tests::every_status_has_a_unique_kebab_code ... ok
+test block_status::tests::only_the_valid_status_is_valid ... ok
+test block_status::tests::every_status_renders_a_distinct_message ... ok
+test block_status::tests::the_causes_partition_the_statuses ... ok
+test api::block_api::tests::the_self_validation_refusal_is_the_live_cell_and_clear_halt_clears_it ... ok
+test block_status::tests::the_offence_predicate_is_narrower_than_attributable ... ok
+test block_status::tests::the_status_compares_and_hashes_by_value ... ok
+test multi_parent_casper::mark_failed_tests::an_attributable_refusal_is_not_always_an_offence ... ok
+test multi_parent_casper::restore_tests::a_successful_revalidation_clears_the_refusal_and_keeps_attribution ... ok
+test interpreter_util::tests::a_stall_is_a_run_of_refusals_and_the_run_scales_with_the_partition ... ok
+test validate::tests::a_local_knob_changes_the_refusal_and_never_the_offence ... ok
+test blocks::proposer::proposer::tests::a_successful_propose_clears_the_refusal ... ok
+test blocks::proposer::proposer::tests::a_self_validation_refusal_records_its_code_and_block ... ok
+test blocks::proposer::proposer::tests::an_internal_error_records_internal_error ... ok
+test blocks::block_receiver::tests::capacity_refusal_does_not_poison_the_hash_for_later_retry ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 581 filtered out; finished in 0.01s
+

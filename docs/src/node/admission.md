@@ -95,6 +95,59 @@ boundary, permit limits and sample age are on the operator status (`/api/v1/stat
 is the surface that carries numbers. A snapshot is not a memory budget, network readiness, finalised
 height, or validator safety guarantee.
 
+## Finality is not admission
+
+**Decision (2026-11-02): option 2 — bounded speculative admission, with finality exposed
+separately.** `acceptsDeploys` is unchanged: it answers only whether the local deploy pool has room
+under its count and term-byte bounds (Law 86a). It is **not** a claim that the network can include,
+execute or finalize a deploy. No finality input is added to the deploy route; the pool's existing
+bounds are the whole admission policy. "Speculative" means the node may include and execute work that
+is not yet final, bounded by the pool and permit budgets rather than by finality.
+
+A deploy crosses four distinct states, and a client must read the one it needs:
+
+| state | reading | meaning |
+|---|---|---|
+| accepted | `POST /api/v1/deploy` → 200 with the deploy id | the request validated and a pool slot was free; nothing is included |
+| pooled | `GET /api/v1/deploy-settlement/{id}` → `stage: "pooled"`; `GET /api/v1/deploy-status/{id}` → `NotProcessed` with `Pooled` | held by this node, unexecuted |
+| included / executed | deploy status → `ProcessedWithSuccess` / `ProcessedWithError`; settlement `stage` `includedUnfinalized` or `finalityUnknown` | a block carries the deploy and the reducer ran; the block is not final |
+| settled | settlement `stage: "finalizedSuccess"` and `settlementConfirmed: true` | the deploy's **inclusion block** is finalized; this is the only settlement statement |
+
+`ProcessedWithSuccess` is **not** settlement. An application that treats it as final has the
+block-1781 defect.
+
+`GET /api/v1/finality-observation` reports a **node-local** sample: `latestBlockNumber`,
+`finalizedBlockNumber`, `finalizedBlockHash`, `observedFinalityLag`, `observedAtUnixMs`, and
+`availability: "unknown"`. The last is deliberate: one node cannot prove live bonded quorum, so the
+route never guesses. A missing or inconsistent source returns 503 with null fields - unknown, never
+healthy. `observedFinalityLag` is `maxObservedHeight − finalizedBlockNumber`, the same quantity as
+`/health.finalizedLag`; record both heights beside it.
+
+On `/health`, `finalizedHeight`, `finalizedLag`, `lastFinalityAgeMs` and `lastBlockAgeMs` are the
+local signal; `finalityStalled` is the alarm. `ready` deliberately does **not** include finality, and
+a node can be `ready` while the network cannot finalize. `selfValidationRefusal` names a local
+proposal failure and is not an admission signal.
+
+gRPC is the same contract without a new route: the deploy response carries the deploy id; deploy
+status/`FindDeploy` gives `NotProcessed`/`ProcessedWithSuccess`/`ProcessedWithError`; `IsFinalized` is
+read against the **inclusion block**; `LastFinalizedBlock` is a node-local frontier. The gRPC
+`Status` RPC is not a quorum signal.
+
+**Recovery.** When a strict supermajority of bonded stake is live again, finality resumes and a
+previously `includedUnfinalized` deploy becomes `finalizedSuccess` without resubmission. Until then it
+remains `includedUnfinalized` or `finalityUnknown`; it is never reported as settled. A deploy already
+included is not silently lost by a finality stall: its block either finalizes after recovery or the
+node reports the execution error. No retry policy beyond the pool's bounds is defined.
+
+**Partitions and staleness.** A partitioned or stale node may answer `finalityUnknown` or
+`includedUnfinalized`; it must never answer `finalizedSuccess` from a stale fence. No admission
+decision reads any finality signal.
+
+**What this is not.** Not a quorum oracle, not a finality guarantee, not a redefinition of
+`acceptsDeploys`, and not a change to the deploy route's retry or refusal behaviour. A client that
+needs independent confirmation compares finalized hashes and verifies finality attestations across
+validators.
+
 ## Choosing the limits
 
 1. Run the negative cases: a full pool, a refused share/rate, a malformed body, every legacy/v1

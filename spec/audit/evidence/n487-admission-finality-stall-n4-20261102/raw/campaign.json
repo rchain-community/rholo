@@ -1,0 +1,340 @@
+{
+  "gate_id": "n487-admission-finality-stall",
+  "arms": [
+    {
+      "arm": "accepted-not-settled",
+      "deploy": "304402201c7de7ed0416914e6866c531b4959352917adc2a3c16475ef355334a36aa3770022003dac81ff96cdd1ccafcfd39f38baff648d14d0bf31bd9f6b5958ce026a1cf08",
+      "observed_stage": "pooled",
+      "result": "PASS",
+      "error": null,
+      "sample": {
+        "blockHash": null,
+        "blockNumber": null,
+        "deployId": "304402201c7de7ed0416914e6866c531b4959352917adc2a3c16475ef355334a36aa3770022003dac81ff96cdd1ccafcfd39f38baff648d14d0bf31bd9f6b5958ce026a1cf08",
+        "execution": "unknown",
+        "finalized": null,
+        "nodeStatus": "Pooled",
+        "observedAtUnixMs": 1793629875054,
+        "scope": "nodeLocal",
+        "settlementConfirmed": false,
+        "stage": "pooled"
+      }
+    },
+    {
+      "arm": "ordinary-lag",
+      "deploy": "3045022100c7b1cba776270fb21aa16df576e9fc1e9499b90979049b0b6ab4188358b4322a022003212a865a27751ec3c3f89b2664d44bdb155790fe6c0c7db1523b229991740f",
+      "result": "PASS",
+      "error": null
+    },
+    {
+      "arm": "stall-exactly-two-thirds",
+      "deploy": "3045022100a746c73325a3be73421d638cd81b624b44f3ca0eb552f3ee19d617935958e3a702201d1473dbe09959faaf139835e6f4d855e290c95a8521b86ed145909c469a6f1e",
+      "live_stake": "200/300",
+      "height_before": {
+        "0": 17,
+        "1": 17
+      },
+      "height_after": {
+        "0": 18,
+        "1": 18
+      },
+      "finalized_before": {
+        "0": 13,
+        "1": 13
+      },
+      "finalized_frozen": {
+        "0": 13,
+        "1": 13
+      },
+      "settlement": [
+        {
+          "blockHash": "895a22cb4800db3a35390bc3cd0bf51f5a7880ccc13217508546a5e04151bdfa",
+          "blockNumber": 17,
+          "deployId": "3045022100a746c73325a3be73421d638cd81b624b44f3ca0eb552f3ee19d617935958e3a702201d1473dbe09959faaf139835e6f4d855e290c95a8521b86ed145909c469a6f1e",
+          "execution": "succeeded",
+          "finalized": false,
+          "nodeStatus": null,
+          "observedAtUnixMs": 1793629918210,
+          "scope": "nodeLocal",
+          "settlementConfirmed": false,
+          "stage": "includedUnfinalized"
+        },
+        {
+          "blockHash": "895a22cb4800db3a35390bc3cd0bf51f5a7880ccc13217508546a5e04151bdfa",
+          "blockNumber": 17,
+          "deployId": "3045022100a746c73325a3be73421d638cd81b624b44f3ca0eb552f3ee19d617935958e3a702201d1473dbe09959faaf139835e6f4d855e290c95a8521b86ed145909c469a6f1e",
+          "execution": "succeeded",
+          "finalized": false,
+          "nodeStatus": null,
+          "observedAtUnixMs": 1793629918715,
+          "scope": "nodeLocal",
+          "settlementConfirmed": false,
+          "stage": "includedUnfinalized"
+        },
+        {
+          "blockHash": "895a22cb4800db3a35390bc3cd0bf51f5a7880ccc13217508546a5e04151bdfa",
+          "blockNumber": 17,
+          "deployId": "3045022100a746c73325a3be73421d638cd81b624b44f3ca0eb552f3ee19d617935958e3a702201d1473dbe09959faaf139835e6f4d855e290c95a8521b86ed145909c469a6f1e",
+          "execution": "succeeded",
+          "finalized": false,
+          "nodeStatus": null,
+          "observedAtUnixMs": 1793629919222,
+          "scope": "nodeLocal",
+          "settlementConfirmed": false,
+          "stage": "includedUnfinalized"
+        },
+        {
+          "blockHash": "895a22cb4800db3a35390bc3cd0bf51f5a7880ccc13217508546a5e04151bdfa",
+          "blockNumber": 17,
+          "deployId": "3045022100a746c73325a3be73421d638cd81b624b44f3ca0eb552f3ee19d617935958e3a702201d1473dbe09959faaf139835e6f4d855e290c95a8521b86ed145909c469a6f1e",
+          "execution": "succeeded",
+          "finalized": false,
+          "nodeStatus": null,
+          "observedAtUnixMs": 1793629919729,
+          "scope": "nodeLocal",
+          "settlementConfirmed": false,
+          "stage": "includedUnfinalized"
+        },
+        {
+          "blockHash": "895a22cb4800db3a35390bc3cd0bf51f5a7880ccc13217508546a5e04151bdfa",
+          "blockNumber": 17,
+          "deployId": "3045022100a746c73325a3be73421d638cd81b624b44f3ca0eb552f3ee19d617935958e3a702201d1473dbe09959faaf139835e6f4d855e290c95a8521b86ed145909c469a6f1e",
+          "execution": "succeeded",
+          "finalized": false,
+          "nodeStatus": null,
+          "observedAtUnixMs": 1793629920236,
+          "scope": "nodeLocal",
+          "settlementConfirmed": false,
+          "stage": "includedUnfinalized"
+        },
+        {
+          "blockHash": "895a22cb4800db3a35390bc3cd0bf51f5a7880ccc13217508546a5e04151bdfa",
+          "blockNumber": 17,
+          "deployId": "3045022100a746c73325a3be73421d638cd81b624b44f3ca0eb552f3ee19d617935958e3a702201d1473dbe09959faaf139835e6f4d855e290c95a8521b86ed145909c469a6f1e",
+          "execution": "succeeded",
+          "finalized": false,
+          "nodeStatus": null,
+          "observedAtUnixMs": 1793629920741,
+          "scope": "nodeLocal",
+          "settlementConfirmed": false,
+          "stage": "includedUnfinalized"
+        },
+        {
+          "blockHash": "895a22cb4800db3a35390bc3cd0bf51f5a7880ccc13217508546a5e04151bdfa",
+          "blockNumber": 17,
+          "deployId": "3045022100a746c73325a3be73421d638cd81b624b44f3ca0eb552f3ee19d617935958e3a702201d1473dbe09959faaf139835e6f4d855e290c95a8521b86ed145909c469a6f1e",
+          "execution": "succeeded",
+          "finalized": false,
+          "nodeStatus": null,
+          "observedAtUnixMs": 1793629921247,
+          "scope": "nodeLocal",
+          "settlementConfirmed": false,
+          "stage": "includedUnfinalized"
+        },
+        {
+          "blockHash": "895a22cb4800db3a35390bc3cd0bf51f5a7880ccc13217508546a5e04151bdfa",
+          "blockNumber": 17,
+          "deployId": "3045022100a746c73325a3be73421d638cd81b624b44f3ca0eb552f3ee19d617935958e3a702201d1473dbe09959faaf139835e6f4d855e290c95a8521b86ed145909c469a6f1e",
+          "execution": "succeeded",
+          "finalized": false,
+          "nodeStatus": null,
+          "observedAtUnixMs": 1793629921753,
+          "scope": "nodeLocal",
+          "settlementConfirmed": false,
+          "stage": "includedUnfinalized"
+        },
+        {
+          "blockHash": "895a22cb4800db3a35390bc3cd0bf51f5a7880ccc13217508546a5e04151bdfa",
+          "blockNumber": 17,
+          "deployId": "3045022100a746c73325a3be73421d638cd81b624b44f3ca0eb552f3ee19d617935958e3a702201d1473dbe09959faaf139835e6f4d855e290c95a8521b86ed145909c469a6f1e",
+          "execution": "succeeded",
+          "finalized": false,
+          "nodeStatus": null,
+          "observedAtUnixMs": 1793629922259,
+          "scope": "nodeLocal",
+          "settlementConfirmed": false,
+          "stage": "includedUnfinalized"
+        },
+        {
+          "blockHash": "895a22cb4800db3a35390bc3cd0bf51f5a7880ccc13217508546a5e04151bdfa",
+          "blockNumber": 17,
+          "deployId": "3045022100a746c73325a3be73421d638cd81b624b44f3ca0eb552f3ee19d617935958e3a702201d1473dbe09959faaf139835e6f4d855e290c95a8521b86ed145909c469a6f1e",
+          "execution": "succeeded",
+          "finalized": false,
+          "nodeStatus": null,
+          "observedAtUnixMs": 1793629922766,
+          "scope": "nodeLocal",
+          "settlementConfirmed": false,
+          "stage": "includedUnfinalized"
+        },
+        {
+          "blockHash": "895a22cb4800db3a35390bc3cd0bf51f5a7880ccc13217508546a5e04151bdfa",
+          "blockNumber": 17,
+          "deployId": "3045022100a746c73325a3be73421d638cd81b624b44f3ca0eb552f3ee19d617935958e3a702201d1473dbe09959faaf139835e6f4d855e290c95a8521b86ed145909c469a6f1e",
+          "execution": "succeeded",
+          "finalized": false,
+          "nodeStatus": null,
+          "observedAtUnixMs": 1793629923271,
+          "scope": "nodeLocal",
+          "settlementConfirmed": false,
+          "stage": "includedUnfinalized"
+        },
+        {
+          "blockHash": "895a22cb4800db3a35390bc3cd0bf51f5a7880ccc13217508546a5e04151bdfa",
+          "blockNumber": 17,
+          "deployId": "3045022100a746c73325a3be73421d638cd81b624b44f3ca0eb552f3ee19d617935958e3a702201d1473dbe09959faaf139835e6f4d855e290c95a8521b86ed145909c469a6f1e",
+          "execution": "succeeded",
+          "finalized": false,
+          "nodeStatus": null,
+          "observedAtUnixMs": 1793629923779,
+          "scope": "nodeLocal",
+          "settlementConfirmed": false,
+          "stage": "includedUnfinalized"
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "arm": "recovery",
+      "deploy": "3045022100a746c73325a3be73421d638cd81b624b44f3ca0eb552f3ee19d617935958e3a702201d1473dbe09959faaf139835e6f4d855e290c95a8521b86ed145909c469a6f1e",
+      "inclusion": 17,
+      "finalized": 24,
+      "recovery_nodes": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "not_ready": [],
+      "settlement": {
+        "blockHash": "895a22cb4800db3a35390bc3cd0bf51f5a7880ccc13217508546a5e04151bdfa",
+        "blockNumber": 17,
+        "deployId": "3045022100a746c73325a3be73421d638cd81b624b44f3ca0eb552f3ee19d617935958e3a702201d1473dbe09959faaf139835e6f4d855e290c95a8521b86ed145909c469a6f1e",
+        "execution": "succeeded",
+        "finalized": true,
+        "nodeStatus": null,
+        "observedAtUnixMs": 1793629937603,
+        "scope": "nodeLocal",
+        "settlementConfirmed": true,
+        "stage": "finalizedSuccess"
+      },
+      "accepted": [
+        "304402201c7de7ed0416914e6866c531b4959352917adc2a3c16475ef355334a36aa3770022003dac81ff96cdd1ccafcfd39f38baff648d14d0bf31bd9f6b5958ce026a1cf08",
+        "3045022100c7b1cba776270fb21aa16df576e9fc1e9499b90979049b0b6ab4188358b4322a022003212a865a27751ec3c3f89b2664d44bdb155790fe6c0c7db1523b229991740f",
+        "3045022100a746c73325a3be73421d638cd81b624b44f3ca0eb552f3ee19d617935958e3a702201d1473dbe09959faaf139835e6f4d855e290c95a8521b86ed145909c469a6f1e",
+        "3045022100f0bc8c3b04715189bc67a0c721c6c53b889eac817e89ff477232b014ccb7e3e102206898e9f2a5a941c01fa6a773813caa1304d305fd0775c03b6166d4d7f9b898bc"
+      ],
+      "final_stages": {
+        "304402201c7de7ed0416914e6866c531b4959352917adc2a3c16475ef355334a36aa3770022003dac81ff96cdd1ccafcfd39f38baff648d14d0bf31bd9f6b5958ce026a1cf08": "finalizedSuccess",
+        "3045022100c7b1cba776270fb21aa16df576e9fc1e9499b90979049b0b6ab4188358b4322a022003212a865a27751ec3c3f89b2664d44bdb155790fe6c0c7db1523b229991740f": "finalizedSuccess",
+        "3045022100a746c73325a3be73421d638cd81b624b44f3ca0eb552f3ee19d617935958e3a702201d1473dbe09959faaf139835e6f4d855e290c95a8521b86ed145909c469a6f1e": "finalizedSuccess"
+      },
+      "result": "PASS",
+      "error": null
+    },
+    {
+      "arm": "partition-stale",
+      "deploy": "3045022100f0bc8c3b04715189bc67a0c721c6c53b889eac817e89ff477232b014ccb7e3e102206898e9f2a5a941c01fa6a773813caa1304d305fd0775c03b6166d4d7f9b898bc",
+      "result": "PASS",
+      "error": null,
+      "settlement": [
+        {
+          "blockHash": "8d156a7334608282ac1fc5410f39ff69fffd95d55853e935382c142bd831fc7b",
+          "blockNumber": 28,
+          "deployId": "3045022100f0bc8c3b04715189bc67a0c721c6c53b889eac817e89ff477232b014ccb7e3e102206898e9f2a5a941c01fa6a773813caa1304d305fd0775c03b6166d4d7f9b898bc",
+          "execution": "succeeded",
+          "finalized": false,
+          "nodeStatus": null,
+          "observedAtUnixMs": 1793629939567,
+          "scope": "nodeLocal",
+          "settlementConfirmed": false,
+          "stage": "includedUnfinalized"
+        },
+        {
+          "blockHash": "8d156a7334608282ac1fc5410f39ff69fffd95d55853e935382c142bd831fc7b",
+          "blockNumber": 28,
+          "deployId": "3045022100f0bc8c3b04715189bc67a0c721c6c53b889eac817e89ff477232b014ccb7e3e102206898e9f2a5a941c01fa6a773813caa1304d305fd0775c03b6166d4d7f9b898bc",
+          "execution": "succeeded",
+          "finalized": false,
+          "nodeStatus": null,
+          "observedAtUnixMs": 1793629940156,
+          "scope": "nodeLocal",
+          "settlementConfirmed": false,
+          "stage": "includedUnfinalized"
+        },
+        {
+          "blockHash": "8d156a7334608282ac1fc5410f39ff69fffd95d55853e935382c142bd831fc7b",
+          "blockNumber": 28,
+          "deployId": "3045022100f0bc8c3b04715189bc67a0c721c6c53b889eac817e89ff477232b014ccb7e3e102206898e9f2a5a941c01fa6a773813caa1304d305fd0775c03b6166d4d7f9b898bc",
+          "execution": "succeeded",
+          "finalized": false,
+          "nodeStatus": null,
+          "observedAtUnixMs": 1793629940744,
+          "scope": "nodeLocal",
+          "settlementConfirmed": false,
+          "stage": "includedUnfinalized"
+        },
+        {
+          "blockHash": "8d156a7334608282ac1fc5410f39ff69fffd95d55853e935382c142bd831fc7b",
+          "blockNumber": 28,
+          "deployId": "3045022100f0bc8c3b04715189bc67a0c721c6c53b889eac817e89ff477232b014ccb7e3e102206898e9f2a5a941c01fa6a773813caa1304d305fd0775c03b6166d4d7f9b898bc",
+          "execution": "succeeded",
+          "finalized": false,
+          "nodeStatus": null,
+          "observedAtUnixMs": 1793629941348,
+          "scope": "nodeLocal",
+          "settlementConfirmed": false,
+          "stage": "includedUnfinalized"
+        },
+        {
+          "blockHash": "8d156a7334608282ac1fc5410f39ff69fffd95d55853e935382c142bd831fc7b",
+          "blockNumber": 28,
+          "deployId": "3045022100f0bc8c3b04715189bc67a0c721c6c53b889eac817e89ff477232b014ccb7e3e102206898e9f2a5a941c01fa6a773813caa1304d305fd0775c03b6166d4d7f9b898bc",
+          "execution": "succeeded",
+          "finalized": false,
+          "nodeStatus": null,
+          "observedAtUnixMs": 1793629941976,
+          "scope": "nodeLocal",
+          "settlementConfirmed": false,
+          "stage": "includedUnfinalized"
+        },
+        {
+          "blockHash": "8d156a7334608282ac1fc5410f39ff69fffd95d55853e935382c142bd831fc7b",
+          "blockNumber": 28,
+          "deployId": "3045022100f0bc8c3b04715189bc67a0c721c6c53b889eac817e89ff477232b014ccb7e3e102206898e9f2a5a941c01fa6a773813caa1304d305fd0775c03b6166d4d7f9b898bc",
+          "execution": "succeeded",
+          "finalized": false,
+          "nodeStatus": null,
+          "observedAtUnixMs": 1793629942573,
+          "scope": "nodeLocal",
+          "settlementConfirmed": false,
+          "stage": "includedUnfinalized"
+        },
+        {
+          "blockHash": "8d156a7334608282ac1fc5410f39ff69fffd95d55853e935382c142bd831fc7b",
+          "blockNumber": 28,
+          "deployId": "3045022100f0bc8c3b04715189bc67a0c721c6c53b889eac817e89ff477232b014ccb7e3e102206898e9f2a5a941c01fa6a773813caa1304d305fd0775c03b6166d4d7f9b898bc",
+          "execution": "succeeded",
+          "finalized": false,
+          "nodeStatus": null,
+          "observedAtUnixMs": 1793629943188,
+          "scope": "nodeLocal",
+          "settlementConfirmed": false,
+          "stage": "includedUnfinalized"
+        }
+      ],
+      "observation": [
+        200,
+        {
+          "availability": "unknown",
+          "finalizedBlockHash": "8020ca75510751de35eb8527665a02d748f62c96b9a7bbb89fb8267dfa80e8d9",
+          "finalizedBlockNumber": 26,
+          "latestBlockNumber": 30,
+          "observedAtUnixMs": 1793629943784,
+          "observedFinalityLag": 3,
+          "scope": "nodeLocal"
+        }
+      ]
+    }
+  ]
+}

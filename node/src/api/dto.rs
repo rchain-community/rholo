@@ -178,10 +178,22 @@ pub struct HaltStatusDto {
 /// The same facts the flat fields beside it carry, but attributable to a named member: a node whose
 /// non-primary shard has halted reports a healthy `autoproposeTimerHalted` at the top level, because
 /// that field is the **primary's**. This is where the other members' halts are.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SelfValidationRefusalDto {
+    /// A closed code: `BlockStatus::code()`, or `internal-error` for the internal-error arm.
+    pub code: String,
+    pub block_number: i64,
+    pub seq_num: i64,
+    pub at_unix_ms: i64,
+}
+
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ProposerHealthDto {
     pub consecutive_self_validation_failures: u64,
+    /// **Why the last counted failure happened** (#485); `None` after a success or an operator resume.
+    pub self_validation_refusal: Option<SelfValidationRefusalDto>,
     pub autopropose_timer_halted: bool,
     pub autopropose_timer_halt_episodes: u64,
     pub autopropose_halt: HaltStatusDto,
@@ -253,6 +265,10 @@ pub struct OperatorStatus {
     /// cleared by a successful propose — this is what tells "quiet" from "broken" on a chain whose
     /// steady state is a node that produces nothing until work arrives.
     pub consecutive_self_validation_failures: u64,
+    /// #485: **why** the last counted self-validation failure happened — the closed code and the
+    /// refused block. `None` after a successful propose or an operator resume. This is the field the
+    /// counter could not carry: on the height-3122 wedge the only reason was a stderr line.
+    pub self_validation_refusal: Option<SelfValidationRefusalDto>,
     /// #157: the shard's autopropose **timer** has stopped. Deliberately not called `halted`: the tap
     /// and the admin `POST /api/propose` keep running, so a node can have a stopped timer and still be
     /// producing blocks.

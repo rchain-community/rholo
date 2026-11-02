@@ -1,0 +1,50 @@
+   Compiling rchain-casper v0.1.0 (/home/patrick/RNodeRust/.claude/worktrees/close-485-487/casper)
+   Compiling rchain-node v0.1.0 (/home/patrick/RNodeRust/.claude/worktrees/close-485-487/node)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 16.22s
+warning: the following packages contain code that will be rejected by a future version of Rust: nom v4.2.3
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests src/lib.rs (/home/patrick/RNodeRust/.claude/worktrees/close-485-487/target/debug/deps/rchain_node-0b35b539c3d070db)
+
+running 39 tests
+test api::conversion::tests::degraded_is_advisory_and_accepts_deploys_is_pool_capacity ... ok
+test api::conversion::tests::the_public_status_serializes_no_operator_key ... ok
+test api::conversion::tests::the_sync_reading_labels_its_scope ... ok
+test api::conversion::tests::the_operator_status_carries_every_readiness_gate ... ok
+test api::conversion::tests::to_api_status_maps_fields ... ok
+test api::conversion::tests::the_shard_history_counts_reach_the_wire_under_the_rows_names ... ok
+test api::conversion::tests::the_per_shard_map_carries_each_members_halt ... ok
+test api::conversion::tests::to_deploy_exec_status_maps_oneof ... ok
+test api::conversion::tests::to_data_at_name_response_maps_data ... ok
+test api::conversion::tests::to_rho_data_response_maps_pars ... ok
+test api::conversion::to_signed_deploy_tests::rejects_invalid_deployer_hex ... ok
+test api::conversion::to_signed_deploy_tests::rejects_unsupported_algorithm ... ok
+test api::grpc::tonic::tests::wire_conversions::a_domain_result_becomes_the_right_response_variant ... ok
+test api::grpc::tonic::tests::wire_conversions::a_missing_inner_message_is_an_error_naming_the_field ... ok
+test api::grpc::tonic::tests::wire_conversions::each_execution_status_maps_to_its_own_wire_variant ... ok
+test diagnostics::health_contract::tests::a_not_ready_node_always_names_a_reason ... ok
+test diagnostics::health_contract::tests::every_operator_gate_is_also_a_public_health_key ... ok
+test diagnostics::health_contract::tests::ready_reasons_is_a_closed_vocabulary ... ok
+test api::grpc::tonic::tests::wire_conversions::the_domain_to_wire_conversions_carry_every_field ... ok
+test diagnostics::health_contract::tests::the_boot_id_is_stable_within_a_process ... ok
+test diagnostics::health_contract::tests::the_operator_gate_contract_is_sorted_and_unique ... ok
+test api::shard_routing::tests::health_by_shard_reports_every_member_and_the_non_primarys_halt ... ok
+test diagnostics::health_contract::tests::the_public_key_contract_is_sorted_and_unique ... ok
+test diagnostics::health_contract::tests::the_unavailable_contract_is_sorted_and_adds_only_the_error ... ok
+test api::grpc::tonic::tests::wire_conversions::the_block_event_info_round_trips_with_its_nested_parts ... ok
+test api::grpc::tonic::tests::the_block_conversions_wrap_a_block_and_a_stream_reports_its_error ... ok
+test api::grpc::tonic::tests::wire_conversions::the_report_tree_round_trips_through_the_wire ... ok
+test runtime::node_runtime::proposer_health_metric_tests::a_halted_timer_is_readable_on_the_scrape ... ok
+test web::http::tests::health_names_the_reason_it_is_not_ready ... ok
+test web::http::tests::health_publishes_the_finalized_fence_and_its_lag ... ok
+test web::http::tests::health_reports_readiness_and_pool_capacity ... ok
+test web::http::tests::health_reports_zero_lag_when_the_tip_is_finalized ... ok
+test web::http::tests::disabled_admission_does_not_claim_validator_health ... ok
+test web::http::tests::health_publishes_the_peer_liveness_projection ... ok
+test web::http::tests::health_reports_no_observed_height_on_an_empty_dag ... ok
+test web::http::tests::health_is_ready_only_when_every_shard_runs ... ok
+test web::http::tests::health_names_the_self_validation_refusal ... ok
+test web::http::tests::health_self_validation_refusal_is_null_when_none_stands ... ok
+test runtime::node_runtime::proposer_health_metric_tests::a_halted_timer_does_not_tick_until_the_halt_is_cleared ... ok
+
+test result: ok. 39 passed; 0 failed; 0 ignored; 0 measured; 348 filtered out; finished in 0.05s
+

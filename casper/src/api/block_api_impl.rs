@@ -736,7 +736,7 @@ impl BlockApi for BlockApiImpl {
             }
         } else if self.dag.contains_deploy_in_pool(deploy_id).await? {
             Ok(DeployExecStatus::NotProcessed {
-                status: "Pooled".to_string(),
+                status: crate::api::block_api::POOLED_DEPLOY_STATUS.to_string(),
             })
         } else {
             // The Scala's fourth `NotProcessed` reason, `"Running"`, is absent by construction: it came

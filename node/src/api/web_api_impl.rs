@@ -1139,6 +1139,11 @@ impl WebApi for WebApiImpl {
         ))
     }
 
+    /// The primary shard's proposer health, for `/health`'s `selfValidationRefusal` (#485).
+    async fn proposer_health(&self) -> rchain_casper::api::block_api::ProposerHealth {
+        self.block_api.proposer_health().await
+    }
+
     async fn deploy(&self, request: &DeployRequest) -> Result<String, BlockApiException> {
         // `Signed<DeployData>` holds a `&dyn SignaturesAlg` (not `Sync`), so keep it in a block
         // that ends before the `.await`.

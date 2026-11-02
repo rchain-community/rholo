@@ -76,7 +76,7 @@ def envelopeCatalog : List EnvelopeRow :=
         "latestBlockNumber", "autopropose", "proposeOnDeploy", "manualPropose", "devMode",
         "proposer", "degraded", "acceptsDeploys", "pool",
         "adminHttp",
-        "consecutiveSelfValidationFailures", "autoproposeTimerHalted",
+        "consecutiveSelfValidationFailures", "selfValidationRefusal", "autoproposeTimerHalted",
         "autoproposeTimerHaltEpisodes", "autoproposeHalt", "autoproposeTapSuppressed",
         "staleSnapshotSelfEquivocations", "finalityStall", "finalityStalled", "finalityStallEpisodes",
         "finalityCountersDurable",

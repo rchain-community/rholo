@@ -22,6 +22,13 @@ pub trait WebApi: Send + Sync {
     /// narrow exception on the `/health` route, not a field of this status.
     async fn status(&self) -> Result<super::dto::PublicStatus, BlockApiException>;
 
+    /// **The primary shard's proposer health**, read by `/health` for the counted self-validation
+    /// refusal (#485). The default is the empty snapshot so a test double need not implement it; the
+    /// real node forwards to the block API's `proposer_health`.
+    async fn proposer_health(&self) -> rchain_casper::api::block_api::ProposerHealth {
+        rchain_casper::api::block_api::ProposerHealth::default()
+    }
+
     async fn deploy(&self, request: &DeployRequest) -> Result<String, BlockApiException>;
 
     async fn deploy_status(&self, deploy_id: &str) -> Result<DeployExecStatus, BlockApiException>;

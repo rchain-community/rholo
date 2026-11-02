@@ -771,6 +771,9 @@ async fn api_health(State(state): State<HttpState>) -> Response {
             Ok(block) => (Some(block.block_info.block_number), None),
             Err(error) => (None, Some(error.0)),
         };
+    // #485: the proposer's last counted self-validation refusal. `None` is "none standing", not
+    // unknown - the cell is cleared by the successful propose that clears the counter.
+    let proposer_health = state.web_api.proposer_health().await;
     match state.web_api.status().await {
         Ok(status) => {
             // **`latestBlockNumber` is one past the highest observed height**, not the tip height:
@@ -807,6 +810,14 @@ async fn api_health(State(state): State<HttpState>) -> Response {
                 "lastPipelineFault": rchain_casper::blocks::block_processor::last_pipeline_fault(),
                 "proposalHalted": proposal_isolated,
                 "proposalHaltReason": rchain_casper::blocks::proposer::proposer::proposal_isolation_reason(),
+                // #485: the reason a self-created block was refused, and which block. The counter is
+                // operator-only; this is the part `/health` was missing.
+                "selfValidationRefusal": proposer_health.self_validation_refusal.map(|r| json!({
+                    "code": r.code,
+                    "blockNumber": r.block_number,
+                    "seqNum": r.seq_num,
+                    "atUnixMs": r.at_unix_ms,
+                })),
                 "degraded": status.degraded,
                 "acceptsDeploys": status.accepts_deploys,
                 // One past the highest observed height (`latestBlockNumber`'s own convention).
@@ -1041,7 +1052,12 @@ fn finality_observation(
     let tip = status.map(|s| s.latest_block_number);
     let height = finalized.map(|b| b.block_info.block_number);
     let hash = finalized.map(|b| b.block_info.block_hash.clone());
-    let lag = tip.zip(height).and_then(|(tip, height)| {
+    // `latestBlockNumber` is one past the highest observed height, so the observed tip is `tip - 1`
+    // (and unknown on an empty DAG). Using `tip` directly made this lag one larger than
+    // `/health.finalizedLag` for the same snapshot; the two are now the same quantity.
+    let observed_tip =
+        status.and_then(|s| (s.latest_block_number > 0).then(|| s.latest_block_number - 1));
+    let lag = observed_tip.zip(height).and_then(|(tip, height)| {
         if tip >= height && height >= 0 {
             Some(tip.saturating_sub(height))
         } else {
@@ -1098,18 +1114,27 @@ fn deploy_settlement_observation(
 ) -> serde_json::Value {
     use crate::api::dto::DeployExecStatus;
     match execution {
-        DeployExecStatus::NotProcessed { status } => json!({
-            "deployId": deploy_id,
-            "observedAtUnixMs": observed_at_unix_ms,
-            "stage": "notProcessed",
-            "execution": "unknown",
-            "finalized": null,
-            "settlementConfirmed": false,
-            "blockHash": null,
-            "blockNumber": null,
-            "nodeStatus": status,
-            "scope": "nodeLocal",
-        }),
+        DeployExecStatus::NotProcessed { status } => {
+            // #487: "accepted and pooled" is a distinct state from "not processed". The producer's
+            // label is shared (`POOLED_DEPLOY_STATUS`) so the two cannot drift.
+            let stage = if status == rchain_casper::api::block_api::POOLED_DEPLOY_STATUS {
+                "pooled"
+            } else {
+                "notProcessed"
+            };
+            json!({
+                "deployId": deploy_id,
+                "observedAtUnixMs": observed_at_unix_ms,
+                "stage": stage,
+                "execution": "unknown",
+                "finalized": null,
+                "settlementConfirmed": false,
+                "blockHash": null,
+                "blockNumber": null,
+                "nodeStatus": status,
+                "scope": "nodeLocal",
+            })
+        }
         DeployExecStatus::ProcessedWithSuccess { block, .. }
         | DeployExecStatus::ProcessedWithError { block, .. } => {
             let succeeded = matches!(execution, DeployExecStatus::ProcessedWithSuccess { .. });
@@ -1574,6 +1599,7 @@ pub const OPENAPI_JSON: &str = r##"{
           } },
           "adminHttp": { "type": "boolean", "description": "The admin HTTP surface is published" },
           "consecutiveSelfValidationFailures": { "type": "integer", "format": "int64", "description": "Self-validation failures the proposer has recorded in a row; cleared by a successful propose" },
+          "selfValidationRefusal": { "$ref": "#/components/schemas/SelfValidationRefusalDto" },
           "autoproposeTimerHalted": { "type": "boolean", "description": "The autopropose timer has stopped. Two things restart it: the process (the halt is durable, re-seeded at boot), and POST /api/v1/autopropose/resume on the admin listener, which clears the record and wakes the parked timer in-process. Not the same as block production having stopped: the tap and POST /api/propose keep running" },
           "autoproposeTimerHaltEpisodes": { "type": "integer", "format": "int64", "description": "How many times this shard's autopropose timer has stopped. Counting transitions, so a second note of the same halt does not move it; seeded from the durable record at boot, so it is the shard's count and not this process's (W-N10-01)" },
           "autoproposeHalt": { "type": "object", "description": "The autopropose halt on record: when it happened and whether the record is trustworthy. A null `at` with `durable: true` means no halt is on record; `durable: false` means the record could not be read or written, so the node cannot vouch for it — 'unknown' and 'never halted' are the two readings this field exists to keep apart (W-N10-01, F-U10-02)", "properties": { "at": { "type": "integer", "format": "int64", "nullable": true, "description": "When the shard last halted, in milliseconds since the unix epoch; null is no halt on record, unless durable is false" }, "durable": { "type": "boolean", "description": "Whether this reading reflects the store: false means the halt record could not be read or written, so the node cannot vouch for `at`" } } },
@@ -1642,11 +1668,22 @@ pub const OPENAPI_JSON: &str = r##"{
         "description": "One shard's proposer health, as the per-shard map carries it (W-N10-04). The same facts as the flat fields, attributable to a named member",
         "properties": {
           "consecutiveSelfValidationFailures": { "type": "integer", "format": "int64" },
+          "selfValidationRefusal": { "$ref": "#/components/schemas/SelfValidationRefusalDto" },
           "autoproposeTimerHalted": { "type": "boolean" },
           "autoproposeTimerHaltEpisodes": { "type": "integer", "format": "int64" },
           "autoproposeHalt": { "$ref": "#/components/schemas/HaltStatusDto" },
           "autoproposeTapSuppressed": { "type": "integer", "format": "int64" },
           "staleSnapshotSelfEquivocations": { "type": "integer", "format": "int64" }
+        }
+      },
+      "SelfValidationRefusalDto": {
+        "type": "object",
+        "description": "The last counted self-validation refusal (#485): the proposer built a block and refused it. Null when none stands",
+        "properties": {
+          "code": { "type": "string", "description": "A closed kebab-case code from BlockStatus::code(), or internal-error" },
+          "blockNumber": { "type": "integer", "format": "int64" },
+          "seqNum": { "type": "integer", "format": "int64" },
+          "atUnixMs": { "type": "integer", "format": "int64" }
         }
       },
       "FinalityHealthDto": {
@@ -2754,6 +2791,7 @@ mod tests {
                 deploys: Vec::new(),
             }),
             finalized_result: None,
+            proposer_health: Default::default(),
         });
         let response = router(s)
             .oneshot(
@@ -2768,7 +2806,9 @@ mod tests {
         let bytes = to_bytes(response.into_body(), usize::MAX).await.unwrap();
         let json: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
         assert_eq!(json["availability"], "unknown");
-        assert_eq!(json["observedFinalityLag"], 35);
+        // The observed tip is `latestBlockNumber - 1` = 1790, so the lag is 34 - the same value
+        // `/health.finalizedLag` reports for this snapshot.
+        assert_eq!(json["observedFinalityLag"], 34);
         assert_eq!(json["finalizedBlockNumber"], 1756);
     }
 
@@ -2792,6 +2832,7 @@ mod tests {
                 }),
                 finalized_block: None,
                 finalized_result: finalized,
+                proposer_health: Default::default(),
             });
             let response = router(s)
                 .oneshot(
@@ -2863,12 +2904,20 @@ mod tests {
         assert_eq!(result["execution"], "failed");
         assert_eq!(result["finalized"], true);
         assert_eq!(result["settlementConfirmed"], false);
+        // #487: a deploy the pool holds is "pooled", not merely "notProcessed". The two are
+        // different client states - accepted and waiting, versus unknown to this node.
         let pending = DeployExecStatus::NotProcessed {
-            status: "Pooled".to_string(),
+            status: rchain_casper::api::block_api::POOLED_DEPLOY_STATUS.to_string(),
         };
         let result = deploy_settlement_observation("sig", &pending, Some(true), 126);
-        assert_eq!(result["stage"], "notProcessed");
+        assert_eq!(result["stage"], "pooled");
         assert!(result["finalized"].is_null());
+        assert_eq!(result["settlementConfirmed"], false);
+        let unknown_status = DeployExecStatus::NotProcessed {
+            status: "Unknown".to_string(),
+        };
+        let result = deploy_settlement_observation("sig", &unknown_status, Some(true), 126);
+        assert_eq!(result["stage"], "notProcessed");
         assert_eq!(result["settlementConfirmed"], false);
     }
 
@@ -2885,7 +2934,7 @@ mod tests {
             deploys: Vec::new(),
         };
         let reading = finality_observation(Some(&status), Some(&frontier), 127);
-        assert_eq!(reading["observedFinalityLag"], 35);
+        assert_eq!(reading["observedFinalityLag"], 34);
         assert_eq!(reading["availability"], "unknown");
         assert_eq!(reading["scope"], "nodeLocal");
         assert!(status.accepts_deploys);
@@ -2935,6 +2984,7 @@ mod tests {
             core: test_status(),
             admin_http: true,
             consecutive_self_validation_failures: 0,
+            self_validation_refusal: None,
             autopropose_timer_halted: false,
             autopropose_timer_halt_episodes: 0,
             autopropose_halt: HaltStatusDto {
@@ -2978,12 +3028,17 @@ mod tests {
         deploy_result: Option<DeployExecStatus>,
         finalized_block: Option<BlockInfo>,
         finalized_result: Option<bool>,
+        proposer_health: rchain_casper::api::block_api::ProposerHealth,
     }
 
     #[async_trait]
     impl WebApi for MockWebApi {
         async fn status(&self) -> Result<PublicStatus, BlockApiException> {
             Ok(self.status.clone())
+        }
+
+        async fn proposer_health(&self) -> rchain_casper::api::block_api::ProposerHealth {
+            self.proposer_health.clone()
         }
 
         async fn deploy(&self, _: &DeployRequest) -> Result<String, BlockApiException> {
@@ -3087,6 +3142,7 @@ mod tests {
                 deploy_result: None,
                 finalized_block: None,
                 finalized_result: None,
+                proposer_health: Default::default(),
             }),
             block_report_api: test_block_report_api(),
             // The HTTP tests drive the routes, not the shard list; one member stands in.
@@ -3741,6 +3797,7 @@ mod tests {
                 deploys: Vec::new(),
             }),
             finalized_result: None,
+            proposer_health: Default::default(),
         });
         let reply = router(s)
             .oneshot(
@@ -3762,6 +3819,79 @@ mod tests {
         assert_eq!(json["finalizedHeight"], 1756);
         assert_eq!(json["finalizedLag"], 34);
         assert!(json["finalizedHeightError"].is_null());
+    }
+
+    /// **#485: `/health` names the counted self-validation refusal**, not only the operator counter.
+    /// The height-3122 wedge's reason lived in the log line; this is the field the standard was
+    /// missing. The code is a closed vocabulary value, never the prose message.
+    #[tokio::test]
+    async fn health_names_the_self_validation_refusal() {
+        use tower::ServiceExt;
+        let mut s = state();
+        s.web_api = Arc::new(MockWebApi {
+            status: test_status(),
+            pooled_deploys: PooledDeploys {
+                deploys: Vec::new(),
+            },
+            deploy_result: None,
+            finalized_block: None,
+            finalized_result: None,
+            proposer_health: rchain_casper::api::block_api::ProposerHealth {
+                consecutive_self_validation_failures: 8,
+                self_validation_refusal: Some(
+                    rchain_casper::api::block_api::SelfValidationRefusal {
+                        code: "justification-regression",
+                        block_number: 3122,
+                        seq_num: 3122,
+                        at_unix_ms: 1_790_000_000_000,
+                    },
+                ),
+                ..Default::default()
+            },
+        });
+        let reply = router(s)
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri("/health")
+                    .body(axum::body::Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        let body = axum::body::to_bytes(reply.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(
+            json["selfValidationRefusal"]["code"],
+            "justification-regression"
+        );
+        assert_eq!(json["selfValidationRefusal"]["blockNumber"], 3122);
+        assert_eq!(json["selfValidationRefusal"]["seqNum"], 3122);
+        assert_eq!(
+            json["selfValidationRefusal"]["atUnixMs"],
+            1_790_000_000_000i64
+        );
+    }
+
+    /// A node with no counted refusal answers `null`, not an empty object.
+    #[tokio::test]
+    async fn health_self_validation_refusal_is_null_when_none_stands() {
+        use tower::ServiceExt;
+        let reply = router(state())
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri("/health")
+                    .body(axum::body::Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        let body = axum::body::to_bytes(reply.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+        assert!(json["selfValidationRefusal"].is_null());
     }
 
     /// **A fully finalised tip has lag zero**, not one: the off-by-one Aria caught in review.
@@ -3787,6 +3917,7 @@ mod tests {
                 deploys: Vec::new(),
             }),
             finalized_result: None,
+            proposer_health: Default::default(),
         });
         let reply = router(s)
             .oneshot(
@@ -3823,6 +3954,7 @@ mod tests {
             deploy_result: None,
             finalized_block: None,
             finalized_result: None,
+            proposer_health: Default::default(),
         });
         let reply = router(s)
             .oneshot(
@@ -4228,6 +4360,7 @@ mod tests {
             deploy_result: None,
             finalized_block: None,
             finalized_result: None,
+            proposer_health: Default::default(),
         });
         let response = api_deploys(State(s)).await;
         assert_eq!(response.status(), StatusCode::OK);

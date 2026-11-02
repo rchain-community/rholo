@@ -1,0 +1,342 @@
+[
+    {
+        "Id": "0bbc99e285c856e223c0639d255cec440b9318eaec843968e2927219a5a22347",
+        "Created": "2026-11-02T11:28:07.731919531Z",
+        "Path": "rnode",
+        "Args": [
+            "run",
+            "--api-host",
+            "0.0.0.0",
+            "--data-dir",
+            "/var/lib/rnode",
+            "--protocol-port",
+            "40400",
+            "--discovery-port",
+            "40404",
+            "--api-port-grpc-external",
+            "40401",
+            "--api-port-grpc-internal",
+            "40402",
+            "--api-port-http",
+            "40403",
+            "--api-port-admin-http",
+            "40405",
+            "--api-enable-devnet-cors",
+            "--api-enable-devnet-admin-public",
+            "--dev-mode",
+            "--thread-pool-size",
+            "2",
+            "--bootstrap",
+            "rnode://9205872621d949de637e5d9106d2d39e33b18a65@restartload-bootstrap?protocol=40400&discovery=40404",
+            "--bonds-file",
+            "/genesis/bonds.txt",
+            "--wallets-file",
+            "/genesis/wallets.txt",
+            "--host",
+            "restartload-control-incomplete-ancestry",
+            "--sync-anchor",
+            "00962e6d4b3dbd4bef79cfb75c2bdb4e72cd9dfc79ae2d003de82af354328af2"
+        ],
+        "State": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 1,
+            "Error": "",
+            "StartedAt": "2026-11-02T11:28:07.8698207Z",
+            "FinishedAt": "2026-11-02T11:29:51.766695531Z",
+            "Health": {
+                "Status": "unhealthy",
+                "FailingStreak": 0,
+                "Log": [
+                    {
+                        "Start": "2026-11-02T11:29:03.456175882Z",
+                        "End": "2026-11-02T11:29:03.520382752Z",
+                        "ExitCode": 0,
+                        "Output": "{\"version\":{\"api\":\"1\",\"node\":\"rholo node 0.1.0 (d8b19154c4fdfd6a5321610f51935ae8d5fc24e4)\"},\"address\":\"b35d95060615f2074b8570e90d97ae3399df6d7b\",\"networkId\":\"testnet\",\"shardId\":\"/root\",\"peers\":1,\"nodes\":1,\"minPhloPrice\":1,\"latestBlockNumber\":0,\"autopropose\":false,\"proposeOnDeploy\":false,\"manualPropose\":true,\"devMode\":true,\"proposer\":false,\"degraded\":\"normal\",\"acceptsDeploys\":true,\"pool\":{\"deploys\":0,\"bytes\":0,\"maxDeploys\":10000,\"maxBytes\":67108864}}"
+                    },
+                    {
+                        "Start": "2026-11-02T11:29:13.522015799Z",
+                        "End": "2026-11-02T11:29:13.603600127Z",
+                        "ExitCode": 0,
+                        "Output": "{\"version\":{\"api\":\"1\",\"node\":\"rholo node 0.1.0 (d8b19154c4fdfd6a5321610f51935ae8d5fc24e4)\"},\"address\":\"b35d95060615f2074b8570e90d97ae3399df6d7b\",\"networkId\":\"testnet\",\"shardId\":\"/root\",\"peers\":1,\"nodes\":1,\"minPhloPrice\":1,\"latestBlockNumber\":0,\"autopropose\":false,\"proposeOnDeploy\":false,\"manualPropose\":true,\"devMode\":true,\"proposer\":false,\"degraded\":\"normal\",\"acceptsDeploys\":true,\"pool\":{\"deploys\":0,\"bytes\":0,\"maxDeploys\":10000,\"maxBytes\":67108864}}"
+                    },
+                    {
+                        "Start": "2026-11-02T11:29:23.605080351Z",
+                        "End": "2026-11-02T11:29:23.673003743Z",
+                        "ExitCode": 0,
+                        "Output": "{\"version\":{\"api\":\"1\",\"node\":\"rholo node 0.1.0 (d8b19154c4fdfd6a5321610f51935ae8d5fc24e4)\"},\"address\":\"b35d95060615f2074b8570e90d97ae3399df6d7b\",\"networkId\":\"testnet\",\"shardId\":\"/root\",\"peers\":1,\"nodes\":1,\"minPhloPrice\":1,\"latestBlockNumber\":0,\"autopropose\":false,\"proposeOnDeploy\":false,\"manualPropose\":true,\"devMode\":true,\"proposer\":false,\"degraded\":\"normal\",\"acceptsDeploys\":true,\"pool\":{\"deploys\":0,\"bytes\":0,\"maxDeploys\":10000,\"maxBytes\":67108864}}"
+                    },
+                    {
+                        "Start": "2026-11-02T11:29:33.674654615Z",
+                        "End": "2026-11-02T11:29:33.747775973Z",
+                        "ExitCode": 0,
+                        "Output": "{\"version\":{\"api\":\"1\",\"node\":\"rholo node 0.1.0 (d8b19154c4fdfd6a5321610f51935ae8d5fc24e4)\"},\"address\":\"b35d95060615f2074b8570e90d97ae3399df6d7b\",\"networkId\":\"testnet\",\"shardId\":\"/root\",\"peers\":1,\"nodes\":1,\"minPhloPrice\":1,\"latestBlockNumber\":0,\"autopropose\":false,\"proposeOnDeploy\":false,\"manualPropose\":true,\"devMode\":true,\"proposer\":false,\"degraded\":\"normal\",\"acceptsDeploys\":true,\"pool\":{\"deploys\":0,\"bytes\":0,\"maxDeploys\":10000,\"maxBytes\":67108864}}"
+                    },
+                    {
+                        "Start": "2026-11-02T11:29:43.749377395Z",
+                        "End": "2026-11-02T11:29:43.820111702Z",
+                        "ExitCode": 0,
+                        "Output": "{\"version\":{\"api\":\"1\",\"node\":\"rholo node 0.1.0 (d8b19154c4fdfd6a5321610f51935ae8d5fc24e4)\"},\"address\":\"b35d95060615f2074b8570e90d97ae3399df6d7b\",\"networkId\":\"testnet\",\"shardId\":\"/root\",\"peers\":1,\"nodes\":1,\"minPhloPrice\":1,\"latestBlockNumber\":0,\"autopropose\":false,\"proposeOnDeploy\":false,\"manualPropose\":true,\"devMode\":true,\"proposer\":false,\"degraded\":\"normal\",\"acceptsDeploys\":true,\"pool\":{\"deploys\":0,\"bytes\":0,\"maxDeploys\":10000,\"maxBytes\":67108864}}"
+                    }
+                ]
+            }
+        },
+        "Image": "sha256:ba7396c1cc84bbe8c509096b4036a948f8b7d4641e37840fed062c784e7550d8",
+        "ResolvConfPath": "/var/lib/docker/containers/0bbc99e285c856e223c0639d255cec440b9318eaec843968e2927219a5a22347/resolv.conf",
+        "HostnamePath": "/var/lib/docker/containers/0bbc99e285c856e223c0639d255cec440b9318eaec843968e2927219a5a22347/hostname",
+        "HostsPath": "/var/lib/docker/containers/0bbc99e285c856e223c0639d255cec440b9318eaec843968e2927219a5a22347/hosts",
+        "LogPath": "/var/lib/docker/containers/0bbc99e285c856e223c0639d255cec440b9318eaec843968e2927219a5a22347/0bbc99e285c856e223c0639d255cec440b9318eaec843968e2927219a5a22347-json.log",
+        "Name": "/restartload-control-incomplete-ancestry",
+        "RestartCount": 0,
+        "Driver": "overlay2",
+        "Platform": "linux",
+        "MountLabel": "",
+        "ProcessLabel": "",
+        "AppArmorProfile": "docker-default",
+        "ExecIDs": null,
+        "HostConfig": {
+            "Binds": [
+                "restartload-control-incomplete-ancestry-data:/var/lib/rnode",
+                "/tmp/tmp.3bQuy0datx:/genesis:ro",
+                "/home/patrick/RNodeRust/.claude/worktrees/feature+node-hostlist/examples:/contracts:ro"
+            ],
+            "ContainerIDFile": "",
+            "LogConfig": {
+                "Type": "json-file",
+                "Config": {}
+            },
+            "NetworkMode": "restartload",
+            "PortBindings": {},
+            "RestartPolicy": {
+                "Name": "no",
+                "MaximumRetryCount": 0
+            },
+            "AutoRemove": false,
+            "VolumeDriver": "",
+            "VolumesFrom": null,
+            "ConsoleSize": [
+                0,
+                0
+            ],
+            "CapAdd": null,
+            "CapDrop": null,
+            "CgroupnsMode": "private",
+            "Dns": [],
+            "DnsOptions": [],
+            "DnsSearch": [],
+            "ExtraHosts": null,
+            "GroupAdd": null,
+            "IpcMode": "private",
+            "Cgroup": "",
+            "Links": null,
+            "OomScoreAdj": 0,
+            "PidMode": "",
+            "Privileged": false,
+            "PublishAllPorts": false,
+            "ReadonlyRootfs": false,
+            "SecurityOpt": null,
+            "UTSMode": "",
+            "UsernsMode": "",
+            "ShmSize": 67108864,
+            "Runtime": "runc",
+            "Isolation": "",
+            "CpuShares": 0,
+            "Memory": 0,
+            "NanoCpus": 0,
+            "CgroupParent": "",
+            "BlkioWeight": 0,
+            "BlkioWeightDevice": [],
+            "BlkioDeviceReadBps": [],
+            "BlkioDeviceWriteBps": [],
+            "BlkioDeviceReadIOps": [],
+            "BlkioDeviceWriteIOps": [],
+            "CpuPeriod": 0,
+            "CpuQuota": 0,
+            "CpuRealtimePeriod": 0,
+            "CpuRealtimeRuntime": 0,
+            "CpusetCpus": "",
+            "CpusetMems": "",
+            "Devices": [],
+            "DeviceCgroupRules": null,
+            "DeviceRequests": null,
+            "MemoryReservation": 0,
+            "MemorySwap": 0,
+            "MemorySwappiness": null,
+            "OomKillDisable": null,
+            "PidsLimit": null,
+            "Ulimits": [],
+            "CpuCount": 0,
+            "CpuPercent": 0,
+            "IOMaximumIOps": 0,
+            "IOMaximumBandwidth": 0,
+            "MaskedPaths": [
+                "/proc/asound",
+                "/proc/acpi",
+                "/proc/kcore",
+                "/proc/keys",
+                "/proc/latency_stats",
+                "/proc/timer_list",
+                "/proc/timer_stats",
+                "/proc/sched_debug",
+                "/proc/scsi",
+                "/sys/firmware",
+                "/sys/devices/virtual/powercap"
+            ],
+            "ReadonlyPaths": [
+                "/proc/bus",
+                "/proc/fs",
+                "/proc/irq",
+                "/proc/sys",
+                "/proc/sysrq-trigger"
+            ]
+        },
+        "GraphDriver": {
+            "Data": {
+                "LowerDir": "/var/lib/docker/overlay2/26f51d3a3cce453427403236f06aa354d6670b552c343c8b404d54b12dbc5839-init/diff:/var/lib/docker/overlay2/im36s4fne0x7prm7cj9pcmmas/diff:/var/lib/docker/overlay2/4nwrnog1y9tlscir48t863109/diff:/var/lib/docker/overlay2/x41gpqg8b44tqf2amgjeqe6e4/diff:/var/lib/docker/overlay2/orqot0621189qv57cb762obmn/diff:/var/lib/docker/overlay2/9a6f1652285d81dfa405f4c85398934d68189de03eb7acf432fea9c610ea5731/diff",
+                "MergedDir": "/var/lib/docker/overlay2/26f51d3a3cce453427403236f06aa354d6670b552c343c8b404d54b12dbc5839/merged",
+                "UpperDir": "/var/lib/docker/overlay2/26f51d3a3cce453427403236f06aa354d6670b552c343c8b404d54b12dbc5839/diff",
+                "WorkDir": "/var/lib/docker/overlay2/26f51d3a3cce453427403236f06aa354d6670b552c343c8b404d54b12dbc5839/work"
+            },
+            "Name": "overlay2"
+        },
+        "Mounts": [
+            {
+                "Type": "volume",
+                "Name": "restartload-control-incomplete-ancestry-data",
+                "Source": "/var/lib/docker/volumes/restartload-control-incomplete-ancestry-data/_data",
+                "Destination": "/var/lib/rnode",
+                "Driver": "local",
+                "Mode": "z",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Type": "bind",
+                "Source": "/tmp/tmp.3bQuy0datx",
+                "Destination": "/genesis",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/home/patrick/RNodeRust/.claude/worktrees/feature+node-hostlist/examples",
+                "Destination": "/contracts",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            }
+        ],
+        "Config": {
+            "Hostname": "0bbc99e285c8",
+            "Domainname": "",
+            "User": "rnode",
+            "AttachStdin": false,
+            "AttachStdout": false,
+            "AttachStderr": false,
+            "Tty": false,
+            "OpenStdin": false,
+            "StdinOnce": false,
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            ],
+            "Cmd": [
+                "run",
+                "--api-host",
+                "0.0.0.0",
+                "--data-dir",
+                "/var/lib/rnode",
+                "--protocol-port",
+                "40400",
+                "--discovery-port",
+                "40404",
+                "--api-port-grpc-external",
+                "40401",
+                "--api-port-grpc-internal",
+                "40402",
+                "--api-port-http",
+                "40403",
+                "--api-port-admin-http",
+                "40405",
+                "--api-enable-devnet-cors",
+                "--api-enable-devnet-admin-public",
+                "--dev-mode",
+                "--thread-pool-size",
+                "2",
+                "--bootstrap",
+                "rnode://9205872621d949de637e5d9106d2d39e33b18a65@restartload-bootstrap?protocol=40400&discovery=40404",
+                "--bonds-file",
+                "/genesis/bonds.txt",
+                "--wallets-file",
+                "/genesis/wallets.txt",
+                "--host",
+                "restartload-control-incomplete-ancestry",
+                "--sync-anchor",
+                "00962e6d4b3dbd4bef79cfb75c2bdb4e72cd9dfc79ae2d003de82af354328af2"
+            ],
+            "Healthcheck": {
+                "Test": [
+                    "CMD-SHELL",
+                    "curl -fsS http://localhost:40403/api/status || exit 1"
+                ],
+                "Interval": 10000000000,
+                "Timeout": 3000000000,
+                "StartPeriod": 30000000000,
+                "Retries": 5
+            },
+            "Image": "rnode:local",
+            "Volumes": null,
+            "WorkingDir": "/var/lib/rnode",
+            "Entrypoint": [
+                "rnode"
+            ],
+            "OnBuild": null,
+            "Labels": {}
+        },
+        "NetworkSettings": {
+            "Bridge": "",
+            "SandboxID": "",
+            "SandboxKey": "",
+            "Ports": {},
+            "HairpinMode": false,
+            "LinkLocalIPv6Address": "",
+            "LinkLocalIPv6PrefixLen": 0,
+            "SecondaryIPAddresses": null,
+            "SecondaryIPv6Addresses": null,
+            "EndpointID": "",
+            "Gateway": "",
+            "GlobalIPv6Address": "",
+            "GlobalIPv6PrefixLen": 0,
+            "IPAddress": "",
+            "IPPrefixLen": 0,
+            "IPv6Gateway": "",
+            "MacAddress": "",
+            "Networks": {
+                "restartload": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": null,
+                    "MacAddress": "",
+                    "DriverOpts": null,
+                    "NetworkID": "1377fb7e95682e20cb888d6296d3f071d74d59e4cf48bf0ed954cb5399924518",
+                    "EndpointID": "",
+                    "Gateway": "",
+                    "IPAddress": "",
+                    "IPPrefixLen": 0,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "DNSNames": [
+                        "restartload-control-incomplete-ancestry",
+                        "0bbc99e285c8"
+                    ]
+                }
+            }
+        }
+    }
+]

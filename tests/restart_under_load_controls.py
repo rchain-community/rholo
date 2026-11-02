@@ -52,3 +52,97 @@ def health_verdict(body):
 def proposed_after_restart(tail):
     """The victim's post-restart log tail carries a proposal."""
     return "proposed and added block" in tail
+
+
+CAPACITY = 1024
+
+
+def receiver_verdict(body, allow_full=False):
+    """None iff `/health` carries a coherent `blockPipeline` reading below the cap.
+
+    `pending` is `BlockReceiverState.blocks_st.len()` — the queue the 1024 cap is on — not the
+    validated mpsc queue the stage observers measure. The reading is advisory; this predicate only
+    makes the arm fail when a node reports the queue at (or past) capacity, which is the refusal the
+    arm is testing for. A missing or malformed reading is *unknown*, never zero.
+    """
+    pipeline = body.get("blockPipeline") if isinstance(body, dict) else None
+    if not isinstance(pipeline, dict):
+        return "blockPipeline is missing"
+    capacity = pipeline.get("capacity")
+    pending = pipeline.get("pending")
+    peak = pipeline.get("sampledPeak")
+    if capacity != CAPACITY:
+        return f"capacity is {capacity!r}, not {CAPACITY}"
+    for name, value in (("pending", pending), ("sampledPeak", peak)):
+        if type(value) is not int or value < 0 or value > CAPACITY:
+            return f"{name} is not an integer in [0, {CAPACITY}]: {value!r}"
+    if peak < pending:
+        return "sampledPeak is below pending"
+    if not allow_full and pending >= CAPACITY:
+        return "the block-receiver queue is at capacity"
+    return None
+
+
+def wrong_genesis_verdict(exit_code, log, entered_running):
+    """None iff a wrongly-pinned node refused to start and never entered Running.
+
+    The node can refuse for two reasons, both named in the log: a restored genesis that differs from
+    the pin, or a pin with no height-zero genesis to compare against. Either is a visible refusal;
+    a zero exit, silence, or a Running transition is not.
+    """
+    if entered_running:
+        return "the node entered Running despite the wrong genesis pin"
+    if exit_code == 0:
+        return "the node exited zero with the wrong genesis pin"
+    named = (
+        "differs from pinned genesis" in log
+        or "expected genesis hash is pinned but the restored DAG has no height-zero genesis" in log
+        or "expected one genesis at height zero" in log
+    )
+    if not named:
+        return "the log does not name the pinned-genesis refusal"
+    fatal = (
+        "refusing to enter Running" in log
+        or "Fatal: NodeLaunch exited with error" in log
+        or "stopping rather than serving a chain it never synced" in log
+    )
+    if not fatal:
+        return "the log does not name a fatal Running refusal"
+    return None
+
+
+def incomplete_ancestry_verdict(exit_code, log, entered_running):
+    """None iff a node asked for an ancestry no peer can serve and refused to enter Running."""
+    if entered_running:
+        return "the node entered Running without the requested ancestry"
+    if exit_code == 0:
+        return "the node exited zero with an unavailable sync anchor"
+    if "supplied no authenticated nonempty fringe" not in log:
+        return "the log does not name the missing-fringe refusal"
+    if "refusing to enter Running" not in log:
+        return "the log does not name the Running refusal"
+    return None
+
+
+def interrupted_restart_verdict(boot_ids, expect, ready_error=None):
+    """None iff the interrupted-restart sequence is what the control expects.
+
+    `boot_ids` are the victim's distinct process identities observed in order: the baseline, the
+    first start, and — for `recovered` — the second start. `detected` requires the bounded readiness
+    wait to have raised while the victim was down.
+    """
+    if not boot_ids:
+        return "no bootId was observed"
+    if len(set(boot_ids)) < 2:
+        return "the victim's process identity did not change"
+    if expect == "recovered":
+        if len(set(boot_ids)) < 3:
+            return "the second start did not produce a third process identity"
+        if ready_error is not None:
+            return f"the victim did not recover: {ready_error}"
+        return None
+    if expect == "detected":
+        if ready_error is None:
+            return "the interrupted restart was not detected as a readiness failure"
+        return None
+    return f"unknown expectation {expect!r}"

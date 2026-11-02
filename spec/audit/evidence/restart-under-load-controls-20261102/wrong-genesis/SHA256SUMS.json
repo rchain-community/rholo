@@ -1,0 +1,8 @@
+{
+  "raw/campaign.json": "d60462a4afb892f7646ba15864711453abcd10ac106b651ad1b5705500c50bfb",
+  "raw/observations.jsonl": "7835145b896c5c7ad57a9201b674a94b0516fa6c9d0bf9abe6fba905434f7f62",
+  "raw/result.json": "b178f7552e7e469e92d877fc8adaef406a69fd4055ff28ac971b58841d5e116d",
+  "raw/wrong-genesis-inspect.json": "290d009f56dfd1fdc64b9cedf3a36ec7f0cced256f0905089162889d4b45e1b8",
+  "raw/wrong-genesis.json": "4694df638388840908a86cf99e7fbd3bad30baab6a23f10d29cee9dd375e92bc",
+  "raw/wrong-genesis.log": "9fe1bf9b86ad8ad92ab0a20e7e7c0843c587cac7d650147a8b230b53dd2838c2"
+}

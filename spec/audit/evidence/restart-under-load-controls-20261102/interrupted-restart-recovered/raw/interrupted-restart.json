@@ -1,0 +1,30 @@
+{
+  "control": "interrupted-restart",
+  "result": "PASS",
+  "error": null,
+  "boot_ids": [
+    "1-1793619022395",
+    "1-1793619028840",
+    "1-1793619033257"
+  ],
+  "final": [
+    [
+      9,
+      "c88fe1d443e0ebc88fe116308da5e2c33fa238d69730c82d79c255e27e75dd44"
+    ],
+    [
+      9,
+      "c88fe1d443e0ebc88fe116308da5e2c33fa238d69730c82d79c255e27e75dd44"
+    ],
+    [
+      9,
+      "c88fe1d443e0ebc88fe116308da5e2c33fa238d69730c82d79c255e27e75dd44"
+    ],
+    [
+      9,
+      "c88fe1d443e0ebc88fe116308da5e2c33fa238d69730c82d79c255e27e75dd44"
+    ]
+  ],
+  "ready_error": null,
+  "interrupt_expect": "recovered"
+}

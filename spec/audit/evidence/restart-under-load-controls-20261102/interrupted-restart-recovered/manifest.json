@@ -1,0 +1,51 @@
+{
+  "arms": [
+    {
+      "control": "interrupted-restart",
+      "result": "PASS"
+    }
+  ],
+  "binary_sha256": "d8bcc09158115cdded6b5b692808743fb5bea60b9616d959efc42a6e9a99d611",
+  "execution_proven": false,
+  "files": [
+    {
+      "bytes": 154,
+      "kind": "json",
+      "path": "raw/campaign.json",
+      "sha256": "5f27e18c9f3c065b4eb4fe6dd983956738495f37f6fea9aab015005eeb851545"
+    },
+    {
+      "bytes": 619,
+      "kind": "json",
+      "path": "raw/interrupted-restart.json",
+      "sha256": "db174291c835a01ce276766920527d11d5908c4c8a3be3bdcf90cec5aa6c448f"
+    },
+    {
+      "bytes": 2514,
+      "kind": "jsonl",
+      "path": "raw/observations.jsonl",
+      "sha256": "f8dc628912163e244cd0553abc30754b34bc3f376d1203f17e77ea27c6fae0d4"
+    },
+    {
+      "bytes": 76,
+      "kind": "json",
+      "path": "raw/result.json",
+      "sha256": "8e969213ed7d13226227fc52225a1a014deaca562b140528d7596cdf04a7dc9c"
+    }
+  ],
+  "gate_id": "n4-restart-under-load-interrupted-restart-recovered",
+  "locality": "local-devnet",
+  "packer": {
+    "packaged_at": "2026-11-02T11:31:30+00:00",
+    "tool": "evidence-pack",
+    "version": 1
+  },
+  "redactions": [],
+  "run": {
+    "attempt": null,
+    "url": null
+  },
+  "schema": 1,
+  "source_sha": "d8b19154c4fdfd6a5321610f51935ae8d5fc24e4",
+  "verdict": "PASS"
+}

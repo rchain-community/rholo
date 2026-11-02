@@ -1,5 +1,6 @@
 """Offline falsifiers for issue #522: executable control-flow witnesses."""
 import importlib.util
+import json
 import tempfile
 import time
 import unittest
@@ -67,11 +68,63 @@ class RestartLoadHarnessTests(unittest.TestCase):
             responses = iter([{"NotProcessed": {}}, {"ProcessedWithSuccess": {}}])
             with (
                 patch.object(harness, "observed_finality", return_value=[(10, "a")]),
-                patch.object(harness.drill, "get", side_effect=lambda *_: next(responses)),
+                patch.object(harness, "get", side_effect=lambda *_: next(responses)),
                 patch.object(harness.time, "sleep", return_value=None),
             ):
                 harness.wait_deploys_resolved(1, [("deploy1", "marker", 0, 0)],
                                               time.monotonic() + 1, events, {})
+
+
+    def test_wait_new_boot_requires_a_different_process_identity(self):
+        with tempfile.TemporaryDirectory() as folder:
+            events = Path(folder) / "events.jsonl"
+            seen = iter(["1-1", "1-1", "2-2"])
+            with (
+                patch.object(harness, "boot_id", side_effect=lambda _: next(seen)),
+                patch.object(harness.time, "sleep", return_value=None),
+            ):
+                self.assertEqual(
+                    harness.wait_new_boot(0, "1-1", time.monotonic() + 1, events), "2-2"
+                )
+            self.assertIn("new_boot_id", events.read_text())
+
+    def test_wait_new_boot_fails_when_the_process_identity_never_changes(self):
+        with tempfile.TemporaryDirectory() as folder:
+            events = Path(folder) / "events.jsonl"
+            with (
+                patch.object(harness, "boot_id", return_value="1-1"),
+                patch.object(harness.time, "sleep", return_value=None),
+            ):
+                with self.assertRaisesRegex(RuntimeError, "did not restart with a new bootId"):
+                    harness.wait_new_boot(0, "1-1", time.monotonic() - 1, events)
+
+    def test_control_node_spec_drops_the_validator_identity(self):
+        config = {
+            "Entrypoint": ["rnode"],
+            "Cmd": ["run", "--bootstrap", "rnode://abc@bootstrap:40400",
+                    "--validator-private-key", "deadbeef",
+                    "--validator-private-key-path", "/var/lib/rnode/validator.hex",
+                    "--validator-public-key=04aa", "--deployer-private-key", "cafe",
+                    "--autopropose", "--propose-on-deploy", "--host", "old-name",
+                    "--port", "40400"],
+        }
+        inspected = type("R", (), {
+            "returncode": 0, "stdout": json.dumps([{"Config": config}]), "stderr": "",
+        })()
+        with patch.object(harness, "docker", return_value=inspected):
+            entrypoint, cmd = harness.control_node_spec()
+        self.assertEqual(entrypoint, ["rnode"])
+        self.assertIn("--bootstrap", cmd)
+        for dropped in ("--validator-private-key", "--validator-private-key-path",
+                        "--deployer-private-key", "--autopropose", "--propose-on-deploy",
+                        "--host", "deadbeef", "cafe", "old-name",
+                        "/var/lib/rnode/validator.hex", "--validator-public-key=04aa"):
+            self.assertNotIn(dropped, cmd)
+
+    def test_flipped_is_a_different_same_shape_hash(self):
+        value = "ab" * 32
+        self.assertNotEqual(harness.flipped(value), value)
+        self.assertEqual(len(harness.flipped(value)), 64)
 
 
 if __name__ == "__main__":

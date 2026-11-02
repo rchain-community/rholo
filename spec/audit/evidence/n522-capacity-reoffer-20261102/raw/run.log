@@ -1,0 +1,9 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.22s
+     Running unittests src/lib.rs (target/debug/deps/rchain_casper-ed9d25e6a074f420)
+
+running 1 test
+REOFFER_LOG_LINE re-offering stored pending body 2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b after its parents entered the DAG
+test block_disposition::tests::a_capacity_refused_body_survives_the_full_receiver_and_reoffers_once ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 590 filtered out; finished in 0.63s
+

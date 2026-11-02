@@ -1480,6 +1480,43 @@ mod tests {
         BlockHeight::try_from(n).unwrap()
     }
 
+    /// A `Log` that keeps every line, so a test can quote the operator-visible evidence.
+    #[derive(Default)]
+    struct CapturingLog {
+        lines: std::sync::Mutex<Vec<String>>,
+    }
+
+    impl CapturingLog {
+        fn push(&self, msg: &str) {
+            self.lines.lock().expect("log lock").push(msg.to_string());
+        }
+
+        fn lines(&self) -> Vec<String> {
+            self.lines.lock().expect("log lock").clone()
+        }
+    }
+
+    impl Log for CapturingLog {
+        fn is_trace_enabled(&self, _source: LogSource) -> bool {
+            true
+        }
+        fn trace(&self, _source: LogSource, msg: &str) {
+            self.push(msg);
+        }
+        fn debug(&self, _source: LogSource, msg: &str) {
+            self.push(msg);
+        }
+        fn info(&self, _source: LogSource, msg: &str) {
+            self.push(msg);
+        }
+        fn warn(&self, _source: LogSource, msg: &str) {
+            self.push(msg);
+        }
+        fn error(&self, _source: LogSource, msg: &str) {
+            self.push(msg);
+        }
+    }
+
     #[tokio::test]
     async fn stale_pending_snapshots_cannot_duplicate_a_claim_or_retry_a_terminal_fault() {
         let ledger = store().await;
@@ -2208,7 +2245,8 @@ mod tests {
         let receiver = tokio::sync::Mutex::new(released);
         let dag = empty_dag().await;
         let (tx, mut rx) = mpsc::channel(4);
-        let log: Arc<dyn Log> = Arc::new(rchain_shared::log::NopLog);
+        let capture = Arc::new(CapturingLog::default());
+        let log: Arc<dyn Log> = capture.clone();
         let recheck_at = now_unix_millis().saturating_add(PENDING_PARENT_RECHECK_AGE_MS);
 
         // Capacity is available again, but missing ancestry still forbids re-offer.
@@ -2229,6 +2267,11 @@ mod tests {
             "do not dispatch before parent is in the DAG"
         );
         assert!(rx.try_recv().is_err(), "no early dispatch");
+        assert!(
+            capture.lines().is_empty(),
+            "no re-offer line before the parent arrives: {:?}",
+            capture.lines()
+        );
         assert!(matches!(
             ledger.get(&block.block_hash).await.expect("durable row"),
             Some(BlockDisposition::Pending {
@@ -2264,6 +2307,27 @@ mod tests {
             block.block_hash
         );
         assert!(rx.try_recv().is_err(), "no duplicate processor delivery");
+
+        // **The operator-visible line the issue asks for.** One capacity-refused body, its parent
+        // arrives, and the runtime sweep says so exactly once — the same line an operator reads in
+        // the node log (`block_disposition.rs`, `reoffer_ready_stored_pending_once`).
+        let lines = capture.lines();
+        let reoffers: Vec<&String> = lines
+            .iter()
+            .filter(|line| line.contains("re-offering stored pending body"))
+            .collect();
+        assert_eq!(reoffers.len(), 1, "exactly one re-offer line: {lines:?}");
+        assert!(
+            reoffers[0].contains(block.block_hash.to_hex().as_str()),
+            "the line names the block: {}",
+            reoffers[0]
+        );
+        assert!(
+            reoffers[0].contains("after its parents entered the DAG"),
+            "the line names the cause: {}",
+            reoffers[0]
+        );
+        println!("REOFFER_LOG_LINE {}", reoffers[0]);
         assert!(matches!(
             ledger.get(&block.block_hash).await.expect("durable row"),
             Some(BlockDisposition::Pending {

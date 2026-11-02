@@ -493,6 +493,7 @@ mod tests {
             // rather than the trait default (which is all zeros and records nothing).
             let primary = self.shard_id.ends_with("root");
             ProposerHealth {
+                self_validation_refusal: None,
                 // **The non-primary carries the halt marker** (W-N10-04): the row is that a shard whose
                 // timer has halted off the primary was invisible, so the fixture makes exactly that
                 // shard the halted one and the primary the healthy one.

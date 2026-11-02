@@ -39,6 +39,10 @@ fn now_ms() -> i64 {
 /// A block-api error (the Scala `BlockApi.Error = String`).
 pub type ApiErr<A> = Result<A, String>;
 
+/// The deploy-status label for a deploy the pool holds but no block includes yet (#487). Shared by
+/// the producer and the settlement route so the `pooled` stage cannot drift from the status string.
+pub const POOLED_DEPLOY_STATUS: &str = "Pooled";
+
 /// What the node knows about one deployer key (`GET /api/v1/deployer/{pubkey}`): a block that
 /// includes a deploy it signed — which means the key is public — and how far down the index reaches.
 /// `block: None` is "not in any block" only when `indexed_from_height` is 0; above 0 the node is
@@ -105,11 +109,55 @@ pub struct HaltStatus {
 /// than the code does; this one says which trigger stopped, and the counter is reported beside it
 /// because that is what an operator needs to tell "quiet" from "broken" (#148's probe needs exactly
 /// that witness — the API could not tell the three causes apart).
+/// **The last counted self-validation refusal** (#485): the proposer built a block and then refused
+/// it. The code is [`crate::block_status::BlockStatus::code`] or `internal-error` - a closed
+/// vocabulary, not the prose message, because a machine reads it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct SelfValidationRefusal {
+    pub code: &'static str,
+    pub block_number: i64,
+    pub seq_num: i64,
+    pub at_unix_ms: i64,
+}
+
+/// The shared cell behind [`SelfValidationRefusal`]: the proposer writes, the snapshot reads, and a
+/// successful propose or the operator's resume clears it.
+#[derive(Clone, Debug, Default)]
+pub struct SelfValidationRefusalSink {
+    cell: Arc<Mutex<Option<SelfValidationRefusal>>>,
+}
+
+impl SelfValidationRefusalSink {
+    /// Record one counted refusal. Called on the same paths that bump the consecutive counter.
+    pub fn note(&self, code: &'static str, block_number: i64, seq_num: i64) {
+        *self.cell.lock().unpoison() = Some(SelfValidationRefusal {
+            code,
+            block_number,
+            seq_num,
+            at_unix_ms: now_ms(),
+        });
+    }
+
+    /// Clear the record. Called by the successful propose that clears the counter, and by
+    /// [`ProposeHealth::clear_halt`].
+    pub fn clear(&self) {
+        *self.cell.lock().unpoison() = None;
+    }
+
+    /// The current record, or `None` when no counted refusal stands.
+    pub fn snapshot(&self) -> Option<SelfValidationRefusal> {
+        *self.cell.lock().unpoison()
+    }
+}
+
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct ProposerHealth {
     /// Self-validation failures recorded in a row. The proposer clears it on a successful propose —
     /// "consecutive" is the whole quantity, since one success in between is a node that recovered.
     pub consecutive_self_validation_failures: u64,
+    /// **Why the last counted failure happened** (#485): the closed reason code and the refused
+    /// block. `None` after a successful propose or an operator resume. Process-local.
+    pub self_validation_refusal: Option<SelfValidationRefusal>,
     /// The shard's autopropose timer has stopped. The value is sticky — a later success does **not**
     /// clear it — and two things restart it: the process (the halt is durable, re-seeded at boot) and
     /// the operator's `POST /api/v1/autopropose/resume`. Not the same as production having stopped:
@@ -144,6 +192,9 @@ pub struct ProposeHealth {
     /// Counted rather than silently dropped: the halt is only a halt if the tap obeys it, and a
     /// refusal nobody can see is the shape that row is about.
     tap_suppressed_halted: Arc<AtomicU64>,
+    /// **Why the last counted self-validation failure happened** (#485). Written by the proposer on
+    /// the same paths that bump `failures`, cleared by the success that clears it.
+    self_validation_refusal: SelfValidationRefusalSink,
     /// **The halt on record**, as this process knows it: what the store held at boot, updated by
     /// [`ProposeHealth::note_timer_halted`]. The mirror is what keeps the surface from drifting from
     /// the store it reports — the same rule `note_reset_marker` follows for the reset marker.
@@ -167,6 +218,12 @@ impl ProposeHealth {
     /// its own to be observable.
     pub fn failures(&self) -> Arc<AtomicU64> {
         self.failures.clone()
+    }
+
+    /// The sink the proposer writes the reason into on the same paths that bump [`Self::failures`],
+    /// and clears on the success that clears it (#485).
+    pub fn self_validation_refusal(&self) -> SelfValidationRefusalSink {
+        self.self_validation_refusal.clone()
     }
 
     /// The counter the proposer bumps on a stale-snapshot self-equivocation (§48) — observable so a
@@ -273,6 +330,7 @@ impl ProposeHealth {
     pub fn clear_halt(&self) {
         self.timer_halted.store(false, Ordering::Relaxed);
         self.failures.store(0, Ordering::Relaxed);
+        self.self_validation_refusal.clear();
         self.halt_durable.store(true, Ordering::Relaxed);
         *self.halt_record.lock().unpoison() = None;
         // `notify_one`, not `notify_waiters`: a permit is *stored* when nobody is parked, so a clear
@@ -308,6 +366,7 @@ impl ProposeHealth {
     pub fn snapshot(&self) -> ProposerHealth {
         ProposerHealth {
             consecutive_self_validation_failures: self.failures.load(Ordering::Relaxed),
+            self_validation_refusal: self.self_validation_refusal.snapshot(),
             autopropose_timer_halted: self.timer_halted.load(Ordering::Relaxed),
             autopropose_halt: HaltStatus {
                 at: self.halt_record.lock().unpoison().as_ref().map(|r| r.at_ms),
@@ -769,6 +828,39 @@ mod tests {
         );
         assert_eq!(snap.autopropose_tap_suppressed, 0);
         assert_eq!(snap.stale_snapshot_self_equivocations, 0);
+    }
+
+    /// #485: the refusal sink is the live cell the proposer writes. The success that clears the
+    /// counter clears it; so does the operator's resume, which is the one way out of a halt.
+    #[test]
+    fn the_self_validation_refusal_is_the_live_cell_and_clear_halt_clears_it() {
+        let health = ProposeHealth::new();
+        let sink = health.self_validation_refusal();
+        assert!(health.snapshot().self_validation_refusal.is_none());
+
+        sink.note("justification-regression", 3122, 3122);
+        let snap = health
+            .snapshot()
+            .self_validation_refusal
+            .expect("the record is visible to the reader");
+        assert_eq!(snap.code, "justification-regression");
+        assert_eq!(snap.block_number, 3122);
+        assert_eq!(snap.seq_num, 3122);
+
+        health.note_timer_halted();
+        health.clear_halt();
+        assert!(
+            health.snapshot().self_validation_refusal.is_none(),
+            "the resume clears the reason with the counter"
+        );
+        assert_eq!(health.snapshot().consecutive_self_validation_failures, 0);
+
+        sink.note("invalid-deploy-signature", 7, 9);
+        sink.clear();
+        assert!(
+            health.snapshot().self_validation_refusal.is_none(),
+            "the success path's clear reaches the same cell"
+        );
     }
 
     /// **The count is of halts, not of calls** (W-N10-01).

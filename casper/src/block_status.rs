@@ -251,6 +251,37 @@ impl BlockStatus {
             | BlockStatus::NeglectedInvalidBlock => None,
         }
     }
+
+    /// **A stable machine-readable code** for this status, used by the diagnostic surface (#485).
+    ///
+    /// The `Display` text is a sentence for a human and may be rewritten; this may not. Kebab-case,
+    /// one code per variant. The test beside [`Self::failure_cause`]'s `ALL` array pins uniqueness and
+    /// shape, so adding a variant forces a decision here rather than inheriting a default.
+    pub fn code(&self) -> &'static str {
+        match self {
+            BlockStatus::Valid => "valid",
+            BlockStatus::InvalidBlockNumber => "invalid-block-number",
+            BlockStatus::InvalidRepeatDeploy => "invalid-repeat-deploy",
+            BlockStatus::InvalidSequenceNumber => "invalid-sequence-number",
+            BlockStatus::InvalidDeployShardId => "invalid-deploy-shard-id",
+            BlockStatus::JustificationRegression => "justification-regression",
+            BlockStatus::NeglectedInvalidBlock => "neglected-invalid-block",
+            BlockStatus::InvalidStateHash => "invalid-state-hash",
+            BlockStatus::InvalidPreStateHash => "invalid-pre-state-hash",
+            BlockStatus::InvalidBondsCache => "invalid-bonds-cache",
+            BlockStatus::InvalidRejectedDeploy => "invalid-rejected-deploy",
+            BlockStatus::ContainsExpiredDeploy => "contains-expired-deploy",
+            BlockStatus::ContainsFutureDeploy => "contains-future-deploy",
+            BlockStatus::ContainsLowCostDeploy => "contains-low-cost-deploy",
+            BlockStatus::InvalidPhloLimit => "invalid-phlo-limit",
+            BlockStatus::UnjustifiedSlash => "unjustified-slash",
+            BlockStatus::InvalidDeploySignature => "invalid-deploy-signature",
+            BlockStatus::TooManyDeploys => "too-many-deploys",
+            BlockStatus::TooManyJustifications => "too-many-justifications",
+            BlockStatus::ExceedsBlockPhloLimit => "exceeds-block-phlo-limit",
+            BlockStatus::InvalidVersion => "invalid-version",
+        }
+    }
 }
 
 impl std::fmt::Display for BlockStatus {
@@ -343,6 +374,38 @@ mod tests {
                 assert!(!status.is_valid(), "{status:?} must not be valid");
             }
         }
+    }
+
+    /// **The diagnostic code is a closed vocabulary, not the prose.** Every status has a stable
+    /// kebab-case code, and no two share one; #485's `/health.selfValidationRefusal.code` is read by
+    /// machines, so a variant added without a code (or with a duplicate) fails here.
+    #[test]
+    fn every_status_has_a_unique_kebab_code() {
+        let mut codes: Vec<&'static str> = Vec::new();
+        for status in ALL {
+            let code = status.code();
+            assert!(!code.is_empty(), "{status:?} has no code");
+            assert!(
+                code.chars()
+                    .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-'),
+                "{status:?}'s code {code:?} is not kebab-case",
+            );
+            assert!(
+                !code.starts_with('-') && !code.ends_with('-') && !code.contains("--"),
+                "{status:?}'s code {code:?} has a bad separator",
+            );
+            assert!(
+                !codes.contains(&code),
+                "two statuses share the code {code:?}"
+            );
+            codes.push(code);
+        }
+        assert_eq!(codes.len(), ALL.len());
+        assert_eq!(
+            BlockStatus::JustificationRegression.code(),
+            "justification-regression"
+        );
+        assert_eq!(BlockStatus::Valid.code(), "valid");
     }
 
     /// Every status renders a distinct, non-empty sentence — these reach an operator through the

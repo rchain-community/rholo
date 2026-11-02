@@ -307,6 +307,7 @@ fn dto_by_name(name: &str) -> Value {
             },
             admin_http: false,
             consecutive_self_validation_failures: 0,
+            self_validation_refusal: None,
             autopropose_timer_halted: false,
             autopropose_timer_halt_episodes: 0,
             autopropose_halt: HaltStatusDto {

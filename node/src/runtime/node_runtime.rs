@@ -1979,6 +1979,7 @@ async fn setup_shard_runtime(
     // registry: a value pushed only at setup would read `0` for ever. No cell is created here: the one
     // handed to `setup_shard` above is the same cell, which is why it is created before that call.
     let consecutive_failures = propose_health.failures();
+    let self_validation_refusal = propose_health.self_validation_refusal();
     let stale_snapshot_equivocations = propose_health.stale_snapshot_equivocations();
     let health_source = Source::base()
         .sub("proposer")
@@ -2312,6 +2313,7 @@ async fn setup_shard_runtime(
             propose_effect,
             log.clone(),
             consecutive_failures.clone(),
+            self_validation_refusal,
             stale_snapshot_equivocations.clone(),
             conf.casper.equivocation_injection,
             shard_health.clone(),

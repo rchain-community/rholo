@@ -85,6 +85,7 @@ shard's reading must say which.
 | `orphanDetections` | ingestion | integer | C | P | ≤5 s | monotone; the history beside the current count |
 | `proposalHalted` | consensus | bool | L | S | ≤1 s | set when the proposer is isolated; cleared by restart or operator resume |
 | `proposalHaltReason` | consensus | string? | G | S | at read | a closed code from the proposer's isolation reason |
+| `selfValidationRefusal` | consensus | object? | G | S | at read | the proposer's current **counted** self-validation refusal: `{code, blockNumber, seqNum, atUnixMs}` or null. `code` is a closed kebab-case vocabulary from `BlockStatus::code()` plus `internal-error`; cleared by the successful propose that clears `consecutiveSelfValidationFailures` and by `POST /api/v1/autopropose/resume`; a divergence refusal and a stale-snapshot self-equivocation are **not** recorded; **not** derived from logs; **not** a readiness term |
 | `finalityStalled` | finality | bool | L | S | ≤1 s | sustained refusals, not one partial layer; the field to alarm on |
 | `finalityStallEpisodes` | finality | integer | C | S | at read | durable, monotone; the durability qualifier `finalityCountersDurable` is **operator-only**, so a peer reading this field cannot verify it (§5) |
 | `lastBlockAgeMs` | progress | integer? | G | S | at read | milliseconds since a **new highest** height was accepted; **null until the first observation, never 0**; a same-height sibling does not reset it |
@@ -95,6 +96,9 @@ shard's reading must say which.
 | `finalizedHeight` | progress | integer? | G | S | ≤1 s | the finalized fence (a block's own number); **null means unknown, never zero**; read `finalizedHeightError` for why |
 | `finalizedHeightError` | progress | string? | G | S | ≤1 s | the read error when the fence is unknown; null when the read answered. An erased error is the `silent` class the type-system gate forbids |
 | `finalizedLag` | progress | integer? | G | S | ≤1 s | **`maxObservedHeight − finalizedHeight`** (equal units: both are block heights), so a fully finalised tip reads `0`; null when either side is unknown |
+
+These finality rows are **node-local**: a peer's sample is not quorum, and `ready` deliberately does
+not include finality. The client contract is [Finality is not admission](../node/admission.md#finality-is-not-admission).
 | `degraded` | resource | string | G | H | ≤5 s | advisory word from the fallback machine; never a 503 |
 | `acceptsDeploys` | resource | bool | G | P | ≤1 s | pool capacity only (Law 86a) |
 | `pool` | resource | object | G | P | ≤1 s | depth and bounds, so `acceptsDeploys = false` is explainable |
@@ -115,6 +119,10 @@ It is **not** a superset of `/health`. The two surfaces overlap in three groups,
 2. **the seven process gates** (`OPERATOR_GATE_KEYS`);
 3. **`finalityStalled` and `finalityStallEpisodes`**, the peer-liveness projection as well as the
    operator alarm (a latch and a counter, not two latches).
+
+`selfValidationRefusal` is also on both: flat on the operator surface (the primary's) and inside
+`shards` (every member's), beside the operator-only `consecutiveSelfValidationFailures` it explains
+(#485).
 
 The health-only fields are `diagVersion`, `bootId`, `ok`, `ready`, `readyReasons`, `phase`,
 `nodePhase`, `shardPhases`, `height`, `maxObservedHeight`, `finalizedHeight`, `finalizedHeightError`,
@@ -167,6 +175,10 @@ process's running total — it is a liveness hint, not an assertion about the sh
 including one that is not a validator: it says "something is talking to me", not "a validator is
 healthy". Neither caveat is a licence to promote the field into a decision.
 
+`selfValidationRefusal` is published for probes and operators, not as a peer-liveness signal: a
+peer may not use it to accept or refuse a block, to slash, or to jail. It names a local proposal
+failure, not a verdict about the sender.
+
 ## 7. Non-claims
 
 This is a field standard, not a certification. It says nothing about detection completeness: most
@@ -174,13 +186,17 @@ silent classes in §1 still have no firing test. It does not make an alarm corre
 *nameable, scoped and falsifiable*. `bootId` is a correlation id, not an authentication token.
 `finalizedLag` is a difference of **block heights** (`maxObservedHeight − finalizedHeight`, both
 block numbers), not a maturity measure and not a rate; it reads `0` when the fence is at or ahead of
-the observed tip.
+the observed tip. `selfValidationRefusal` is **process-local**: it is cleared with the counter and is
+absent after a restart until the next counted refusal, so it names the last refusal this process saw,
+not the shard's history and not a root-cause diagnosis.
 
 ## 8. Reproduce
 
 ```sh
 cargo test -p rchain-node --lib health_contract
 cargo test -p rchain-node --lib health_
+cargo test -p rchain-node --lib self_validation
+cargo test -p rchain-casper --lib self_validation
 cargo test -p rchain-node --lib the_operator_status_carries_every_readiness_gate
 tools/check-node-diagnostics.py --gate
 ```

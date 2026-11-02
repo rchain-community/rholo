@@ -182,13 +182,16 @@ readings return HTTP 503 with nullable fields. Observations can be stale; caller
 check timestamps and repeat sampling across validators before making network claims.
 
 For a specific signed deploy, poll
-`GET /api/v1/deploy-settlement/{deploy_signature}`. Its `stage` is one of
-`notProcessed`, `includedUnfinalized`, `finalityUnknown`,
-`finalizedSuccess`, `finalizedError`. Only `finalizedSuccess` sets
-`settlementConfirmed=true`. A failed block-finality lookup yields
-`finalityUnknown`, never success. All statements are explicitly node-local;
+`GET /api/v1/deploy-settlement/{deploy_signature}` - the deploy id in the
+`POST /api/v1/deploy` success string is the signature this path takes. Its `stage` is
+one of `pooled`, `notProcessed`, `includedUnfinalized`, `finalityUnknown`,
+`finalizedSuccess`, `finalizedError`. `pooled` means accepted and held but not
+executed; `notProcessed` means this node does not know the deploy. Only
+`finalizedSuccess` sets `settlementConfirmed=true`. A failed block-finality lookup
+yields `finalityUnknown`, never success. All statements are explicitly node-local;
 applications requiring independent confirmation should compare finalized hashes and
-verify bonded-validator finality attestations across multiple nodes.
+verify bonded-validator finality attestations across multiple nodes. The normative
+contract is [Finality is not admission](../node/admission.md#finality-is-not-admission).
 
 gRPC clients can make the corresponding separate queries through the existing
 `DeployService` methods: `findDeploy` / deploy status to establish inclusion,

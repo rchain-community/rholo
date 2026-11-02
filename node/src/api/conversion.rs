@@ -1,7 +1,8 @@
 //! Web API protobuf conversion functions (port of the conversion fns in `api/WebApi.scala`).
 
 use rchain_casper::api::block_api::{
-    Capabilities, DeployPoolStats, FinalityHealth, ProposerHealth, ShardHealthEntry, SyncHealth,
+    Capabilities, DeployPoolStats, FinalityHealth, ProposerHealth, SelfValidationRefusal,
+    ShardHealthEntry, SyncHealth,
 };
 use rchain_casper::runtime_manager::CapturedReply;
 use rchain_crypto::public_key::PublicKey;
@@ -18,7 +19,8 @@ use super::dto::{
     DataAtNameResponse, DeployExecStatus as ApiDeployExecStatus, DeployPoolStatus, DeployRequest,
     ExploratoryDeployResponse, FinalityHealthDto, HaltStatusDto, NodeCapabilities, OperatorStatus,
     PipelineGates, PooledDeploy, ProposerHealthDto, PublicStatus, ResourceStatusDto,
-    RhoDataResponse, RhoExprWithBlock, ShardHealthDto, SignatureException, SyncStatus, VersionInfo,
+    RhoDataResponse, RhoExprWithBlock, SelfValidationRefusalDto, ShardHealthDto,
+    SignatureException, SyncStatus, VersionInfo,
 };
 use super::rho_expr::{expr_from_par, RhoExpr};
 use crate::resources::admission::{effective_available_mb, threshold_mb};
@@ -30,6 +32,19 @@ use crate::resources::{AdmissionPolicy, ResourceSnapshot};
 /// not.
 pub const SINCE_PROCESS_START: &str = "SinceProcessStart";
 
+/// Map the proposer's last counted refusal (#485). The code is already a `'static` closed code; the
+/// DTO owns a `String` because it is serialized.
+fn to_self_validation_refusal_dto(
+    refusal: Option<SelfValidationRefusal>,
+) -> Option<SelfValidationRefusalDto> {
+    refusal.map(|r| SelfValidationRefusalDto {
+        code: r.code.to_string(),
+        block_number: r.block_number,
+        seq_num: r.seq_num,
+        at_unix_ms: r.at_unix_ms,
+    })
+}
+
 /// Map one casper [`ShardHealthEntry`] to its DTO (W-N10-04).
 fn to_shard_health_dto(entry: &ShardHealthEntry) -> ShardHealthDto {
     ShardHealthDto {
@@ -37,6 +52,9 @@ fn to_shard_health_dto(entry: &ShardHealthEntry) -> ShardHealthDto {
             consecutive_self_validation_failures: entry
                 .proposer
                 .consecutive_self_validation_failures,
+            self_validation_refusal: to_self_validation_refusal_dto(
+                entry.proposer.self_validation_refusal,
+            ),
             autopropose_timer_halted: entry.proposer.autopropose_timer_halted,
             autopropose_timer_halt_episodes: entry.proposer.autopropose_halt.episodes,
             autopropose_halt: HaltStatusDto {
@@ -126,6 +144,7 @@ pub fn to_operator_status(
         core,
         admin_http: caps.admin_http,
         consecutive_self_validation_failures: health.consecutive_self_validation_failures,
+        self_validation_refusal: to_self_validation_refusal_dto(health.self_validation_refusal),
         autopropose_timer_halted: health.autopropose_timer_halted,
         // The durable count, which is what the key always claimed to be (W-N10-01): it was an
         // in-memory count when this line was written, and a restart reset it.
@@ -466,6 +485,12 @@ mod tests {
         };
         let health = ProposerHealth {
             consecutive_self_validation_failures: 3,
+            self_validation_refusal: Some(rchain_casper::api::block_api::SelfValidationRefusal {
+                code: "justification-regression",
+                block_number: 3122,
+                seq_num: 3122,
+                at_unix_ms: 1_700_000_000_000,
+            }),
             autopropose_timer_halted: true,
             autopropose_halt: HaltStatus {
                 at: Some(1_700_000_000_000),
@@ -526,6 +551,16 @@ mod tests {
         // #157: the health is carried through, and it is the third source rather than a capability —
         // the configured mode above says nothing about whether the proposer is failing.
         assert_eq!(api.consecutive_self_validation_failures, 3);
+        // #485: the reason beside the count — the operator surface carries what the log line used
+        // to be the only carrier of.
+        let refusal = api
+            .self_validation_refusal
+            .as_ref()
+            .expect("the refusal is carried");
+        assert_eq!(refusal.code, "justification-regression");
+        assert_eq!(refusal.block_number, 3122);
+        assert_eq!(refusal.seq_num, 3122);
+        assert_eq!(refusal.at_unix_ms, 1_700_000_000_000);
         assert!(api.autopropose_timer_halted);
         // W-N10-01: the **episode count** beside the sticky flag, counted on the transition. It is the
         // durable count now — seeded from the store at boot — so unlike the flag it does not start at
@@ -900,6 +935,7 @@ mod tests {
             "undeliveredSendsScope",
             "shards",
             "consecutiveSelfValidationFailures",
+            "selfValidationRefusal",
             "staleSnapshotSelfEquivocations",
             "finalityStall",
             "finalityStalled",

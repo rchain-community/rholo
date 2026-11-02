@@ -74,6 +74,9 @@ pub const PUBLIC_HEALTH_KEYS: &[&str] = &[
     "proposalHalted",
     "ready",
     "readyReasons",
+    // #485: the proposer's last counted self-validation refusal, object or null. A diagnosis, not a
+    // readiness term; kept off the alarm vocabularies above.
+    "selfValidationRefusal",
     "shardPhases",
 ];
 

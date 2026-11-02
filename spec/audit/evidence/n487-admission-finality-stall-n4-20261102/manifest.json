@@ -1,0 +1,46 @@
+{
+  "arms": [],
+  "binary_sha256": "0f07efeab722cabc",
+  "execution_proven": false,
+  "files": [
+    {
+      "bytes": 15146,
+      "kind": "json",
+      "path": "raw/campaign.json",
+      "sha256": "773f1356905fc4a8118fe5daa7ec2354c959d7947929ee33a6798b142006e88d"
+    },
+    {
+      "bytes": 17317,
+      "kind": "jsonl",
+      "path": "raw/observations.jsonl",
+      "sha256": "5c27d469f908acec7aa839ece0f1ffe91ceea82a068219a230782c3c6288e5e0"
+    },
+    {
+      "bytes": 455,
+      "kind": "json",
+      "path": "raw/provenance.json",
+      "sha256": "685025b3676728d8ecf5589353dc1bee25d16d0f0b064d8807eb5663bd66a577"
+    },
+    {
+      "bytes": 124,
+      "kind": "json",
+      "path": "raw/result.json",
+      "sha256": "68b3eafaf93b8da212a6189d8ebf2109e4d8e56ab3f98574cda863c2a343530d"
+    }
+  ],
+  "gate_id": "n487-admission-finality-stall",
+  "locality": "local-devnet",
+  "packer": {
+    "packaged_at": "2026-11-02T14:32:44+00:00",
+    "tool": "evidence-pack",
+    "version": 1
+  },
+  "redactions": [],
+  "run": {
+    "attempt": null,
+    "url": null
+  },
+  "schema": 1,
+  "source_sha": "80d2a8fac21bc5c4a4e3e2ff782ba101e2981e19",
+  "verdict": "PASS"
+}

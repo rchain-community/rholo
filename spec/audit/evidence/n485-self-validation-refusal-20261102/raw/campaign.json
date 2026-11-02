@@ -1,0 +1,1 @@
+{"gate_id":"n485-self-validation-refusal","verdict":"PASS","arms":[{"arm":"block-status-code","result":"PASS"},{"arm":"proposer-refusal-record","result":"PASS"},{"arm":"block-api-live-cell","result":"PASS"},{"arm":"health-route","result":"PASS"},{"arm":"operator-conversion","result":"PASS"},{"arm":"lean-envelope-corpus","result":"PASS"}]}

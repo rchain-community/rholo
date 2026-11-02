@@ -188,7 +188,9 @@ silent classes in §1 still have no firing test. It does not make an alarm corre
 block numbers), not a maturity measure and not a rate; it reads `0` when the fence is at or ahead of
 the observed tip. `selfValidationRefusal` is **process-local**: it is cleared with the counter and is
 absent after a restart until the next counted refusal, so it names the last refusal this process saw,
-not the shard's history and not a root-cause diagnosis.
+not the shard's history and not a root-cause diagnosis. The deploy-side contract is the other half:
+`acceptsDeploys` is local pool capacity, never a finality signal, and the four deploy states are in
+[Finality is not admission](../node/admission.md#finality-is-not-admission).
 
 ## 8. Reproduce
 

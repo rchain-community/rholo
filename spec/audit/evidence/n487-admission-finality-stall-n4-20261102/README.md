@@ -20,14 +20,16 @@ record.
 |---|---|
 | gate | `n487-admission-finality-stall` |
 | source | `80d2a8fac21bc5c4a4e3e2ff782ba101e2981e19` |
-| binary | `0f07efeab722cabc` |
+| binary | `0f07efeab722cabc30ace442c0fbb0bfd0e35569771175407c084334d1bf226a` |
 | run | none - local disposable devnet; the source, image and binary hashes are the provenance |
 | packaged | `2026-11-02T14:32:44+00:00` |
 | verdict | **PASS** |
 
 The image is `rnode:487-local`, id `sha256:a585d6ac1626caad2e6a9066c5cad37c113d1524ed53eb5edab4c8f05ef21c7d`,
-built from the source above with `tools/devnet.sh build`. Genesis bonds and wallets are in
-`provenance.json`.
+built from the source above with `tools/devnet.sh build`. The bond set is `stakes` in
+`result.json`; the genesis capture in `provenance.json` is **empty** for this run (the harness read
+`/var/lib/rnode/genesis/...` while the devnet mounts it at `/genesis`). The harness path is corrected
+for future runs; this record does not claim a captured genesis file.
 
 Every file listed in `manifest.json` is hashed in `SHA256SUMS.json`. **`execution_proven` is
 false**: the digests prove the bytes are the bytes, not that the run happened or that its verdict is
@@ -65,7 +67,8 @@ seconds before the stall baseline; a step after that window would have failed th
 RNODE_IMAGE=rnode:487-local tools/devnet.sh build
 RNODE_IMAGE=rnode:487-local DEVNET_PREFIX=admissionstall DEVNET_NETWORK=admissionstall \
   DEVNET_GRPC_BASE=44402 DEVNET_HTTP_BASE=44403 DEVNET_ADMIN_BASE=44405 DEVNET_NODE_MEMORY=4g \
-  tools/devnet.sh up --validators 4 --stakes 100,100,50,50 --fresh
+  tools/devnet.sh up --validators 4 --stakes 100,100,50,50 --fresh \
+    --no-autopropose --no-propose-on-deploy
 RNODE_IMAGE=rnode:487-local DEVNET_PREFIX=admissionstall DEVNET_NETWORK=admissionstall \
   DEVNET_HTTP_BASE=44403 DEVNET_ADMIN_BASE=44405 \
   python3 tests/admission-finality-stall.py --validators 4 --stakes 100,100,50,50 \

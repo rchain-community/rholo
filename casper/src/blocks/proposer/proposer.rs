@@ -2643,6 +2643,7 @@ mod tests {
         let log: Arc<dyn Log> = Arc::new(rchain_shared::log::NopLog);
         let consecutive_failures = Arc::new(AtomicU64::new(0));
         let stale_snapshot_equivocations = Arc::new(AtomicU64::new(0));
+        let refusal = SelfValidationRefusalSink::default();
 
         let p = Proposer::new(
             get_seq,
@@ -2656,7 +2657,8 @@ mod tests {
             stale_snapshot_equivocations.clone(),
             false,
             block_store(),
-        );
+        )
+        .with_self_validation_refusal(refusal.clone());
 
         let (tx, rx) = tokio::sync::oneshot::channel();
         let (result, block_opt) = p
@@ -2673,6 +2675,10 @@ mod tests {
             consecutive_failures.load(Ordering::Relaxed),
             0,
             "the race must not count toward the timer halt"
+        );
+        assert!(
+            refusal.snapshot().is_none(),
+            "a self-equivocation is not a counted self-validation refusal"
         );
         assert_eq!(
             stale_snapshot_equivocations.load(Ordering::Relaxed),

@@ -332,7 +332,9 @@ does not depend on one node's availability, whatever the pool's arithmetic does 
 The rows distinguish quorum arithmetic from recovery. Restarting replays the stored state; it is not a
 guarantee that an inconsistent or diverged state will recover. The restart-under-load and
 proposer-wedge records are in
-[Incident history](incident-history.md#testnet-rebuild-and-receiver-exhaustion).
+[Incident history](incident-history.md#testnet-rebuild-and-receiver-exhaustion). A node that is still
+advertising `acceptsDeploys` during a finality stall is saying only that its local pool has room, not
+that the network can settle; see [Finality is not admission](admission.md#finality-is-not-admission).
 
 | what failed | what happens | action |
 |---|---|---|

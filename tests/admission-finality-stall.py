@@ -285,8 +285,9 @@ def provenance(validators: int, stakes: list[int]) -> dict:
         "exec", node_name(0), "sha256sum", "/usr/local/bin/rnode"
     ).stdout.split()[0]
     genesis = {
-        "bonds": docker("exec", node_name(0), "cat", "/var/lib/rnode/genesis/bonds.txt").stdout,
-        "wallets": docker("exec", node_name(0), "cat", "/var/lib/rnode/genesis/wallets.txt").stdout,
+        # The devnet mounts its genesis directory at `/genesis`, not under the data directory.
+        "bonds": docker("exec", node_name(0), "cat", "/genesis/bonds.txt").stdout,
+        "wallets": docker("exec", node_name(0), "cat", "/genesis/wallets.txt").stdout,
     }
     return {
         "source_sha": source,

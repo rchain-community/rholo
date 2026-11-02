@@ -1,0 +1,109 @@
+{
+  "arms": [],
+  "binary_sha256": "408527817d29e707b7cb72c2811fb9f0e5f05a827ad3f7aaf531dc2dce2d6101",
+  "execution_proven": false,
+  "files": [
+    {
+      "bytes": 20047,
+      "kind": "json",
+      "path": "raw/causal/comparison.json",
+      "sha256": "d899561d208548acd1007ecaa0fd57785a3ad038a0c6324df14bcf60e1bed637"
+    },
+    {
+      "bytes": 33255,
+      "kind": "json",
+      "path": "raw/causal/manifest.json",
+      "sha256": "9650919d19ce394b6022d1168ec425e3295d91005ff041e7f87d012293be1064"
+    },
+    {
+      "bytes": 14274,
+      "kind": "json",
+      "path": "raw/container-0.json",
+      "sha256": "6eadc5d942edae54d5ef39f8279a76c58109b8e873d23a1dab2d2711a9e6a45e"
+    },
+    {
+      "bytes": 14022,
+      "kind": "json",
+      "path": "raw/container-1.json",
+      "sha256": "ac1ca97c9821f142d646b90f26a3817984a2c00e146d837fdc1eef1c8b2aeb5e"
+    },
+    {
+      "bytes": 14023,
+      "kind": "json",
+      "path": "raw/container-2.json",
+      "sha256": "883821d9c0a9d22796757f89a21ae84faf173b4ffadc0f0ce8cca6d4cbef093d"
+    },
+    {
+      "bytes": 14021,
+      "kind": "json",
+      "path": "raw/container-3.json",
+      "sha256": "4376a1b14ad13749d47394a9e017f5d4c91c465acdccb879f0d3c45ba82b092b"
+    },
+    {
+      "bytes": 14022,
+      "kind": "json",
+      "path": "raw/container-4.json",
+      "sha256": "cd6aca861e51b5a3cf74f825a8ed1cd65a048db829484ab0d8268c9d131b864a"
+    },
+    {
+      "bytes": 14023,
+      "kind": "json",
+      "path": "raw/container-5.json",
+      "sha256": "e06c2bd44a6a207b038a64b3c3103db9059e75ec3be9fef3aa821cac9cf93abc"
+    },
+    {
+      "bytes": 13247,
+      "kind": "json",
+      "path": "raw/container-6.json",
+      "sha256": "facf0c7dc080d32d96751f6b5c95d02e586d38ad4af93af866e67b93947880f8"
+    },
+    {
+      "bytes": 13246,
+      "kind": "json",
+      "path": "raw/container-7.json",
+      "sha256": "d4c0e26b1de3741b14b3c77fde2adeaa4562ef4980988c8addae53acd04f9cf1"
+    },
+    {
+      "bytes": 3744,
+      "kind": "log",
+      "path": "raw/n8-campaign.log",
+      "sha256": "f07663c07ddff8478d7f2b30ed166f3e23da58a434556a80236df23aca77b229"
+    },
+    {
+      "bytes": 2754,
+      "kind": "log",
+      "path": "raw/n8-start.log",
+      "sha256": "43af5c0efa9f99b5f7299d4fa9279f2f84bcdb84cd9162b30166d5c74eebafb5"
+    },
+    {
+      "bytes": 1925847,
+      "kind": "jsonl",
+      "path": "raw/observations.jsonl",
+      "sha256": "28abfccc445708c6f20b3ef97eeb6cd95a465cd969dc94cb21c0e888bdb79312"
+    },
+    {
+      "bytes": 2277,
+      "kind": "json",
+      "path": "raw/workload-result.json",
+      "sha256": "4a9e212acf2c58cf3156f024f2a3abd58828e47e1c8873f55fb446e4c95e6ffa"
+    }
+  ],
+  "gate_id": "finalized-write-retention-n8",
+  "locality": "local-devnet",
+  "packer": {
+    "packaged_at": "2026-11-02T11:00:46+00:00",
+    "tool": "evidence-pack",
+    "version": 1
+  },
+  "redactions": [
+    "causal/node-*.json",
+    "causal/node-*.log"
+  ],
+  "run": {
+    "attempt": "1",
+    "url": "https://github.com/rhovision-org/rholo/actions/runs/41298319051/attempts/1"
+  },
+  "schema": 1,
+  "source_sha": "1705392df24210fdfebae9635d42bc86c3f1a570",
+  "verdict": "PASS"
+}

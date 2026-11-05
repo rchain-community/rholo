@@ -140,9 +140,10 @@ impl WebApiImpl {
         Ok(())
     }
 
-    /// Read the recipient's REV balance from the same finalised fringe used by the public
-    /// explore-deploy endpoint. The finalized balance determines eligibility; the persisted
-    /// ledger preserves unresolved reservations and the allocation across restarts.
+    /// Read the recipient's REV balance from the same anchor the public explore-deploy endpoint
+    /// uses: the last finalised block, or genesis when the chain has never finalised (#554). The
+    /// finalized balance determines eligibility; the persisted ledger preserves unresolved
+    /// reservations and the allocation across restarts.
     async fn finalized_rev_balance(&self, address: &str) -> Result<i64, BlockApiException> {
         let term = format!(
             r#"new return, vault(`rho:rchain:revVault`), ret in {{ vault!("getBalance", "{address}", *ret) | for (@b <- ret) {{ return!(b) }} }}"#
@@ -1317,8 +1318,9 @@ impl WebApi for WebApiImpl {
         }
 
         // The chain, not a process-local counter, owns one-grant-per-account. explore-deploy without
-        // a block hash is anchored to last-finalized-block, so this survives process restarts and
-        // cannot lock out an account that received nothing.
+        // a block hash is anchored to last-finalized-block (or genesis before anything finalises,
+        // #554), so this survives process restarts and cannot lock out an account that received
+        // nothing.
         let balance = self.finalized_rev_balance(address).await?;
         if balance >= faucet::FAUCET_AMOUNT {
             return Err(BlockApiException(format!(

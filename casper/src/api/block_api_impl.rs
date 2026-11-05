@@ -101,15 +101,10 @@ pub struct BlockApiImpl {
     relay: Option<RelayFunction>,
 }
 
-/// The messages at or above `lowest_height`, in the shape the DAG view renders.
+/// The block a **no-hash** `explore-deploy` reads (AUDIT C129, #554).
 ///
-/// Extracted from `visualize_dag` so the *empty view* is testable on its own, because it is a
-/// legitimate request rather than an error: a DAG with no blocks yet, and a `start_block_number`
-/// above the top of the chain, both filter to nothing here — and the renderer must render that empty
-/// slice rather than index it (H2a, `graph_generator::dag_as_cluster`).
-/// The block a **no-hash** `explore-deploy` reads (AUDIT C129).
-///
-/// It is the last **finalized** block, and the choice is deliberate rather than incidental.
+/// It is the last **finalized** block when the DAG has one, and otherwise the **genesis** — the
+/// block at the lowest height. Both choices are deliberate rather than incidental.
 ///
 /// The arm used to read the chain *tip* — the highest height, then an arbitrary hash from that
 /// height's set (`height_map.iter().next_back()…hashes.iter().next()`) — on the argument that a
@@ -125,12 +120,45 @@ pub struct BlockApiImpl {
 /// hash (`explore-deploy-by-block-hash`), which is an explicit choice rather than this route's
 /// silent one.
 ///
-/// Extracted from the handler so the choice is testable without a node: the fixture builds the two
-/// heights the decision is between.
+/// **A chain that has not finalized anything still has a block to read (#554).** A genesis-only
+/// history chain never finalizes: `insert_genesis` stores an empty fringe, so `latest_fringe()` is
+/// empty for ever and the finalized read refuses. That refusal is right for
+/// `/api/last-finalized-block` and `bond_status`, whose names promise real finality — the
+/// history-chain page says the former always answers "Finalized fringe is not available." there —
+/// but it is wrong for an exploratory read, whose whole state *is* the genesis block. The fallback
+/// is not the tip: genesis is agreed by construction in exactly the way the finalized block is, so
+/// it does not reopen the C129 hole. A DAG with no blocks at all still refuses with that message.
+///
+/// Extracted from the handler so the choice is testable without a node: the fixtures build the
+/// finalized-vs-tip case and the one-block/no-fringe case.
 fn exploration_anchor(dag: &DagRepresentation) -> Result<BlockHash, String> {
-    dag.last_finalized_block_unsafe()
+    match dag.last_finalized_block_unsafe() {
+        Ok(finalized) => Ok(finalized),
+        // No fringe yet: a view that holds any block holds the block at its lowest height, which
+        // is genesis on a chain built from one and is agreed by construction like the finalized
+        // block. Only a view with no block at all has nothing to name.
+        Err(no_fringe) => lowest_height_block(dag).ok_or(no_fringe),
+    }
 }
 
+/// The block at the lowest height this view holds — genesis on a chain built from one.
+///
+/// `height_map` is ordered by height and each height's set is a `BTreeSet`, so the choice is
+/// deterministic even in the degenerate case where one height holds several hashes (the lowest hash
+/// wins). Validation-failed blocks are already excluded from `height_map`, so the fallback can never
+/// name one.
+fn lowest_height_block(dag: &DagRepresentation) -> Option<BlockHash> {
+    dag.height_map
+        .first_key_value()
+        .and_then(|(_, at_height)| at_height.iter().next().copied())
+}
+
+/// The messages at or above `lowest_height`, in the shape the DAG view renders.
+///
+/// Extracted from `visualize_dag` so the *empty view* is testable on its own, because it is a
+/// legitimate request rather than an error: a DAG with no blocks yet, and a `start_block_number`
+/// above the top of the chain, both filter to nothing here — and the renderer must render that empty
+/// slice rather than index it (H2a, `graph_generator::dag_as_cluster`).
 fn view_blocks_above(dag: &DagRepresentation, lowest_height: i64) -> Vec<ValidatorBlock> {
     let to_hash_str = |bytes: &[u8]| base16::encode(bytes).chars().take(5).collect::<String>();
     dag.dag_message_state
@@ -1341,6 +1369,81 @@ mod tests {
             exploration_anchor(&dag).unwrap(),
             tip,
             "the tip is reachable by hash, but it is not this route's default"
+        );
+    }
+
+    /// **#554.** A genesis-only chain never finalizes: `insert_genesis` stores an empty fringe, so
+    /// `latest_fringe()` is empty for ever and the finalized read refuses. The exploratory read
+    /// still has a block to read — genesis, the block at the lowest height — and it is not a tip an
+    /// adversary picks.
+    #[test]
+    fn the_no_hash_exploration_read_falls_back_to_genesis_without_a_fringe() {
+        use std::collections::BTreeMap;
+
+        use rchain_block_storage::dag::finalizer::Message;
+        use rchain_block_storage::dag::message_state::DagMessageState;
+        use rchain_shared::refined::{BlockHeight, SeqNum};
+
+        let genesis = BlockHash::new([0x0c; 32]);
+        let sender = Validator::new([0u8; 65]);
+        // What `insert_genesis` builds: one validated height-0 message whose fringe is forced
+        // empty (`block-storage/src/syntax.rs:insert_genesis`), so `latest_fringe()` stays empty.
+        let genesis_msg = Message {
+            id: genesis,
+            height: BlockHeight::try_from(0).unwrap(),
+            sender,
+            sender_seq: SeqNum::try_from(0).unwrap(),
+            bonds_map: BTreeMap::new(),
+            parents: BTreeSet::new(),
+            fringe: BTreeSet::new(),
+            seen: Arc::new(BTreeSet::from([genesis])),
+        };
+        let dag = DagRepresentation {
+            dag_set: Arc::new(BTreeSet::from([genesis])),
+            child_map: Arc::new(BTreeMap::new()),
+            height_map: Arc::new(BTreeMap::from([(
+                BlockHeight::try_from(0).unwrap(),
+                BTreeSet::from([genesis]),
+            )])),
+            dag_message_state: DagMessageState::from_parts(
+                BTreeMap::from([(sender, genesis_msg.clone())]),
+                BTreeMap::from([(genesis, genesis_msg)]),
+            ),
+        };
+
+        // The premise, not an incidental: this is the state #554 is about.
+        assert!(dag.latest_fringe().is_empty(), "genesis carries no fringe");
+        assert_eq!(dag.last_finalized_block_hash(), None);
+        assert_eq!(
+            dag.last_finalized_block_unsafe().expect_err("no fringe"),
+            "Finalized fringe is not available.",
+            "the DAG's finality read keeps refusing; only the exploratory anchor falls back"
+        );
+        assert_eq!(
+            exploration_anchor(&dag).expect("genesis is the fallback"),
+            genesis,
+            "one block and no finalized set: the anchor is the block at the lowest height"
+        );
+    }
+
+    /// **#554.** A view with no block at all has nothing safe to name, so the canonical refusal is
+    /// unchanged.
+    #[test]
+    fn the_no_hash_exploration_read_refuses_an_empty_dag() {
+        use std::collections::BTreeMap;
+
+        use rchain_block_storage::dag::message_state::DagMessageState;
+
+        let dag = DagRepresentation {
+            dag_set: Arc::new(BTreeSet::new()),
+            child_map: Arc::new(BTreeMap::new()),
+            height_map: Arc::new(BTreeMap::new()),
+            dag_message_state: DagMessageState::empty(),
+        };
+        assert_eq!(
+            exploration_anchor(&dag).expect_err("no block to anchor to"),
+            "Finalized fringe is not available.",
+            "an empty DAG has no genesis to fall back to; the refusal is unchanged"
         );
     }
 

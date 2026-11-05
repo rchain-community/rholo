@@ -248,11 +248,12 @@ fn the_read_routes_answer_and_their_refusals_are_defined() {
         // and its one piece of logic is the empty-hash arm: an empty string means "the no-hash
         // default" rather than "a block whose hash is `""`".
         //
-        // **What that default *is* changed with AUDIT C129**, and this is where the change shows. The
-        // arm used to read the chain tip; it reads the **last finalized block** now, so on a node that
-        // has produced only its genesis it answers the same 400 with the same reason
-        // `/api/last-finalized-block` does — asserted below, with the route's own comment above for
-        // why refusing is the behaviour rather than an arbitrary block presented as an answer.
+        // **What that default *is* changed with AUDIT C129**, and #554 refines it. The arm used to
+        // read the chain tip; it reads the **last finalized block** now. On a node that has produced
+        // only its genesis, nothing is finalized, so it falls back to the **genesis block** — the
+        // block at the lowest height — rather than naming an arbitrary tip.
+        // `/api/last-finalized-block` still refuses there (asserted above): its name promises real
+        // finality.
         for (label, hash) in [("against the genesis block", genesis_hash.clone())] {
             let resp = client
                 .post(format!("{base}/api/v1/explore-deploy-by-block-hash"))
@@ -272,9 +273,9 @@ fn the_read_routes_answer_and_their_refusals_are_defined() {
             );
         }
 
-        // The empty-hash default, on a chain with no finalized fringe: a reported 400 naming the
-        // reason, which is exactly what `/api/last-finalized-block` answers — so the two routes cannot
-        // disagree about which block the node is talking about (AUDIT C129).
+        // The empty-hash default on a chain with no finalized fringe (#554): it anchors the read at
+        // genesis, which is the whole state of a genesis-only chain. The response names that block,
+        // so this is not a stale tip presented as an answer.
         let unrouted = client
             .post(format!("{base}/api/v1/explore-deploy-by-block-hash"))
             .json(&serde_json::json!({
@@ -287,14 +288,38 @@ fn the_read_routes_answer_and_their_refusals_are_defined() {
             .expect("POST /api/v1/explore-deploy-by-block-hash");
         assert_eq!(
             unrouted.status(),
-            400,
-            "with no finalized fringe the no-hash default refuses rather than naming an arbitrary block"
+            200,
+            "with no finalized fringe the no-hash default reads genesis rather than refusing"
         );
-        let unrouted_json: Value = unrouted.json().await.expect("refusal json");
+        let unrouted_json: Value = unrouted.json().await.expect("explore json");
         assert_eq!(
-            unrouted_json.as_str(),
-            Some("Finalized fringe is not available."),
-            "and it names the same reason the finalized-block route does: {unrouted_json}"
+            unrouted_json["expr"][0]["ExprInt"]["data"], 7,
+            "the term ran against the genesis state: {unrouted_json}"
+        );
+        assert_eq!(
+            unrouted_json["block"]["blockHash"].as_str(),
+            Some(genesis_hash.as_str()),
+            "and the default provably resolved to genesis: {unrouted_json}"
+        );
+
+        // The issue's own route: a bare JSON string body (the handler takes `Json<String>`), no block
+        // hash. It reaches the same anchor arm as the empty-hash sibling above.
+        let bare = client
+            .post(format!("{base}/api/v1/explore-deploy"))
+            .json(&serde_json::json!("@\"out\"!(7)"))
+            .send()
+            .await
+            .expect("POST /api/v1/explore-deploy");
+        assert_eq!(bare.status(), 200, "the no-hash explore-deploy answers");
+        let bare_json: Value = bare.json().await.expect("explore json");
+        assert_eq!(
+            bare_json["expr"][0]["ExprInt"]["data"], 7,
+            "the reported route runs the term at genesis: {bare_json}"
+        );
+        assert_eq!(
+            bare_json["block"]["blockHash"].as_str(),
+            Some(genesis_hash.as_str()),
+            "and it anchors at genesis: {bare_json}"
         );
 
         // `GET /api/v1/openapi.json` serves the route document. It is generated from the same route

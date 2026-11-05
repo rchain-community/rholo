@@ -149,11 +149,12 @@ fn genesis_boot_exposes_block_over_http() {
         //   * the value is the reference document's shape — `{"ExprInt":{"data":42}}` — rather than
         //     the `{"ExprInt":42}` the port used to write, which no client could read.
         //
-        // **Through the by-hash route, because the no-hash default cannot answer on this node.** AUDIT
-        // C129 made `POST /api/v1/explore-deploy` read the last *finalized* block, and a node that has
-        // produced only its genesis has no finalized fringe — so that route answers the 400 its sibling
-        // `api_surface.rs` asserts. Naming the genesis block is what lets this test keep doing the job
-        // it was written for; which of the two routes carries the term does not change any of it.
+        // **Through the by-hash route, naming the genesis block explicitly.** AUDIT C129 made
+        // `POST /api/v1/explore-deploy` read the last *finalized* block; #554 makes it fall back to
+        // genesis when nothing is finalized, so the no-hash default answers on this node now too.
+        // Naming the block here keeps this test pinned to the genesis state whatever arm of that
+        // decision a later change takes; the no-hash default itself is exercised in
+        // `api_surface.rs::the_read_routes_answer_and_their_refusals_are_defined`.
         // (Registered as C163: C129's commit changed the default and verified `--test api_surface`,
         // never this file, so this assertion had been failing unseen.)
         let explore = client

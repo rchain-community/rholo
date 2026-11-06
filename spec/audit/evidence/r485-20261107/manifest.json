@@ -1,0 +1,43 @@
+{
+  "suite": "r485-height3122-round-escape-differential",
+  "recorded_utc": "2026-11-06",
+  "input_store": {
+    "original_lmdb_data_digest_sha256": "a51a2b78551e184d9e4d9cc8c5e8a6ef0edeae78ea26dfe60bf0459a3f2183bd",
+    "original_post_run_digest_sha256": "a51a2b78551e184d9e4d9cc8c5e8a6ef0edeae78ea26dfe60bf0459a3f2183bd",
+    "store_format": 1,
+    "data_mdb_files": 8,
+    "path": "/var/lib/rnode"
+  },
+  "historical": {
+    "source_sha": "a5259969a7c5673ccdfc5dad97981d0a3607fcf0",
+    "binary_sha256": "a5b9e9de4f3a75833da50aef67a845ddc350248ec3113040bc727dbcb9bdfa01",
+    "outcome": "JUSTIFICATION_REGRESSION_AT_3122"
+  },
+  "differential": {
+    "control": {
+      "source_sha": "a5259969a7c5673ccdfc5dad97981d0a3607fcf0",
+      "workflow_run": "https://github.com/aixaria0/rchain-rust/actions/runs/42284910765",
+      "binary_sha256": "91740c78dbb22bd0b589c8e77b8bee06a1601ee173f9f36abb586ab53cefbe4a",
+      "artifact_zip_sha256": "1c5d0bb34cfa26ea4477f906c9cecc16454f9213b02e606a810dc5b2eba29f91",
+      "post_copy_lmdb_sha256": "5438bc911e169ead3b71e5b164eecc2a86a6584547959273505f9edc407bc36f",
+      "outcome": "JUSTIFICATION_REGRESSION_AT_3122"
+    },
+    "candidate": {
+      "source_sha": "7f1d4814213404107c421691a31259c501295cd8",
+      "workflow_run": "https://github.com/aixaria0/rchain-rust/actions/runs/42284921687",
+      "binary_sha256": "442cba52fa9787c572bad74bcbbb3444525b24fa4446101d7242a1ae13b3b932",
+      "artifact_zip_sha256": "09a6549ee9024af92413b98bbba004024fcd42f061f5d3554b7c148ef6347be5",
+      "post_copy_lmdb_sha256": "20f7649301d985e7c3d242700c5a9b64f34ea793394a06a1d0c3b9cfe6581b57",
+      "outcome": "PROPOSED_AND_ADDED_3122_3123_3124"
+    },
+    "source_change": "one commit, two files: block-storage/src/dag/message_state.rs; casper/src/multi_parent_casper.rs",
+    "patch": "patches/a525-plus492.diff",
+    "run_script": "scripts/paired-a525.redacted.sh",
+    "isolation": "single inherited validator identity; no-external-route namespace"
+  },
+  "original_executed_script_sha256": {
+    "r485-historical-escape-20261106.sh": "04d6993fa5572597cc522e052dbad7917a5a1f2a19f8680f42de8bdcaa7d443a",
+    "r485-historical-paired-20261106.sh": "8de1c0c16d0ee2c8091c6710225d71cdda6cbd9cf85e065152ef387f37ad0ecf"
+  },
+  "privacy": "Only public script templates replace network addresses; raw logs remain byte-for-byte identical."
+}

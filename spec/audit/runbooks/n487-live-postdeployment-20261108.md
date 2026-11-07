@@ -10,7 +10,7 @@
 
 The operator must obtain explicit maintainer approval for a **named window** and the exact **signed, low-value native-REV test transfer** (source, destination, maximum amount/fee, responsible owner and test wallet authorization) before any write. No production secrets, private keys, signing material or validator control endpoints belong in Git. The public testnet, not a disposable DevNet, is the scope.
 
-The existing option-2 contract in [admission.md](../../docs/src/node/admission.md#finality-is-not-admission) is authoritative:
+The existing option-2 contract in [admission.md](../../../docs/src/node/admission.md#finality-is-not-admission) is authoritative:
 
 - `acceptsDeploys` is **local pool capacity**, not network finality, health quorum or settlement.
 - Deploy **accepted** means the request was admitted; **pooled** means held but not executed; `ProcessedWithSuccess` / `ProcessedWithError` indicates execution in a block, **not finality**.
@@ -56,7 +56,7 @@ Keep this run **non-disruptive**. No deliberate validator shutdown, network part
 
 **Proposed maximum observation window:** 15 minutes after the single authorized submission (plus baseline/post-finalization samples), subject to maintainer pre-registration. At timeout without positive finalization, record **INCONCLUSIVE / NOT ACCEPTED**, not PASS. If A1 or A2 transition occurs between polls, retain the adjacent samples and mark the unobserved stage as **not directly observed**; do not fabricate a pooled or unfinalized observation. If the acceptance criterion requires direct proof of an intermediate state and it was missed, that arm is inconclusive. Do not submit extra deploys simply to manufacture a missing stage without another approved plan.
 
-**Negative safety check:** Throughout A1–A4, all observed stages except `finalizedSuccess` with confirmed inclusion must have `settlementConfirmed=false` (or explicit unknown) and must not be shown as settled by the test client. Fail closed on inconsistent responses; do not trust tip balance alone.
+**Negative safety check:** Throughout A1–A4, `settlementConfirmed=true` is valid **only** when the stage is `finalizedSuccess` and `finalized=true` for the inclusion block (consistent with `tests/admission_finality_stall_controls.py`). The `finalizedError` stage is a terminal execution error, **not** successful settlement. `pooled`, `notProcessed`, `includedUnfinalized` and `finalityUnknown` must never claim successful settlement. Fail closed on inconsistent responses; do not trust tip balance alone.
 
 ## 3. Abort, containment and rollback
 

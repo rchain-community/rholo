@@ -132,6 +132,15 @@ WebCrypto does not normalise S: `(r, s)` and `(r, n - s)` are both valid. Do not
 as a unique identifier. Malformed data, signature or key answers `false`; a malformed *call* (wrong
 arity, or an argument that is not a byte array) is an error, as with the hash contracts.
 
+**Rollout on an existing chain.** Installing the definition is not checkpointed, so adding it does
+not move any historical post-state root. The URN is still consensus-visible: a node without this
+process cannot validate a block that calls it, and a historical block containing a *failed* deploy
+that bound the name in ``new x(`rho:crypto:p256Verify`)`` would replay differently, because the name
+used to be an error and now resolves (replay checks the deploy's failed flag). Upgrade every
+validator together, and confirm the chain's history contains no such deploy before using it. On a
+fresh testnet or the playground this is a normal coordinated upgrade; it does not require a genesis
+reset.
+
 ## Known limitations
 
 Some surface features are known incomplete in the reference semantics (see

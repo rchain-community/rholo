@@ -837,6 +837,14 @@ impl SystemProcesses {
                 body_ref: BodyRefs::ED25519_VERIFY,
                 handler: self.ed25519_verify(),
             },
+            // **A coordinated upgrade, not a state migration — with one replay caveat to check.**
+            // The install itself is not checkpointed (`InMemHotStore::changes` excludes
+            // `installed_continuations`/`installed_joins`), so no historical post-state root moves.
+            // But this URN enters `urn_map`, so a *pre-upgrade* block carrying a failed deploy that
+            // bound the name `rho:crypto:p256Verify` in a `new` would now resolve instead of
+            // erroring, and replay compares `is_failed` (`casper/src/runtime_replay.rs`). Upgrade all
+            // validators together only after confirming the chain's history has no such deploy; old
+            // binaries cannot validate a block that calls this process. Issue #560 records the caveat.
             Definition {
                 urn: "rho:crypto:p256Verify".to_string(),
                 fixed_channel: FixedChannels::p256_verify(),

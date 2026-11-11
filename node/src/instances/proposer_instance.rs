@@ -61,6 +61,11 @@ fn log_propose_result(log: &Arc<dyn Log>, result: &(ProposeResult, Option<BlockM
                      the chain will not advance until this is fixed"
                 ),
             ),
+            ProposeStatus::SelfReplayFaultHalted => log.error(
+                source,
+                "propose halted: a self-replay fault is latched — proposing and attesting are \
+                 stopped until an operator resumes with POST /api/v1/autopropose/resume (#564)",
+            ),
             ProposeStatus::ResourcePressure(state) => log.warn(
                 source,
                 &format!(

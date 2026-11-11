@@ -12343,7 +12343,7 @@ its true length rather than as no body.
 refuses both builds, resets (rewound 9 blocks at height 1), catches up and resumes **without a
 POST**; arm 3 disables the reset, halts, holds finality frozen for 20 seconds and resumes on the
 operator route. The packed, digest-verified record is
-`spec/audit/evidence/n564-self-replay-recovery-drill-20261111/drill-readout.md`; each arm's surface
+`spec/audit/evidence/n564-self-replay-recovery-drill-20261111/raw/drill-readout.md`; each arm's surface
 snapshot carries the 786-byte refused body and the reset anchor.
 
 **RC-B remains open.** The injected refusal has the incident's shape (`ReplayCostMismatch`), not its

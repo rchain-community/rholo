@@ -863,9 +863,12 @@ are returned to the pool before the rewind. It is therefore on by default (`casp
 rather than behind `casper.self-reset`, attempted at most once per finalised anchor, and with the
 switch off the node halts proposing and attesting instead. The reset lifecycle it reuses is U11–U16's;
 the automatic post-catch-up resume (F-U23-11) and the refused-body surface are wired and tested
-(`a_caught_up_self_replay_reset_resumes_without_an_operator_post`, `the_refused_body_survives_the_restart`
-and the over-cap case), and the one-reset-per-anchor bound now has a reader. What remains is the
-**devnet drill's evidence** (`tools/self-replay-drill.sh`) and **RC-B**, which is Aria's.
+(`a_caught_up_self_replay_reset_resumes_without_an_operator_post`; `a_self_replay_reset_record_latches_the_next_boot`
+for the boot-seeded surface; `an_over_cap_refused_body_is_visible_as_unavailable_with_its_length` for
+the cap), and the one-reset-per-anchor bound now has a reader
+(`a_reset_at_an_anchor_already_attempted_is_refused`). The three-arm drill's packed, digest-verified
+evidence is `spec/audit/evidence/n564-self-replay-recovery-drill-20261111/raw/drill-readout.md`. What
+remains is **RC-B**, which is Aria's.
 
 **Built, 2026-10-10 (#320, register C274).** Dark first was the rule and it was kept: the detector, the
 `unrestorableRecords` count and the dry run shipped in §82, and the acting half came after, **off by

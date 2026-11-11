@@ -132,6 +132,11 @@ seeded from the record at boot. The tests are
 pace-rule override is
 `casper/src/blocks/proposer/proposer.rs::an_attestation_only_build_is_not_withheld_by_the_pace_rule`.
 
-**Still owed.** The devnet drill's packed evidence (`tools/self-replay-drill.sh`, three arms:
-attestation recovery, reset after an attestation failure, halt with the reset disabled) and **RC-B**,
-the trigger, which is Aria's and is blocked on validator A's runtime environment.
+**The drill, packed.** `tools/self-replay-drill.sh` ran the three arms (attestation recovery; reset
+after an attestation failure with the automatic resume; halt with the reset disabled and the operator
+resume). The digest-verified record is
+`spec/audit/evidence/n564-self-replay-recovery-drill-20261111/README.md`, with the arm-by-arm reading
+in `raw/drill-readout.md`.
+
+**Still owed.** **RC-B**, the trigger, which is Aria's and is blocked on validator A's runtime
+environment.

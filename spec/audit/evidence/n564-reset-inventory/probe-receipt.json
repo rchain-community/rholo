@@ -18,9 +18,10 @@
     }
   },
   "candidate": {
-    "utc": "2026-11-11T14:29:05.100506+00:00",
+    "utc": "2026-11-11T14:46:21.668721+00:00",
     "exit": 0,
-    "output": "\nrunning 4 tests\ntest body_without_dag_metadata_is_outside_rewind_inventory ... ok\ntest complete_empty_inventory_is_allowed ... ok\ntest known_unfinalised_deploy_is_returned_and_not_duplicated ... ok\ntest missing_dag_body_must_refuse_inventory ... ok\n\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n"
+    "output": "\nrunning 4 tests\ntest body_without_dag_metadata_is_outside_rewind_inventory ... ok\ntest known_unfinalised_deploy_is_returned_and_not_duplicated ... ok\ntest complete_empty_inventory_is_allowed ... ok\ntest missing_dag_body_must_refuse_inventory ... ok\n\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n",
+    "source_commit": "c4a5356221d558d127929817762c1d462137db3f"
   },
   "full_crate_tests": "pending CI"
 }

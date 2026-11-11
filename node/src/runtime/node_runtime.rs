@@ -2494,6 +2494,18 @@ fn cross_deploy_batch_policy() -> rchain_casper::runtime_manager::BatchPolicy {
     let verify = flag("RNODE_CROSS_DEPLOY_BATCH_VERIFY")
         .map(|v| !(v == "0" || v.eq_ignore_ascii_case("false")))
         .unwrap_or(true);
+    // **A batched play path without verification is not representable** (#564): the oracle is the
+    // only cost comparison, and a batched cost a Sequential replay refuses is a play-mode condition.
+    // The flag is honoured as far as is safe; an operator asking to disable it is told it was not.
+    let verify = if enabled && !verify {
+        eprintln!(
+            "[cost] RNODE_CROSS_DEPLOY_BATCH_VERIFY=0 is refused while batching is enabled: \
+             the batched per-deploy cost would be unchecked. Verification stays on."
+        );
+        true
+    } else {
+        verify
+    };
     let max_batch = flag("RNODE_CROSS_DEPLOY_BATCH_MAX")
         .and_then(|v| v.parse().ok())
         .unwrap_or(4);

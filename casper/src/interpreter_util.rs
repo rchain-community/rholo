@@ -18,7 +18,7 @@ use rchain_models::block_metadata::{BlockMetadata, FailureCause, SlashSeverity};
 use rchain_models::casper::protocol::casper_message::{BlockMessage, SignedDeployData};
 use rchain_models::validator::Validator;
 use rchain_rholang::errors::RholangError;
-use rchain_rholang::runtime::ReplayRhoRuntime;
+use rchain_rholang::runtime::{ReplayCostCheck, ReplayRhoRuntime};
 use rchain_rholang::system_processes::BlockData;
 use rchain_shared::base16;
 use rchain_shared::log::{Log, LogSource};
@@ -28,7 +28,9 @@ use crate::block_random_seed::BlockRandomSeed;
 use crate::block_status::BlockStatus;
 use crate::merging::{BlockIndex, ParentsMergedState};
 use crate::multi_parent_casper::get_pre_state_for_parents;
-use crate::rholang::{ReplayFailure, SystemDeployRuntimeResult, UserDeployRuntimeResult};
+use crate::rholang::{
+    CostMismatchDetail, ReplayFailure, SystemDeployRuntimeResult, UserDeployRuntimeResult,
+};
 use crate::runtime_manager::RuntimeManager;
 use crate::system_deploy::SystemDeploy;
 
@@ -1133,7 +1135,7 @@ where
         let forked = runtime
             .fork_replay_runtime(pre_state.pre_state_hash)
             .await?;
-        let replay_result = replay_block(
+        let mut replay_result = replay_block(
             runtime,
             &forked,
             block,
@@ -1142,6 +1144,75 @@ where
             &rand,
         )
         .await;
+        // **The bounded shadow replay** (#564). The production replay refuses on the cost field before
+        // it compares the declared post-state, so it never says whether the state matched. On a
+        // self-built cost refusal only, run one fresh replay with the cost check ignored, reach the
+        // checkpoint if the trace permits, and attach both verdicts to the failure. This is diagnostic:
+        // the block is still refused and never broadcast.
+        if origin == ValidationOrigin::SelfBuilt {
+            let cost_mismatch = match &replay_result {
+                Err(ReplayFailure::ReplayCostMismatch {
+                    initial_cost,
+                    replay_cost,
+                }) => Some((*initial_cost, *replay_cost)),
+                _ => None,
+            };
+            if let Some((initial_cost, replay_cost)) = cost_mismatch {
+                let shadow = runtime
+                    .fork_replay_runtime(pre_state.pre_state_hash)
+                    .await?;
+                shadow.set_replay_cost_check(ReplayCostCheck::Ignore);
+                let trace_before = rchain_rspace::replay_trace_census::snapshot();
+                let shadow_result = replay_block(
+                    runtime,
+                    &shadow,
+                    block,
+                    &pre_state.fringe_state,
+                    &pre_state.participation,
+                    &rand,
+                )
+                .await;
+                let ignored = shadow.take_ignored_cost_mismatch();
+                let (state_hash_matched, replayed_state_hash) = match &shadow_result {
+                    Ok(hash) => (Some(*hash == post_state_hash), Some(hash.to_hex())),
+                    Err(_) => (None, None),
+                };
+                let play = ignored.as_ref().and_then(|mismatch| {
+                    crate::play_cost_census::lookup(
+                        &BlockData::from_block(block),
+                        &mismatch.deploy_id,
+                    )
+                });
+                let replay = ignored
+                    .as_ref()
+                    .and_then(|mismatch| mismatch.replay_census.clone());
+                let trace =
+                    Some(trace_before.delta(&rchain_rspace::replay_trace_census::snapshot()));
+                log.warn(
+                    source,
+                    &format!(
+                        "shadow replay on self-built block #{}: state_hash_matched={:?} \
+                         replayed_state_hash={:?} cost_delta={} (declared post-state {})",
+                        block.block_number,
+                        state_hash_matched,
+                        replayed_state_hash,
+                        replay_cost - initial_cost,
+                        post_state_hash.to_hex(),
+                    ),
+                );
+                replay_result = Err(ReplayFailure::replay_cost_mismatch_with_detail(
+                    initial_cost,
+                    replay_cost,
+                    CostMismatchDetail {
+                        play,
+                        replay,
+                        state_hash_matched,
+                        replayed_state_hash,
+                        trace,
+                    },
+                ));
+            }
+        }
         // Read the recomputed hash *before* `handle_errors` consumes the result, so the disagreement
         // can be reported with both sides (#139).
         let recomputed = replay_result.as_ref().ok().cloned();

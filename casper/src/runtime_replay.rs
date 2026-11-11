@@ -30,6 +30,7 @@ use rchain_rholang::evaluate_result::EvaluateResult;
 use rchain_rholang::native_state::{NativeSystemState, PosGenesis};
 use rchain_rholang::reporting_runtime::ReportingRuntime;
 use rchain_rholang::runtime::ReplayRhoRuntime;
+use rchain_rholang::runtime::{IgnoredCostMismatch, ReplayCostCheck};
 use rchain_rholang::system_processes::BlockData;
 use rchain_rspace::checkpoint::{Checkpoint, SoftCheckpoint};
 use rchain_rspace::errors::RSpaceError;
@@ -72,6 +73,14 @@ pub trait ReplayRuntime {
     fn block_data(&self) -> BlockData;
 
     fn cost(&self) -> &CostAccounting;
+
+    /// The diagnostic shadow switch (#564). Production is `Enforce`; the self-built validation path
+    /// sets `Ignore` on one fresh fork to learn whether the declared state matched.
+    fn replay_cost_check(&self) -> ReplayCostCheck {
+        ReplayCostCheck::Enforce
+    }
+
+    fn note_ignored_cost_mismatch(&self, _mismatch: IgnoredCostMismatch) {}
 
     async fn reset(&self, root: Blake2b256Hash) -> Result<(), String>;
 
@@ -465,6 +474,10 @@ impl<'a, R: ReplayRuntime + ?Sized> RuntimeReplayOps<'a, R> {
         // `rho:rchain:deployId` resolve identically (the Scala oracle passes `NormalizerEnv(deploy)`
         // on both paths). The empty env made every deployerId/deployId-dependent deploy fail replay.
         let normalizer_env = NormalizerEnv::new(&processed_deploy.deploy);
+        // Diagnostic only (#564): the replay-side category delta for this deploy, sampled around the
+        // same evaluation the play path sampled. With the census off this is one relaxed load.
+        let census_before = rchain_rholang::accounting::cost_census_is_enabled()
+            .then(|| self.runtime.cost().census_snapshot());
         let result = self
             .runtime
             .evaluate_with_env(
@@ -489,6 +502,21 @@ impl<'a, R: ReplayRuntime + ?Sized> RuntimeReplayOps<'a, R> {
         let recorded_cost = i64::try_from(processed_deploy.cost.cost)
             .map_err(|_| ReplayFailure::replay_cost_mismatch(i64::MAX, result.cost.value))?;
         if recorded_cost != result.cost.value {
+            if self.runtime.replay_cost_check() == ReplayCostCheck::Ignore {
+                // The diagnostic shadow: keep the mismatch and let the replay reach the checkpoint,
+                // so the caller can say whether the declared post-state hash matched. This is never
+                // the acceptance path.
+                let replay_census = census_before
+                    .map(|before| before.delta(&self.runtime.cost().census_snapshot()));
+                self.runtime
+                    .note_ignored_cost_mismatch(IgnoredCostMismatch {
+                        deploy_id: processed_deploy.deploy.sig.clone(),
+                        recorded: recorded_cost,
+                        replayed: result.cost.value,
+                        replay_census,
+                    });
+                return Ok(result);
+            }
             return Err(ReplayFailure::replay_cost_mismatch(
                 recorded_cost,
                 result.cost.value,
@@ -711,6 +739,9 @@ impl<'a, R: ReplayRuntime + ?Sized> RuntimeReplayOps<'a, R> {
                 if eval_successful {
                     Err(failure)
                 } else {
+                    // Diagnostic (#564): the swallow is intentional, but it must be countable, or a
+                    // trace difference on a failed deploy is indistinguishable from a clean replay.
+                    rchain_rspace::replay_trace_census::note_swallowed_for_failed_deploy();
                     Ok(())
                 }
             }
@@ -771,6 +802,14 @@ impl ReplayRuntime for ReplayRhoRuntime {
 
     fn cost(&self) -> &CostAccounting {
         ReplayRhoRuntime::cost(self)
+    }
+
+    fn replay_cost_check(&self) -> ReplayCostCheck {
+        ReplayRhoRuntime::replay_cost_check(self)
+    }
+
+    fn note_ignored_cost_mismatch(&self, mismatch: IgnoredCostMismatch) {
+        ReplayRhoRuntime::note_ignored_cost_mismatch(self, mismatch);
     }
 
     async fn reset(&self, root: Blake2b256Hash) -> Result<(), String> {

@@ -498,6 +498,20 @@ impl Default for BatchPolicy {
     }
 }
 
+/// **A batched play path without verification is not representable** (#564).
+///
+/// The verification oracle is the only place that compares a batched per-deploy cost with the
+/// sequential one (`play_deploys_batched_with`). With it off, a batched run can record a cost a
+/// Sequential replay refuses, which is a play-mode condition the incident's evidence cannot exclude.
+/// The play mode may change speed, not accounting: an enabled batch is always verified. The node's
+/// flag reader warns when it forces this; a test caller gets the same normalization.
+fn canonical_batch_policy(mut batch: BatchPolicy) -> BatchPolicy {
+    if batch.enabled && !batch.verify {
+        batch.verify = true;
+    }
+    batch
+}
+
 /// The effective batch cap: an explicit execution-permit limit wins over the configured max, and
 /// zero is never a batch size (the proposer withholds before calling this).
 fn effective_max_batch(configured: usize, limit: Option<usize>) -> usize {
@@ -585,7 +599,7 @@ impl RuntimeManager {
 
     /// Set the cross-deploy batch policy (builder form; default off).
     pub fn with_batch_policy(mut self, batch: BatchPolicy) -> Self {
-        self.batch = batch;
+        self.batch = canonical_batch_policy(batch);
         self
     }
 
@@ -596,7 +610,7 @@ impl RuntimeManager {
 
     /// Set the batch policy in place (tests switch it between runs; production uses the builder).
     pub fn set_batch_policy(&mut self, batch: BatchPolicy) {
-        self.batch = batch;
+        self.batch = canonical_batch_policy(batch);
     }
 
     /// Set the network's genesis PoS descriptors (builder form).
@@ -935,6 +949,10 @@ impl RuntimeManager {
             deploy.data.phlo_limit,
             "deploy",
         ));
+        // Diagnostic only (#564): a per-deploy breakdown the replay can diff. With the census off,
+        // this is one relaxed load and nothing else.
+        let census_before = rchain_rholang::accounting::cost_census_is_enabled()
+            .then(|| runtime.cost().census_snapshot());
         let eval_result = match runtime
             .evaluate_with_env(&deploy.data.term, normalizer_env.to_env(), rand)
             .await
@@ -948,6 +966,10 @@ impl RuntimeManager {
             }
             Err(e) => return Err(RuntimeRunError::Other(e.to_string())),
         };
+        if let Some(before) = census_before {
+            let delta = before.delta(&runtime.cost().census_snapshot());
+            crate::play_cost_census::remember(&runtime.block_data(), &deploy.sig, delta);
+        }
         // Laws 23–25: the write-record certificate fails fast on a DFS-later read; the skew signal
         // is the complementary heuristic for the certificate's blind spot (a DFS-earlier writer
         // landing while a DFS-later op held the channel). Either way, roll back and let the caller
@@ -1990,7 +2012,15 @@ impl RuntimeManager {
                     ) => comm_multisets_match(a, b),
                     _ => false,
                 });
-        let mut accepted = oracle_hash == relaxed_hash && logs_match;
+        // **The recorded accounting is the sequential oracle's, not the relaxed run's** (#564). A
+        // relaxed execution can produce the same state and COMM multiset with a different per-deploy
+        // cost; accepting it would record a cost a Sequential replay refuses. Including the cost and
+        // the status in `accepted` sends that case to the existing oracle-results arm below, so the
+        // play mode changes speed, not accounting.
+        let outcomes_match = relaxed_user.iter().zip(&oracle_user).all(|(r, o)| {
+            r.deploy.cost == o.deploy.cost && r.deploy.is_failed == o.deploy.is_failed
+        });
+        let mut accepted = oracle_hash == relaxed_hash && logs_match && outcomes_match;
         if accepted {
             // Law 11 backstop: the shipped (relaxed) trace must rig-replay to the shipped hash.
             let processed: Vec<ProcessedDeploy> =
@@ -2831,6 +2861,30 @@ mod tests {
             100,
             "and the denominator a quorum is measured against halves — 200 against 100 is the same \
              quorum read as a different fraction of the same chain"
+        );
+    }
+
+    /// **An enabled batch always verifies** (#564): the flag cannot disable the only per-deploy cost
+    /// comparison, because a batched cost a Sequential replay refuses is a play-mode condition.
+    #[test]
+    fn a_batch_policy_without_verification_is_not_representable() {
+        let forced = canonical_batch_policy(BatchPolicy {
+            enabled: true,
+            verify: false,
+            max_batch: 4,
+        });
+        assert!(
+            forced.verify,
+            "an enabled batch must verify its per-deploy cost"
+        );
+        let off = canonical_batch_policy(BatchPolicy {
+            enabled: false,
+            verify: false,
+            max_batch: 4,
+        });
+        assert!(
+            !off.verify,
+            "verification is irrelevant when batching is off; the policy is left alone"
         );
     }
 

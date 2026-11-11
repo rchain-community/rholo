@@ -699,6 +699,147 @@ async fn play_and_replay_agree_per_deploy_for_same_key_multi_transfer() {
     );
 }
 
+/// **The ordering the incident's evidence depended on** (#564): a cost mismatch is returned before the
+/// declared post-state hash is compared, so the refusal says nothing about whether the state was
+/// correct. The record tamper changes the refund input too; the shadow replay is what reports the
+/// state verdict, and it is the only place that verdict is computed.
+#[tokio::test]
+async fn a_cost_only_tamper_is_refused_before_the_state_hash_is_compared() {
+    use rchain_rholang::accounting::set_cost_census_enabled;
+    use rchain_rholang::runtime::ReplayCostCheck;
+
+    let rm = common::build_runtime_manager().await;
+    let rand = Blake2b512Random::from_init(&[0u8; 32]);
+    let (_pre, post, _) = rm
+        .compute_genesis(
+            &[],
+            &rand,
+            BlockData::empty(),
+            &PosGenesis::default(),
+            &[seeded_vault()],
+        )
+        .await
+        .expect("compute_genesis");
+    let target = RevAddress::from_public_key(&PublicKey::new(vec![3u8; 65]))
+        .expect("target")
+        .to_base58();
+    let term = format!(
+        r#"new revVault(`rho:rchain:revVault`), deployerId(`rho:rchain:deployerId`), r in {{ revVault!("transfer", *deployerId, "{target}", 30000000, *r) | for (_ <- r) {{ Nil }} }}"#
+    );
+
+    // The census is diagnostic; enable it for this fixture so the shadow can carry the breakdown.
+    set_cost_census_enabled(true);
+    let (post_state, user_results, sys_results) = rm
+        .compute_state(
+            &post,
+            &[deploy(&term)],
+            &[],
+            &rand,
+            BlockData::empty(),
+            &fringe_state(1),
+        )
+        .await
+        .expect("play compute_state");
+    set_cost_census_enabled(false);
+    let processed: Vec<ProcessedDeploy> = user_results.into_iter().map(|r| r.deploy).collect();
+    let processed_sys: Vec<ProcessedSystemDeploy> =
+        sys_results.into_iter().map(|r| r.deploy).collect();
+    let recorded = processed[0].cost.cost;
+    assert!(recorded > 0);
+
+    // Control: the untouched record replays to the declared state and is accepted.
+    let (clean_hash, _) = rm
+        .replay_compute_state(
+            &post,
+            &processed,
+            &processed_sys,
+            &rand,
+            BlockData::empty(),
+            &fringe_state(1),
+            &BTreeMap::new(),
+            true,
+            &PosGenesis::default(),
+            &[],
+        )
+        .await
+        .expect("a clean replay");
+    assert_eq!(clean_hash, post_state);
+
+    // Tamper only the recorded cost. The enforcing replay refuses on it; the declared post-state is
+    // never compared on that path (`handle_errors` sees only `Err`).
+    let mut tampered = processed.clone();
+    tampered[0].cost.cost = recorded + 274;
+    let refused = rm
+        .replay_compute_state(
+            &post,
+            &tampered,
+            &processed_sys,
+            &rand,
+            BlockData::empty(),
+            &fringe_state(1),
+            &BTreeMap::new(),
+            true,
+            &PosGenesis::default(),
+            &[],
+        )
+        .await;
+    match refused {
+        Err(rchain_casper::rholang::ReplayFailure::ReplayCostMismatch {
+            initial_cost,
+            replay_cost,
+        }) => {
+            assert_eq!(initial_cost, i64::try_from(recorded + 274).unwrap());
+            assert_eq!(replay_cost, i64::try_from(recorded).unwrap());
+        }
+        other => panic!("expected a simple ReplayCostMismatch, got {other:?}"),
+    }
+
+    // The shadow: one fresh replay that ignores the cost check, reaches the checkpoint and reports
+    // the state verdict. The record tamper also changes the refund, so the hash is expected to move;
+    // the point is that the verdict is computed at all.
+    set_cost_census_enabled(true);
+    let shadow = rm
+        .fork_replay_runtime(post)
+        .await
+        .expect("fork a replay runtime");
+    shadow.set_replay_cost_check(ReplayCostCheck::Ignore);
+    let shadow_result = rm
+        .replay_compute_state_with(
+            &shadow,
+            &post,
+            &tampered,
+            &processed_sys,
+            &rand,
+            BlockData::empty(),
+            &fringe_state(1),
+            &BTreeMap::new(),
+            true,
+            &PosGenesis::default(),
+            &[],
+        )
+        .await;
+    let ignored = shadow
+        .take_ignored_cost_mismatch()
+        .expect("the shadow records the mismatch it let through");
+    assert_eq!(ignored.recorded, i64::try_from(recorded + 274).unwrap());
+    assert_eq!(ignored.replayed, i64::try_from(recorded).unwrap());
+    assert!(
+        ignored.replay_census.is_some(),
+        "the shadow carries the replay-side breakdown when the census is on"
+    );
+    assert!(
+        shadow_result.is_ok(),
+        "the shadow reaches the checkpoint; a trace refusal is the only other arm"
+    );
+    if let Ok((shadow_hash, _)) = shadow_result {
+        assert_ne!(
+            shadow_hash, post_state,
+            "a changed record changes the refund input and therefore the state; the verdict is real"
+        );
+    }
+    set_cost_census_enabled(false);
+}
+
 #[tokio::test]
 async fn play_and_replay_agree_for_escrow_round_trip_deploy() {
     let rm = common::build_runtime_manager().await;

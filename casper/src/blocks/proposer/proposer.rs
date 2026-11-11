@@ -180,7 +180,27 @@ struct SelfReplayTracker {
     last: Option<(BTreeSet<DeployId>, &'static str)>,
     attempts: u64,
     excluded: BTreeSet<DeployId>,
-    last_selected: BTreeSet<DeployId>,
+    /// **The pool selection keyed by the block it produced** (#564): `(height, sender, seq,
+    /// pre_state_hash)`. The association is per block, not a single "last" cell, so a second caller
+    /// that creates a block between this one's creation and its refusal cannot misattribute the set.
+    /// Bounded; the key exists only until the block is accepted or refused.
+    selected: BTreeMap<SelfReplayBlockKey, BTreeSet<DeployId>>,
+}
+
+/// The identity of a created block that carries a selection: height, sender and pre-state. One block
+/// per validator per round is the protocol rule, and the pre-state distinguishes a re-derivation from
+/// the block it replaces; the sequence is derived from the parent set and is not needed in the key.
+type SelfReplayBlockKey = (i64, Vec<u8>, Vec<u8>);
+
+const MAX_SELECTED_BLOCKS: usize = 8;
+
+/// The identity of a created block, as the selection is keyed.
+fn self_replay_block_key(block: &BlockMessage) -> SelfReplayBlockKey {
+    (
+        i64::from(block.block_number),
+        block.sender.as_bytes().to_vec(),
+        block.pre_state_hash.as_bytes().to_vec(),
+    )
 }
 
 impl SelfReplayTracker {
@@ -210,14 +230,24 @@ impl SelfReplayTracker {
         self.excluded.clone()
     }
 
-    /// Remember what this attempt selected, before the dummy-deploy fallback.
-    fn set_selected(&mut self, ids: BTreeSet<DeployId>) {
-        self.last_selected = ids;
+    /// Remember what this block selected, before the dummy-deploy fallback.
+    fn set_selected(&mut self, key: SelfReplayBlockKey, ids: BTreeSet<DeployId>) {
+        if self.selected.len() >= MAX_SELECTED_BLOCKS {
+            if let Some(oldest) = self.selected.keys().next().cloned() {
+                self.selected.remove(&oldest);
+            }
+        }
+        self.selected.insert(key, ids);
     }
 
-    /// The deploy ids this proposer last selected from the pool.
-    fn selected(&self) -> BTreeSet<DeployId> {
-        self.last_selected.clone()
+    /// The deploy ids the block with this identity selected from the pool.
+    fn selected(&self, key: &SelfReplayBlockKey) -> BTreeSet<DeployId> {
+        self.selected.get(key).cloned().unwrap_or_default()
+    }
+
+    /// Drop the association once the block has been accepted or refused.
+    fn forget_selected(&mut self, key: &SelfReplayBlockKey) {
+        self.selected.remove(key);
     }
 
     /// A success clears the run — "consecutive" is the quantity — but **not** the exclusions: the
@@ -411,7 +441,11 @@ impl Proposer {
                     self.self_validation_refusal.clear();
                     // A success ends the run; the exclusions stay, because a deploy this node could
                     // not rebuild must not return to selection on the next block (#564).
-                    self.self_replay.lock().unpoison().clear_attempts();
+                    {
+                        let mut tracker = self.self_replay.lock().unpoison();
+                        tracker.clear_attempts();
+                        tracker.forget_selected(&self_replay_block_key(&block));
+                    }
                     (self.propose_effect)(&block).await;
                     // **The equivocation injection**, when armed: a second, equally valid block at the
                     // same `(sender, seq_num)`. Loud on every block, because a node that is doing this
@@ -468,9 +502,10 @@ impl Proposer {
                         .iter()
                         .map(|d| d.deploy.sig.clone())
                         .collect();
+                    let block_key = self_replay_block_key(&block);
                     let (attempts, pool_ids) = {
                         let mut tracker = self.self_replay.lock().unpoison();
-                        let selected = tracker.selected();
+                        let selected = tracker.selected(&block_key);
                         let pool_ids: BTreeSet<DeployId> =
                             refused.intersection(&selected).cloned().collect();
                         let attempts = tracker.record(&refused, failure.code());
@@ -1750,10 +1785,16 @@ where
     .await?;
     // Remember what selection actually chose, **before** the dev-mode dummy fallback: a refusal of a
     // dummy-only block is not deploy-set-scoped, and the refusal arm distinguishes the two by this set.
+    // Keyed by the block it will produce, so a later create/validate cannot overwrite it.
+    let selection_key = (
+        i64::from(next_block_num),
+        creators_validator.as_bytes().to_vec(),
+        pre_state_hash.as_bytes().to_vec(),
+    );
     self_replay
         .lock()
         .unpoison()
-        .set_selected(deploys.iter().cloned().collect());
+        .set_selected(selection_key, deploys.iter().cloned().collect());
     // **A block with nothing to include says why** (issue #356). Reported here rather than at the
     // callers because this is where the reasons are known, and only on this path.
     if deploys.is_empty() {
@@ -2915,10 +2956,10 @@ mod tests {
     async fn a_self_replay_failure_is_bounded_and_not_counted_as_divergence() {
         let tracker = Arc::new(Mutex::new(SelfReplayTracker::default()));
         let id = vec![7u8; 65];
-        tracker
-            .lock()
-            .unpoison()
-            .set_selected(BTreeSet::from([id.clone()]));
+        tracker.lock().unpoison().set_selected(
+            (0, vec![0u8; 65], vec![0u8; 32]),
+            BTreeSet::from([id.clone()]),
+        );
         let p = proposer_failing_self_replay(
             crate::rholang::ReplayFailure::replay_cost_mismatch(5576, 5302),
             block_with_deploy_sig(7),

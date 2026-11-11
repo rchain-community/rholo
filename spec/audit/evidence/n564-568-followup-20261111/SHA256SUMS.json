@@ -1,0 +1,32 @@
+{
+  "run_url": "https://github.com/aixaria0/rchain-rust/actions/runs/43054121454",
+  "job_url": "https://github.com/aixaria0/rchain-rust/actions/runs/43054121454/job/130638879775",
+  "artifact_id": 13871561136,
+  "artifact_archive_sha256": "84404b354ef1409940a1e1b98c33f79594dfb5c1e4ede911e0705124ce8fb4ef",
+  "downloaded_archive_digest_matched": true,
+  "artifact_file_to_committed_file": {
+    "availability-negative.json": "availability-negative.json",
+    "availability-negative.log": "availability-negative.txt",
+    "combined-reset.log": "combined-reset.txt",
+    "incident-m15.log": "incident-m15.txt",
+    "incident-probe.json": "incident-probe.json",
+    "omega_rcb_m15.rs": "omega_rcb_m15.rs",
+    "c366-rust.patch": "c366-rust.patch",
+    "review-receipt.json": "run-receipt.json"
+  },
+  "note": "run-receipt.json log_sha256 keys name files in the original downloadable run artifact. The mapping records renamed committed copies; each copy preserves its bytes.",
+  "committed_file_sha256": {
+    "README.md": "b69ea43a1d77f31b4de108e1a2c99984c9a77e092fb3392c48ae74daa14b1533",
+    "availability-negative.json": "ed11c3a0eb1642b3edb7c147b236e4d94eff6555d7903c8ede83c2279aa4b1e8",
+    "availability-negative.txt": "baf5c70fc7fa5275f85c8615f374f6fb8eb7d5af0c2dcd8a2e56ae519f5f1256",
+    "c366-rust.patch": "eb7d42652579dc7a24d8fabd40aebb2686279de84448891bbd6a8969ecd1c15c",
+    "combined-reset.txt": "814938db931aea3e64e3706ca912eae4019843793bf660c0e93faafe5ebe8523",
+    "incident-m15.txt": "afa7054a3053befa32aad066c63ebc487af0dad9a6019b9bcaede9e769a1ec17",
+    "incident-probe.json": "03e591ba8074518c11893d60bf0bf184d57ea9437a77374218783e041543d54b",
+    "omega_rcb_m15.rs": "b68bf0990baebe6d4f0417b6ab38c975c5183d4d1c313a173c3a94f5fb9dc6a5",
+    "pack-check.json": "c6bb713669d4a54e6de394ea52b3325ff5028618c140670a44f18ce55f81bd69",
+    "run-receipt.json": "135881674b445639291956d1dfc51e25cfe08dd6f0e66adf927d02bae00090d4",
+    "runtime-A.json": "d1f47aa6d675f1a918bac74ff27836981db2ec71ffa35609cbc7762f960eca81"
+  },
+  "scope": "digest matches establish byte identity; observed execution is the separately linked Actions job"
+}

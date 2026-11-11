@@ -1,0 +1,72 @@
+ Downloading crates ...
+  Downloaded tonic-prost-build v0.14.6
+  Downloaded tonic-prost v0.14.6
+  Downloaded tonic-build v0.14.6
+  Downloaded roxmltree v0.21.1
+  Downloaded tonic v0.14.6
+  Downloaded pulldown-cmark v0.13.5
+  Downloaded tokio v1.53.3
+   Compiling tokio v1.53.3
+   Compiling pulldown-cmark v0.13.5
+   Compiling pulldown-cmark-to-cmark v22.0.1
+   Compiling prost-build v0.14.4
+   Compiling tonic-build v0.14.6
+   Compiling tonic-prost-build v0.14.6
+   Compiling rchain-models v0.1.0 (/home/runner/work/rchain-rust/rchain-rust/models)
+   Compiling tokio-util v0.7.19
+   Compiling h2 v0.4.16
+   Compiling tower v0.5.3
+   Compiling rchain-shared v0.1.0 (/home/runner/work/rchain-rust/rchain-rust/shared)
+   Compiling hyper v1.11.0
+   Compiling axum v0.8.9
+   Compiling hyper-util v0.1.21
+   Compiling hyper-timeout v0.5.2
+   Compiling tokio-stream v0.1.19
+   Compiling rchain-crypto v0.1.0 (/home/runner/work/rchain-rust/rchain-rust/crypto)
+   Compiling tonic v0.14.6
+   Compiling rchain-rspace v0.1.0 (/home/runner/work/rchain-rust/rchain-rust/rspace)
+   Compiling tonic-prost v0.14.6
+   Compiling tokio-rustls v0.26.6
+   Compiling rchain-sdk v0.1.0 (/home/runner/work/rchain-rust/rchain-rust/sdk)
+   Compiling roxmltree v0.21.1
+   Compiling rchain-block-storage v0.1.0 (/home/runner/work/rchain-rust/rchain-rust/block-storage)
+   Compiling rchain-rholang v0.1.0 (/home/runner/work/rchain-rust/rchain-rust/rholang)
+   Compiling rchain-comm v0.1.0 (/home/runner/work/rchain-rust/rchain-rust/comm)
+   Compiling rchain-casper v0.1.0 (/home/runner/work/rchain-rust/rchain-rust/casper)
+    Finished `test` profile [unoptimized] target(s) in 27.70s
+     Running tests/omega_rcb_m15.rs (target/debug/deps/omega_rcb_m15-babb82ed2cef2781)
+
+running 3 tests
+[deploy] deployer=0000000000000000 ok cost=984 
+[deploy] deployer=0000000000000000 FAILED (state changes reverted) cost=599 Error: Operator `+` is not defined on String.
+[deploy] deployer=0000000000000000 ok cost=3 
+CONTROL M01 transfer+Nil: trace_lengths=[5, 0]
+CONTROL M01 transfer+Nil: play costs=[984, 3] failed=[false, false] total=987
+CONTROL M04 failed COMM: trace_lengths=[3]
+CONTROL M04 failed COMM: play costs=[599] failed=[true] total=599
+CONTROL M04 failed COMM: replay OK state_match=true
+test omega_rcb_original_failed_comm_control ... ok
+CONTROL M01 transfer+Nil: replay OK state_match=true
+test omega_rcb_original_transfer_control ... ok
+[deploy] deployer=0000000000000000 ok cost=984 
+[deploy] deployer=0000000000000000 ok cost=444 
+[deploy] deployer=0000000000000000 ok cost=984 
+M15 transient variant 0: trace_lengths=[5, 3, 5]
+M15 transient variant 0: play costs=[984, 444, 984] failed=[false, false, false] total=2412
+M15 transient variant 0: replay OK state_match=true
+[deploy] deployer=0000000000000000 ok cost=984 
+[deploy] deployer=0000000000000000 ok cost=926 
+[deploy] deployer=0000000000000000 ok cost=984 
+M15 transient variant 1: trace_lengths=[5, 6, 5]
+M15 transient variant 1: play costs=[984, 926, 984] failed=[false, false, false] total=2894
+M15 transient variant 1: replay OK state_match=true
+[deploy] deployer=0000000000000000 ok cost=984 
+[deploy] deployer=0000000000000000 FAILED (state changes reverted) cost=1081 Error: Operator `+` is not defined on String.
+[deploy] deployer=0000000000000000 ok cost=984 
+M15 transient variant 2: trace_lengths=[5, 6, 5]
+M15 transient variant 2: play costs=[984, 1081, 984] failed=[false, true, false] total=3049
+M15 transient variant 2: replay OK state_match=true
+test omega_rcb_original_transient_comm_m15 ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.39s
+

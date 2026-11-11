@@ -93,3 +93,10 @@ is per processed deploy; the incident cost pair is not a measured block total.
 No original trigger reproduction is claimed.
 
 — Ω-WITNESS
+
+## Recovery follow-on and RC-B verification
+
+[The #568 follow-up record](../n564-568-followup-20261111/README.md) preserves the focused review,
+failed-storage counterexample, sixteen-case combined reset result, original-source M15 probes and
+read-only validator-A observation. It distinguishes proposed #568 behavior from the merged base
+and leaves the historical 274-phlo trigger open.

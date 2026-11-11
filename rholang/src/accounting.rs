@@ -14,6 +14,7 @@ use num_bigint::BigInt;
 
 use rchain_models::runtime::{BindPattern, ListParWithRandom, TaggedContinuation};
 use rchain_models::sorted::SortedProc;
+use rchain_shared::lock::Unpoison;
 use rchain_shared::serialize::Serialize;
 
 use crate::errors::RholangError;
@@ -748,7 +749,7 @@ impl CostAccounting {
     /// The diagnostic breakdown as of now. A per-deploy delta is
     /// `after.census_snapshot().delta(&before)`; see [`CostCensusSnapshot::delta`].
     pub fn census_snapshot(&self) -> CostCensusSnapshot {
-        let state = self.census.lock().unwrap_or_else(|e| e.into_inner());
+        let state = self.census.lock().unpoison();
         CostCensusSnapshot {
             total: self.total_charged(),
             charges: self.charges.load(Ordering::Relaxed),
@@ -794,7 +795,7 @@ impl CostAccounting {
                     if amount_value < 0 {
                         self.negative_charges.fetch_add(1, Ordering::Relaxed);
                     }
-                    let mut census = self.census.lock().unwrap_or_else(|e| e.into_inner());
+                    let mut census = self.census.lock().unpoison();
                     census.record(&amount.operation, amount_value);
                 }
                 if prev - amount_value < 0 {
@@ -918,7 +919,7 @@ mod tests {
     /// must record the positive charges and the negative refunds at the same choke point.
     #[test]
     fn the_census_records_each_charge_without_moving_the_total() {
-        let _guard = CENSUS_TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = CENSUS_TEST_LOCK.lock().unpoison();
         let off = CostAccounting::from_initial(Cost::new(10_000, "test"));
         set_cost_census_enabled(false);
         off.charge(Cost::new(40, "parsing")).unwrap();
@@ -953,7 +954,7 @@ mod tests {
     /// A per-deploy delta names what moved, and drops the keys that did not.
     #[test]
     fn the_census_delta_names_only_the_charges_that_moved() {
-        let _guard = CENSUS_TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = CENSUS_TEST_LOCK.lock().unpoison();
         set_cost_census_enabled(true);
         let a = CostAccounting::from_initial(Cost::new(10_000, "test"));
         let before = a.census_snapshot();

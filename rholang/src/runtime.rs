@@ -626,20 +626,14 @@ impl ReplayRhoRuntime {
     /// Record a mismatch the shadow let through. The first one wins: a shadow replay is for one
     /// diagnosis, not a list.
     pub fn note_ignored_cost_mismatch(&self, mismatch: IgnoredCostMismatch) {
-        let mut slot = self
-            .ignored_cost_mismatch
-            .lock()
-            .unwrap_or_else(|e| e.into_inner());
+        let mut slot = self.ignored_cost_mismatch.lock().unpoison();
         if slot.is_none() {
             *slot = Some(mismatch);
         }
     }
 
     pub fn take_ignored_cost_mismatch(&self) -> Option<IgnoredCostMismatch> {
-        self.ignored_cost_mismatch
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .take()
+        self.ignored_cost_mismatch.lock().unpoison().take()
     }
 
     /// Set the per-block data exposed to the `rho:block:data` contract (port of `setBlockData`).

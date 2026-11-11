@@ -14,6 +14,7 @@ use std::sync::{Mutex, OnceLock};
 
 use rchain_rholang::accounting::CostCensusSnapshot;
 use rchain_rholang::system_processes::BlockData;
+use rchain_shared::lock::Unpoison;
 
 /// The number of recent play entries kept. A block carries at most `MAX_BLOCK_DEPLOYS` (255), so one
 /// block's entries fit; the cap is a process-memory bound, not a correctness threshold.
@@ -44,7 +45,7 @@ fn key(block: &BlockData) -> (i64, i64, Vec<u8>) {
 /// Record the play path's per-deploy breakdown. Called only when the census is on.
 pub fn remember(block: &BlockData, deploy_id: &[u8], snapshot: CostCensusSnapshot) {
     let (block_number, seq_num, sender) = key(block);
-    let mut table = table().lock().unwrap_or_else(|e| e.into_inner());
+    let mut table = table().lock().unpoison();
     if let Some(entry) = table.iter_mut().find(|e| {
         e.block_number == block_number
             && e.seq_num == seq_num
@@ -69,7 +70,7 @@ pub fn remember(block: &BlockData, deploy_id: &[u8], snapshot: CostCensusSnapsho
 /// The play breakdown for this deploy, if the census recorded one.
 pub fn lookup(block: &BlockData, deploy_id: &[u8]) -> Option<CostCensusSnapshot> {
     let (block_number, seq_num, sender) = key(block);
-    let table = table().lock().unwrap_or_else(|e| e.into_inner());
+    let table = table().lock().unpoison();
     table
         .iter()
         .rev()
@@ -84,5 +85,5 @@ pub fn lookup(block: &BlockData, deploy_id: &[u8]) -> Option<CostCensusSnapshot>
 
 /// Drop every entry. Tests use this; a process restart does the same.
 pub fn clear() {
-    table().lock().unwrap_or_else(|e| e.into_inner()).clear();
+    table().lock().unpoison().clear();
 }

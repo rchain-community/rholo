@@ -63,13 +63,13 @@ needed for `> 2/3` caps finality for everyone.
 | F-U23-02 | MORE | measured (tracker test) | S1 | L-D | fixed: the three-strike is gone; the stage is keyed by pre-state |
 | F-U23-03 | LESS | measured (halt test) | S1 | L-C | fixed: the latch is read by every trigger and parks the timer |
 | F-U23-04 | AS WELL AS | measured (recovery test) | S2 | L-D | fixed: the suspect set and the record survive the recovery |
-| F-U23-05 | PART OF | read; boot test owed | S2 | L-C | open until the boot test |
+| F-U23-05 | PART OF | measured (reset boot test) | S2 | L-C | fixed: a `ResetRequested`/`Halted` stage seeds the halt |
 | F-U23-06 | OTHER THAN | measured (recovery test) | S1 | L-D | fixed: selection-only, attestation-only, refused block never inserted |
 | F-U23-07 | REVERSE | read; create_block test owed | S1 | L-D | open until the pace-rule test |
 | F-U23-08 | EARLY | measured (tracker test) | S3 | L-D | fixed: suspect at one pre-state, retried at another |
 | F-U23-09 | LATE | measured (reset/halt test) | S1 | L-C | fixed: one finalised-anchor reset, recorded first |
 | F-U23-10 | BEFORE | measured (record codec + reset/halt test) | S2 | L-D | fixed: body, verdict and ids are durable before the transition |
-| F-U23-11 | AFTER | measured (latch/resume); boot test owed | S2 | L-C | open until the boot test |
+| F-U23-11 | AFTER | measured (latch/resume + boot test) | S2 | L-C | fixed: the boot seed obeys the stage; the automatic post-catch-up resume is owed |
 
 ## §5 Table B — barriers that held
 
@@ -119,8 +119,8 @@ fault. The code paths are in §1 and the issue timeline is the measurement.
 claim it. The prior pass's sentence "the cause of the 274 is not established" was true of RC-B and
 wrong as a statement about the incident.
 
-**What is owed.** The boot tests for the `ResetRequested`/`Halted` stage (F-U23-05/11), the
-`create_block` pace-rule test (F-U23-07), and the devnet drill (three arms: attestation recovery, reset
-after an attestation failure, halt on recurrence). The automatic post-catch-up resume is not wired:
-the reset halts, and an operator resume is the explicit way back. That is safe and bounded, not
-silent.
+**What is owed.** The `create_block` pace-rule test (F-U23-07) and the devnet drill (three arms:
+attestation recovery, reset after an attestation failure, halt on recurrence). The automatic
+post-catch-up resume is not wired: the reset halts, and an operator resume is the explicit way back.
+That is safe and bounded, not silent. The boot test for the `ResetRequested`/`Halted` stage is in
+`casper/tests/reset.rs::a_self_replay_reset_record_latches_the_next_boot`.

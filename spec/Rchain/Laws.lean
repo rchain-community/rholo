@@ -5269,7 +5269,8 @@ def lawsC : List Law := [
       the fault state has an exit and that the exit is not a no-op. The automatic post-catch-up resume \
       is not part of the model: the implemented reset latches the halt and the operator resume is the \
       explicit way back. The Rust witnesses are the recovery and reset/halt proposer tests; the boot \
-      seed and the `create_block` pace rule remain owed (U23 F-05/F-07/F-11)." },
+      seed now has a boot test; the `create_block` pace rule remains owed (U23 F-07), and the
+      automatic post-catch-up resume is not part of the model." },
 ]
 
 def laws : List Law := lawsA ++ lawsB ++ lawsC

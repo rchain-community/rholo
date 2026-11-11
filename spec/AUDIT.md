@@ -102,9 +102,9 @@ on the rows that are not reads.
 
 ## Check-off
 
-**Findings  TODO 0 · IN PROGRESS 10 · DONE 390** &nbsp;&nbsp;·&nbsp;&nbsp; **Coverage  all 89 T1 modules read**
+**Findings  TODO 0 · IN PROGRESS 11 · DONE 390** &nbsp;&nbsp;·&nbsp;&nbsp; **Coverage  all 89 T1 modules read**
 
-**Laws  194 of 400 findings name one** (ceiling 206; 206 done row(s) unclassified)
+**Laws  195 of 401 findings name one** (ceiling 206; 206 done row(s) unclassified)
 
 **Both halves are closed.** A `done` row is settled -- fixed, assessed faithful, a
 deliberate deviation, or refuted -- and names what holds it where there is evidence to
@@ -112,7 +112,7 @@ name. What that does *not* mean is stated under each half below.
 
 ### Findings — closed
 
-All 400 are settled: **336 name the evidence that holds them** and **64 do not** — the
+All 401 are settled: **337 name the evidence that holds them** and **64 do not** — the
 second number is the honest residual, and a column rather than an implication. A `done`
 row says the fix is in the tree or that the decision was taken; it does not say either is
 right. Read a row that matters at the § its account cites.
@@ -124,7 +124,7 @@ verdict of `cleared`, 24 produced a finding, and 4 are `exempt` with a reason cl
 The twenty reads of the 2026-09-27 coverage pass are in the pass record, and two of them found
 defects this register had not recorded (C164, C165).
 
-### IN PROGRESS (10)
+### IN PROGRESS (11)
 
 | id | what | what closes it | account |
 |---|---|---|---|
@@ -138,6 +138,7 @@ defects this register had not recorded (C164, C165).
 | `C361` | **The self-replay fault had no safe exit: the 45-hour freeze is RC-A, not the 274.** A deploy-scoped refusal with fewer than three attempts returned NotEnoughNewBlocks with no counter, no latch and no durable state; needs_retry re-queued it; exclusion at three was a selection filter; the halt counter was read only by the autopropose timer; restart re-entered the same input; and the only safe reset was wired to an exhausted divergence record. The validator never broadcast, its latest message froze, and finality was capped. RC-A is established; RC-B (the 274 cause) remains open. | owed: the devnet drill (attestation, reset and halt arms). | §155 |
 | `C364` | **A self-replay fault could not reach the R3 reset.** ResetRequest had one reason and one producer, the exhausted divergence budget, which a self-replay fault never spends. ResetReason::SelfReplayFault now raises one reset to the last finalised anchor after the attestation fallback fails, default-on, one attempt per anchor; with it off the latch halts. | owed: the devnet reset arm; the automatic post-catch-up resume. | §155 |
 | `C365` | **A self-replay refusal destroyed its own evidence.** The body was never stored and the tracker was process-local. SelfReplayRecord now carries the capped body, verdict, cost pair and suspect ids before the transition, under its own reserved key, with a boot seed for ResetRequested/Halted; the boot test is owed. | owed: the refused-body surface test. | §155 |
+| `C366` | **The reset inventory enumerated surviving bodies, so an absent DAG body was silently skipped.** return_unfinalised_deploys now inventories the DAG candidate set and refuses missing metadata or any missing body above the anchor before a rewind. This closes an incomplete-inventory acceptance; the #564 trigger and devnet drill remain open. | owed: full crate CI on this revision; the #564 devnet drill remains C361. | §156 |
 
 ### DONE (390)
 

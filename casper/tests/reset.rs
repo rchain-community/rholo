@@ -30,7 +30,9 @@ use rchain_block_storage::dag::dag_storage::{BlockDagStorage, DeployId, ResetMar
 use rchain_casper::block_metadata_store::BlockMetadataStore;
 use rchain_casper::dag::BlockDagKeyValueStorage;
 use rchain_casper::engine::reset::{act_on_reset_request, resume_after_reset};
-use rchain_casper::interpreter_util::{reset_request, take_reset_request, ResetRequest};
+use rchain_casper::interpreter_util::{
+    reset_request, take_reset_request, ResetReason, ResetRequest,
+};
 use rchain_models::block::state_hash::StateHash;
 use rchain_models::block_hash::BlockHash;
 use rchain_models::block_metadata::{BlockMetadata, SlashSeverity};
@@ -238,6 +240,7 @@ async fn a_reset_request_rewinds_the_stores_when_the_switch_is_on_and_does_nothi
         anchor_height,
         blocks_above: 2,
         refused,
+        reason: ResetReason::DivergenceBudget,
     };
 
     // --- the switch off --------------------------------------------------------------------------
@@ -249,6 +252,7 @@ async fn a_reset_request_rewinds_the_stores_when_the_switch_is_on_and_does_nothi
     );
     let off = act_on_reset_request(
         LANE,
+        false,
         false,
         &(dag.clone() as Arc<dyn BlockDagStorage>),
         &block_store,
@@ -277,6 +281,7 @@ async fn a_reset_request_rewinds_the_stores_when_the_switch_is_on_and_does_nothi
     let acted = act_on_reset_request(
         LANE,
         true,
+        false,
         &(dag.clone() as Arc<dyn BlockDagStorage>),
         &block_store,
         &manager,
@@ -324,6 +329,7 @@ async fn a_reset_request_rewinds_the_stores_when_the_switch_is_on_and_does_nothi
         anchor_height: BlockHeight::try_from(1).unwrap(),
         blocks_above: 0,
         refused: hash(2),
+        reason: ResetReason::DivergenceBudget,
     };
     assert!(
         rchain_casper::interpreter_util::request_reset(LANE.to_string(), pending.clone()),
@@ -332,6 +338,7 @@ async fn a_reset_request_rewinds_the_stores_when_the_switch_is_on_and_does_nothi
     let unacted = act_on_reset_request(
         LANE,
         true,
+        false,
         &(bare_dag.clone() as Arc<dyn BlockDagStorage>),
         &bare_store,
         &manager,

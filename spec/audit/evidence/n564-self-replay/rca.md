@@ -12,6 +12,16 @@ claims are **not the same claim**: the post-state hash is the RSpace checkpoint 
 cost` is a block field that is not an RSpace leaf. The protocol checks both, but this code checks the
 cost first and the state second — or not at all when the cost fails.
 
+**Correction, 2026-11-11 — this document studies the trigger, not the incident's cause.** The
+`ReplayCostMismatch` is **RC-B**: why the block was refused. The incident is the 45-hour freeze, and
+its cause is **RC-A**: the node had no safe recovery state under that fault — no transition changed
+the input, produced an attestation, reset to a finalised anchor, or halted every trigger, so the only
+modelled response was to rebuild the same deterministic block and never broadcast. RC-A is
+established by the code paths in `recovery-hazop.md` §1 and the issue timeline. RC-B remains open.
+The two are layered: RC-B is the stress condition; RC-A is the reason it became a 45-hour chain halt.
+The earlier status sentence, "the cause of the 274 is not established", is true of RC-B and was
+mistaken as a statement about the incident.
+
 ## 1. The condition inventory
 
 `condition-inventory.tsv` is the data. The load-bearing rows:
@@ -131,5 +141,7 @@ run are reported in `matrix.tsv`. The 274's cause is not established; the pack s
 
 The operational fallback is in place: the pool export now carries the signed fields a repost needs
 (`signature`, `sigAlgorithm`, attachments, shard), and `tools/recover-pool.sh` reposts a selected set to
-a healthy validator. The durable refusal record and the local fault halt remain owed (C359,
-F-U22-08/09/10).
+a healthy validator. The recovery is the other half: one refusal rebuilds as an attestation, a
+node-level fault raises one finalised-anchor reset and latches a halt read by every trigger, and the
+refused body/verdict/ids are durable before either transition (`recovery-hazop.md`, U23). The boot
+tests for the stage and the `create_block` pace-rule test remain owed (F-U23-05/07/11).

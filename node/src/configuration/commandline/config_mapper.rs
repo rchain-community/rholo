@@ -323,6 +323,12 @@ pub fn from_options(options: &Options) -> Hocon {
         if run.self_reset {
             e.push(("casper.self-reset".to_string(), Hocon::Boolean(true)));
         }
+        if run.no_self_replay_reset {
+            e.push((
+                "casper.self-replay-reset".to_string(),
+                Hocon::Boolean(false),
+            ));
+        }
         if let Some(n) = run.merge_divergence_injection {
             e.push((
                 "casper.merge-divergence-injection".to_string(),

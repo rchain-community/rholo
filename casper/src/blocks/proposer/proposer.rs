@@ -13,7 +13,10 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use rchain_block_storage::block_store::BlockStore;
-use rchain_block_storage::dag::dag_storage::{BlockDagStorage, DeployId};
+use rchain_block_storage::dag::dag_storage::{
+    BlockDagStorage, DeployId, SelfReplayRecord, SelfReplayStage, SELF_REPLAY_BODY_MAX,
+    SELF_REPLAY_IDS_MAX, SELF_REPLAY_RECORD_VERSION,
+};
 use rchain_block_storage::dag::liveness;
 use rchain_block_storage::syntax::put_block;
 use rchain_crypto::private_key::PrivateKey;
@@ -29,7 +32,7 @@ use rchain_shared::log::{Log, LogSource};
 use rchain_shared::refined::{BlockHeight, NonNegI64};
 
 use super::block_creator::BlockCreator;
-use super::propose_result::{BlockCreatorResult, ProposeResult, ProposeStatus};
+use super::propose_result::{BlockCreatorResult, ProposalMode, ProposeResult, ProposeStatus};
 use crate::api::block_api::SelfValidationRefusalSink;
 use crate::interpreter_util::{ShardHealth, ValidationOrigin};
 use crate::merging::BlockIndex;
@@ -150,13 +153,6 @@ pub async fn is_active_validator(
         .unwrap_or(false))
 }
 
-/// After this many identical self-replay refusals, the deploy set is held out of selection (#564).
-///
-/// Three matches the autopropose halt threshold (`AUTOPROPOSE_MAX_CONSECUTIVE_FAILURES`), so the
-/// node takes the bounded route before the counted route can stop the timer. The count is per
-/// `(deploy set, failure kind)`: a different block is a different attempt.
-pub const SELF_REPLAY_EXCLUSION_AFTER: u64 = 3;
-
 /// How many refused deploy ids the operator surface carries. The record also carries the full count,
 /// so a large block is bounded on the wire without hiding that it was large.
 const SELF_REPLAY_IDS_SHOWN: usize = 16;
@@ -177,9 +173,16 @@ const SELF_REPLAY_IDS_SHOWN: usize = 16;
 /// counted/fail-loudly path.
 #[derive(Debug, Default)]
 struct SelfReplayTracker {
-    last: Option<(BTreeSet<DeployId>, &'static str)>,
+    /// The exact refusal key: the pre-state it happened at, the deploy set, and the failure code.
+    /// A *different pre-state* is a different input, not a retry of the same one.
+    last: Option<(Vec<u8>, BTreeSet<DeployId>, &'static str)>,
     attempts: u64,
+    /// Held out at **every** pre-state: the set was refused at two different pre-states, so it is
+    /// not the pre-state's fault.
     excluded: BTreeSet<DeployId>,
+    /// The pre-state that first refused each id. It is held out at that pre-state only; a later
+    /// pre-state retries it once. This is what keeps the first refusal from censoring a deploy.
+    suspect: BTreeMap<DeployId, Vec<u8>>,
     /// **The pool selection keyed by the block it produced** (#564): `(height, sender, seq,
     /// pre_state_hash)`. The association is per block, not a single "last" cell, so a second caller
     /// that creates a block between this one's creation and its refusal cannot misattribute the set.
@@ -209,48 +212,128 @@ fn self_replay_block_key(block: &BlockMessage) -> SelfReplayBlockKey {
     )
 }
 
+/// **Build the durable record from an in-memory refusal** (#564). The body is included when it fits
+/// under the record's cap; otherwise only its length is kept, so a large block cannot make the
+/// record unbounded. This is the artifact the incident did not have: the refused block, the verdict,
+/// the suspect ids and the stage, before any recovery transition.
+#[allow(clippy::too_many_arguments)]
+fn self_replay_record(
+    block: &BlockMessage,
+    failure: &crate::rholang::ReplayFailure,
+    cost_pair: Option<(i64, i64)>,
+    state_hash_matched: Option<bool>,
+    replayed_state_hash: Option<String>,
+    refused: &BTreeSet<DeployId>,
+    deploy_count: usize,
+    stage: SelfReplayStage,
+) -> SelfReplayRecord {
+    let body_bytes = block.to_bytes();
+    let body_len = body_bytes.len();
+    let body = (body_len <= SELF_REPLAY_BODY_MAX).then_some(body_bytes);
+    SelfReplayRecord {
+        version: SELF_REPLAY_RECORD_VERSION,
+        at_ms: rchain_shared::time::current_millis(),
+        block_hash: *block.block_hash.as_bytes(),
+        height: i64::from(block.block_number),
+        seq_num: i64::from(block.seq_num),
+        code: failure.code().to_string(),
+        initial_cost: cost_pair.map(|(initial, _)| initial),
+        replay_cost: cost_pair.map(|(_, replay)| replay),
+        state_hash_matched,
+        replayed_state_hash: replayed_state_hash
+            .as_deref()
+            .and_then(rchain_shared::base16::decode)
+            .and_then(|v| <[u8; 32]>::try_from(v.as_slice()).ok()),
+        deploy_ids: refused.iter().take(SELF_REPLAY_IDS_MAX).cloned().collect(),
+        deploy_count: deploy_count as u32,
+        stage,
+        reset_anchor: None,
+        reset_attempted: false,
+        body,
+        body_len,
+        durable: false,
+    }
+}
+
 impl SelfReplayTracker {
-    /// Count one refusal of `(ids, code)`, returning the run length for that exact pair.
-    fn record(&mut self, ids: &BTreeSet<DeployId>, code: &'static str) -> u64 {
-        if self
+    /// Record one refusal keyed by `(pre_state, ids, code)`. Returns the run length for that exact
+    /// key and whether this set has now been refused at a **different** pre-state — the condition
+    /// that moves it from "suspect at one pre-state" to "held out everywhere". An unchanged retry is
+    /// not reachable through this API: the caller's next build is `AttestOnly`, and a deploy-bearing
+    /// build only happens at a new pre-state.
+    fn record_refusal(
+        &mut self,
+        pre_state: &[u8],
+        ids: &BTreeSet<DeployId>,
+        code: &'static str,
+    ) -> (u64, bool) {
+        let same = self
             .last
             .as_ref()
-            .is_some_and(|(last_ids, last_code)| last_ids == ids && *last_code == code)
-        {
+            .is_some_and(|(last_pre, last_ids, last_code)| {
+                last_pre.as_slice() == pre_state && last_ids == ids && *last_code == code
+            });
+        if same {
             self.attempts = self.attempts.saturating_add(1);
         } else {
-            self.last = Some((ids.clone(), code));
+            self.last = Some((pre_state.to_vec(), ids.clone(), code));
             self.attempts = 1;
         }
-        self.attempts
+        let mut quarantined = false;
+        for id in ids {
+            match self.suspect.get(id) {
+                Some(previous) if previous.as_slice() != pre_state => quarantined = true,
+                _ => {
+                    self.suspect.insert(id.clone(), pre_state.to_vec());
+                }
+            }
+        }
+        (self.attempts, quarantined)
     }
 
-    /// Hold the union of these ids out of selection. Returns the number held and whether the cap was
-    /// reached; a caller that sees `true` treats the fault as node-level rather than growing for ever.
+    /// The ids selection must skip at `pre_state`: the globally excluded set plus the ids first
+    /// refused at this same pre-state.
+    fn effective_exclusion(&self, pre_state: &[u8]) -> BTreeSet<DeployId> {
+        let mut out = self.excluded.clone();
+        for (id, refused_at) in &self.suspect {
+            if refused_at.as_slice() == pre_state {
+                out.insert(id.clone());
+            }
+        }
+        out
+    }
+
+    /// Hold the union of these ids out of selection at every pre-state. Returns the number held and
+    /// whether the cap was reached; a caller that sees `true` treats the fault as node-level rather
+    /// than growing for ever.
     fn exclude(&mut self, ids: &BTreeSet<DeployId>) -> (u64, bool) {
         for id in ids {
             if self.excluded.len() >= MAX_SELF_REPLAY_EXCLUSIONS {
                 return (self.excluded.len() as u64, true);
             }
             self.excluded.insert(id.clone());
+            self.suspect.remove(id);
         }
         (self.excluded.len() as u64, false)
     }
 
-    /// Record the pool the last selection read.
+    /// Record the pool the last selection read, and drop every held-out id that has left it. A deploy
+    /// that was included, expired or otherwise gone cannot be censored by this node, and the operator
+    /// surface then agrees with the pool rather than carrying a stale exclusion.
     fn set_pooled(&mut self, ids: BTreeSet<DeployId>) {
         self.pooled = ids;
+        self.prune();
     }
 
-    /// Drop exclusions for ids that have left the pool (included, expired or otherwise gone). Returns
-    /// the number still held. The deploy logs and the operator surface then agree that the exclusion
-    /// is not permanent.
+    /// Drop held-out ids that have left the pool. Returns the number still held.
     fn prune(&mut self) -> u64 {
         self.excluded.retain(|id| self.pooled.contains(id));
-        self.excluded.len() as u64
+        self.suspect.retain(|id, _| self.pooled.contains(id));
+        (self.excluded.len() + self.suspect.len()) as u64
     }
 
-    /// The ids selection must skip.
+    /// The globally held-out ids. Test-only: production reads [`Self::effective_exclusion`].
+    #[cfg(test)]
     fn excluded(&self) -> BTreeSet<DeployId> {
         self.excluded.clone()
     }
@@ -292,6 +375,7 @@ pub struct Proposer {
         dyn Fn(
                 &ValidatorIdentity,
                 ProposeSource,
+                ProposalMode,
                 Option<usize>,
             ) -> BoxFuture<Result<BlockCreatorResult, String>>
             + Send
@@ -322,6 +406,16 @@ pub struct Proposer {
     /// closure so the exclusions reach selection; `new` starts an empty tracker and `apply` installs
     /// it with [`Self::with_self_replay_tracker`].
     self_replay: Arc<Mutex<SelfReplayTracker>>,
+    /// **The reset request a self-replay fault raises** after the attestation fallback also fails
+    /// (#564). `apply` wires it to the DAG's finalised anchor and the reset-request cell; `new`
+    /// gets a no-op so the proposer unit tests need no DAG. It takes the record so the request and
+    /// the `ResetRequested` stage are written together, and returns the anchor it named.
+    self_replay_reset: Arc<dyn Fn(SelfReplayRecord) -> BoxFuture<Option<[u8; 32]>> + Send + Sync>,
+    /// **Persist the self-replay fault and its stage** (#564). `apply` wires it to the DAG's
+    /// durable record; `new` gets a no-op. A failed write is reported as `durable: false`; the
+    /// fault is real whether or not its evidence reached the store.
+    self_replay_persist:
+        Arc<dyn Fn(SelfReplayRecord) -> BoxFuture<Result<(), String>> + Send + Sync>,
 }
 
 impl Proposer {
@@ -335,6 +429,7 @@ impl Proposer {
             dyn Fn(
                     &ValidatorIdentity,
                     ProposeSource,
+                    ProposalMode,
                     Option<usize>,
                 ) -> BoxFuture<Result<BlockCreatorResult, String>>
                 + Send
@@ -366,6 +461,8 @@ impl Proposer {
             block_store,
             batch_cap: 1,
             self_replay: Arc::new(Mutex::new(SelfReplayTracker::default())),
+            self_replay_reset: Arc::new(|_| Box::pin(async { None })),
+            self_replay_persist: Arc::new(|_| Box::pin(async { Ok(()) })),
         }
     }
 
@@ -388,6 +485,24 @@ impl Proposer {
         self
     }
 
+    /// Wire the finalised-anchor reset the self-replay fault raises (#564).
+    pub fn with_self_replay_reset(
+        mut self,
+        effect: Arc<dyn Fn(SelfReplayRecord) -> BoxFuture<Option<[u8; 32]>> + Send + Sync>,
+    ) -> Self {
+        self.self_replay_reset = effect;
+        self
+    }
+
+    /// Wire the durable record the self-replay fault writes (#564).
+    pub fn with_self_replay_persist(
+        mut self,
+        effect: Arc<dyn Fn(SelfReplayRecord) -> BoxFuture<Result<(), String>> + Send + Sync>,
+    ) -> Self {
+        self.self_replay_persist = effect;
+        self
+    }
+
     pub fn batch_cap(&self) -> usize {
         self.batch_cap
     }
@@ -397,6 +512,17 @@ impl Proposer {
         source: ProposeSource,
         batch_limit: Option<usize>,
     ) -> Result<(ProposeResult, Option<BlockMessage>), String> {
+        // **The self-replay fault latch stops every trigger** (#564). The autopropose timer, the
+        // attest-on-new-blocks tap, the not-due retry and an explicit propose all arrive here, so
+        // one check is what makes the halt total; the surface reads the reason beside it.
+        if self.self_validation_refusal.self_replay_halted() {
+            return Ok((
+                ProposeResult {
+                    propose_status: ProposeStatus::SelfReplayFaultHalted,
+                },
+                None,
+            ));
+        }
         // A DAG that cannot be read is an error, not `NotBonded` (AUDIT C67): the oracle's
         // `lookupUnsafe` raises, and reporting "not bonded" would stop this node proposing on a wrong
         // reason with nothing in the log.
@@ -428,7 +554,9 @@ impl Proposer {
             Err(e) => return Err(format!("cannot decide whether this node is bonded: {e}")),
         }
 
-        match (self.create_block)(&self.validator, source, batch_limit).await? {
+        match (self.create_block)(&self.validator, source, ProposalMode::Normal, batch_limit)
+            .await?
+        {
             BlockCreatorResult::AwaitingFinality => Ok((
                 ProposeResult {
                     propose_status: ProposeStatus::AwaitingFinality,
@@ -457,6 +585,12 @@ impl Proposer {
             BlockCreatorResult::TooFarAheadOfLastFinalized => Ok((
                 ProposeResult {
                     propose_status: ProposeStatus::TooFarAheadOfLastFinalized,
+                },
+                None,
+            )),
+            BlockCreatorResult::SelfReplayFaultHalted => Ok((
+                ProposeResult {
+                    propose_status: ProposeStatus::SelfReplayFaultHalted,
                 },
                 None,
             )),
@@ -516,10 +650,12 @@ impl Proposer {
                         Some(block),
                     ))
                 }
-                // **A self-built block failed its own replay** (#564). This is the arm the incident
-                // needed: the cost/status/comm variant is kept rather than collapsed into
-                // `InvalidStateHash`, so it is never read as `Divergence` and the loop is bounded by
-                // construction instead of by the operator noticing.
+                // **A self-built block failed its own replay** (#564). Two things happen, in this
+                // order: the refusal is recorded as evidence, and the node immediately builds a
+                // *different* block — an attestation over the same pre-state with no user deploys.
+                // A replay refusal is deterministic for the block it refused; retrying that block
+                // cannot succeed, and a node that cannot move its latest message caps finality at
+                // its last broadcast height. That is the incident this arm exists to end.
                 Err(ValidateError::SelfReplayFailed(failure)) => {
                     let refused: BTreeSet<DeployId> = block
                         .state
@@ -528,13 +664,44 @@ impl Proposer {
                         .map(|d| d.deploy.sig.clone())
                         .collect();
                     let block_key = self_replay_block_key(&block);
-                    let (attempts, pool_ids) = {
+                    let (attempts, pool_ids, quarantined) = {
                         let mut tracker = self.self_replay.lock().unpoison();
                         let selected = tracker.selected(&block_key);
                         let pool_ids: BTreeSet<DeployId> =
                             refused.intersection(&selected).cloned().collect();
-                        let attempts = tracker.record(&refused, failure.code());
-                        (attempts, pool_ids)
+                        let pre_state = block.pre_state_hash.as_bytes().to_vec();
+                        let (attempts, refused_elsewhere) =
+                            tracker.record_refusal(&pre_state, &refused, failure.code());
+                        let mut quarantined = false;
+                        if !pool_ids.is_empty() && refused_elsewhere {
+                            let (total, overflowed) = tracker.exclude(&pool_ids);
+                            quarantined = true;
+                            if overflowed {
+                                // The cap is a node-level fault: stop growing and halt every
+                                // trigger rather than working through the pool for ever.
+                                drop(tracker);
+                                self.consecutive_failures.fetch_add(1, Ordering::Relaxed);
+                                self.self_validation_refusal.set_self_replay_halted(format!(
+                                    "self-replay exclusion cap ({MAX_SELF_REPLAY_EXCLUSIONS}) reached"
+                                ));
+                                self.log.error(
+                                    LogSource::new("casper.blocks.Proposer"),
+                                    &format!(
+                                        "Self-created block #{} (seq {}) reached the self-replay \
+                                         exclusion cap ({MAX_SELF_REPLAY_EXCLUSIONS}); proposing \
+                                         and attesting are halted until an operator resumes (#564).",
+                                        block.block_number, block.seq_num
+                                    ),
+                                );
+                                return Err(format!(
+                                    "the node rejected its own block #{} (seq {}): the self-replay \
+                                     exclusion cap was reached. This is a node-side bug.",
+                                    block.block_number, block.seq_num
+                                ));
+                            }
+                            self.self_validation_refusal.set_quarantined(total);
+                        }
+                        (attempts, pool_ids, quarantined)
                     };
                     let cost_pair = failure.cost_pair();
                     let (state_hash_matched, replayed_state_hash) = match &failure {
@@ -553,131 +720,228 @@ impl Proposer {
                         .take(SELF_REPLAY_IDS_SHOWN)
                         .map(|id| rchain_shared::base16::encode(id))
                         .collect();
+                    let held_out = quarantined || !pool_ids.is_empty();
 
-                    // **The refused set is empty of pool deploys**: an attestation-only or
-                    // dummy-only block has nothing to hold out, so this is not deploy-scoped and the
-                    // counted path is the honest one — the autopropose timer halts after the
-                    // threshold, loudly, rather than retrying a node-level fault for ever.
-                    if pool_ids.is_empty() {
-                        self.consecutive_failures.fetch_add(1, Ordering::Relaxed);
-                        self.self_validation_refusal.note_self_replay(
-                            failure.code(),
-                            i64::from(block.block_number),
-                            i64::from(block.seq_num),
-                            cost_pair,
-                            deploy_ids,
-                            deploy_count,
-                            attempts,
-                            false,
-                            state_hash_matched,
-                            replayed_state_hash.clone(),
-                        );
-                        self.log.error(
-                            LogSource::new("casper.blocks.Proposer"),
-                            &format!(
-                                "Self-created block #{} (seq {}) failed its own replay with {} — \
-                                 no pooled deploy to hold out, so this is a node fault and is \
-                                 counted toward the autopropose halt (RC1 is still open).",
-                                block.block_number,
-                                block.seq_num,
-                                failure.describe()
-                            ),
-                        );
-                        return Err(format!(
-                            "the node rejected its own block #{} (seq {}): its replay failed with \
-                             {}. This is a node-side bug, not a problem with your request.",
+                    self.self_validation_refusal.note_self_replay(
+                        failure.code(),
+                        i64::from(block.block_number),
+                        i64::from(block.seq_num),
+                        cost_pair,
+                        deploy_ids,
+                        deploy_count,
+                        attempts,
+                        held_out,
+                        state_hash_matched,
+                        replayed_state_hash.clone(),
+                    );
+                    self.log.error(
+                        LogSource::new("casper.blocks.Proposer"),
+                        &format!(
+                            "Self-created block #{} (seq {}) failed its own replay with {} — \
+                             rebuilding once as an attestation-only block over the same pre-state; \
+                             the refused set stays pooled and is retried on a later pre-state \
+                             (#564; the replay's own cause is RC1).",
                             block.block_number,
                             block.seq_num,
                             failure.describe()
-                        ));
+                        ),
+                    );
+
+                    // **Evidence before the transition** (#564): the refused block, its verdict and
+                    // the suspect ids are durable before anything acts on them. This is the artifact
+                    // the incident did not have. A failed write is reported and the recovery
+                    // proceeds — the fault is real whether or not its evidence reached the store.
+                    let record = self_replay_record(
+                        &block,
+                        &failure,
+                        cost_pair,
+                        state_hash_matched,
+                        replayed_state_hash,
+                        &refused,
+                        deploy_count,
+                        SelfReplayStage::Refused,
+                    );
+                    if let Err(e) = (self.self_replay_persist)(record.clone()).await {
+                        self.log.error(
+                            LogSource::new("casper.blocks.Proposer"),
+                            &format!(
+                                "the self-replay refusal could not be recorded durably: {e} — the \
+                                 recovery proceeds, but a restart cannot reconstruct this fault (#564)"
+                            ),
+                        );
                     }
 
-                    if attempts >= SELF_REPLAY_EXCLUSION_AFTER {
-                        let (total, overflowed) = {
-                            let mut tracker = self.self_replay.lock().unpoison();
-                            let (_, overflowed) = tracker.exclude(&pool_ids);
-                            (tracker.prune(), overflowed)
-                        };
-                        self.self_validation_refusal.set_quarantined(total);
-                        if overflowed {
+                    // **The one transition the incident lacked** (#564). The second build has no
+                    // user deploy, so it is a different input by construction; it carries the
+                    // system deploys the pre-state requires and moves this validator's latest
+                    // message, which is what finality needs.
+                    match (self.create_block)(
+                        &self.validator,
+                        source,
+                        ProposalMode::AttestOnly,
+                        batch_limit,
+                    )
+                    .await
+                    {
+                        Ok(BlockCreatorResult::Created(attestation)) => {
+                            match (self.validate_block)(&attestation).await {
+                                Ok(()) => {
+                                    self.consecutive_failures.store(0, Ordering::Relaxed);
+                                    // The refusal record is **not** cleared: the evidence stands
+                                    // until the suspect set is resolved. Only the run counter is
+                                    // cleared, because the node produced a block.
+                                    {
+                                        let mut tracker = self.self_replay.lock().unpoison();
+                                        tracker.clear_attempts();
+                                        tracker
+                                            .forget_selected(&self_replay_block_key(&attestation));
+                                    }
+                                    (self.propose_effect)(&attestation).await;
+                                    let mut recovered = record.clone();
+                                    recovered.stage = SelfReplayStage::Recovered;
+                                    let _ = (self.self_replay_persist)(recovered).await;
+                                    self.log.warn(
+                                        LogSource::new("casper.blocks.Proposer"),
+                                        &format!(
+                                            "Recovered from the self-replay refusal by broadcasting \
+                                             attestation-only block #{} (seq {}). The refused deploy \
+                                             set is still pooled and is retried on a later pre-state; \
+                                             finality is not capped by this validator (#564).",
+                                            attestation.block_number, attestation.seq_num
+                                        ),
+                                    );
+                                    Ok((
+                                        ProposeResult {
+                                            propose_status: ProposeStatus::SelfReplayRecovered,
+                                        },
+                                        Some(attestation),
+                                    ))
+                                }
+                                Err(ValidateError::SelfReplayFailed(second)) => {
+                                    // Even a block with no user deploy cannot replay: the fault is
+                                    // node-level. Ask for the finalised reset (the engine acts only
+                                    // when the reason's switch is on) and halt every trigger.
+                                    let anchor = (self.self_replay_reset)(record.clone()).await;
+                                    let mut halted = record.clone();
+                                    halted.stage = SelfReplayStage::Halted;
+                                    halted.reset_anchor = anchor;
+                                    halted.reset_attempted = anchor.is_some();
+                                    if let Err(e) = (self.self_replay_persist)(halted).await {
+                                        self.log.error(
+                                            LogSource::new("casper.blocks.Proposer"),
+                                            &format!(
+                                                "the self-replay halt could not be recorded durably: \
+                                                 {e} — a restart cannot tell that the reset was \
+                                                 already attempted (#564)"
+                                            ),
+                                        );
+                                    }
+                                    let reason = format!(
+                                        "the attestation fallback also failed its own replay: {}",
+                                        second.describe()
+                                    );
+                                    self.self_validation_refusal
+                                        .set_self_replay_halted(reason.clone());
+                                    self.consecutive_failures.fetch_add(1, Ordering::Relaxed);
+                                    self.log.error(
+                                        LogSource::new("casper.blocks.Proposer"),
+                                        &format!(
+                                            "Self-created attestation block #{} (seq {}) also \
+                                             failed its own replay — {reason}. Proposing and \
+                                             attesting are halted until an operator resumes (#564).",
+                                            attestation.block_number, attestation.seq_num
+                                        ),
+                                    );
+                                    Err(format!(
+                                        "the node rejected its own attestation block #{} (seq \
+                                         {}): {reason}. This is a node-side bug; proposing and \
+                                         attesting are halted until an operator resumes.",
+                                        attestation.block_number, attestation.seq_num
+                                    ))
+                                }
+                                Err(e) => {
+                                    self.consecutive_failures.fetch_add(1, Ordering::Relaxed);
+                                    self.log.error(
+                                        LogSource::new("casper.blocks.Proposer"),
+                                        &format!(
+                                            "the recovery attestation for block #{} (seq {}) failed \
+                                             validation: {e:?}",
+                                            attestation.block_number, attestation.seq_num
+                                        ),
+                                    );
+                                    Err(format!(
+                                        "the recovery attestation failed validation: {e:?}"
+                                    ))
+                                }
+                            }
+                        }
+                        Ok(other) => {
+                            // No attestation was produced: the node cannot build any block at this
+                            // pre-state. Retrying the deploy block is not an exit.
+                            let anchor = (self.self_replay_reset)(record.clone()).await;
+                            let mut halted = record.clone();
+                            halted.stage = SelfReplayStage::Halted;
+                            halted.reset_anchor = anchor;
+                            halted.reset_attempted = anchor.is_some();
+                            if let Err(e) = (self.self_replay_persist)(halted).await {
+                                self.log.error(
+                                    LogSource::new("casper.blocks.Proposer"),
+                                    &format!(
+                                        "the self-replay halt could not be recorded durably: {e} — \
+                                         a restart cannot tell that the reset was already attempted \
+                                         (#564)"
+                                    ),
+                                );
+                            }
+                            let reason = format!(
+                                "no attestation could be built after the refusal ({other:?})"
+                            );
+                            self.self_validation_refusal
+                                .set_self_replay_halted(reason.clone());
                             self.consecutive_failures.fetch_add(1, Ordering::Relaxed);
                             self.log.error(
                                 LogSource::new("casper.blocks.Proposer"),
                                 &format!(
-                                    "Self-created block #{} (seq {}) reached the self-replay \
-                                     exclusion cap ({MAX_SELF_REPLAY_EXCLUSIONS}); this is a \
-                                     node-level fault, not a deploy-scoped one, and is counted \
-                                     toward the autopropose halt.",
+                                    "Self-created block #{} (seq {}) failed its own replay and no \
+                                     attestation could be built — {reason}. Proposing and attesting \
+                                     are halted until an operator resumes (#564).",
                                     block.block_number, block.seq_num
                                 ),
                             );
-                            return Err(format!(
-                                "the node rejected its own block #{} (seq {}): the self-replay \
-                                 exclusion cap was reached. This is a node-side bug.",
-                                block.block_number, block.seq_num
-                            ));
+                            Err(reason)
                         }
-                        self.self_validation_refusal.note_self_replay(
-                            failure.code(),
-                            i64::from(block.block_number),
-                            i64::from(block.seq_num),
-                            cost_pair,
-                            deploy_ids,
-                            deploy_count,
-                            attempts,
-                            true,
-                            state_hash_matched,
-                            replayed_state_hash.clone(),
-                        );
-                        self.log.error(
-                            LogSource::new("casper.blocks.Proposer"),
-                            &format!(
-                                "Self-created block #{} (seq {}) failed its own replay with {} for \
-                                 the {attempts}th identical time — holding {} pooled deploy(s) out \
-                                 of selection and re-deriving without them (RC1 is still open).",
-                                block.block_number,
-                                block.seq_num,
-                                failure.describe(),
-                                pool_ids.len()
-                            ),
-                        );
-                    } else {
-                        self.self_validation_refusal.note_self_replay(
-                            failure.code(),
-                            i64::from(block.block_number),
-                            i64::from(block.seq_num),
-                            cost_pair,
-                            deploy_ids,
-                            deploy_count,
-                            attempts,
-                            false,
-                            state_hash_matched,
-                            replayed_state_hash.clone(),
-                        );
-                        // Log on the first attempt, not every tick: the count is on the refusal
-                        // record and the exclusion at the threshold is the next loud event.
-                        if attempts == 1 {
-                            self.log.warn(
+                        Err(e) => {
+                            let anchor = (self.self_replay_reset)(record.clone()).await;
+                            let mut halted = record.clone();
+                            halted.stage = SelfReplayStage::Halted;
+                            halted.reset_anchor = anchor;
+                            halted.reset_attempted = anchor.is_some();
+                            if let Err(e) = (self.self_replay_persist)(halted).await {
+                                self.log.error(
+                                    LogSource::new("casper.blocks.Proposer"),
+                                    &format!(
+                                        "the self-replay halt could not be recorded durably: {e} — \
+                                         a restart cannot tell that the reset was already attempted \
+                                         (#564)"
+                                    ),
+                                );
+                            }
+                            let reason = format!("the attestation build failed: {e}");
+                            self.self_validation_refusal
+                                .set_self_replay_halted(reason.clone());
+                            self.consecutive_failures.fetch_add(1, Ordering::Relaxed);
+                            self.log.error(
                                 LogSource::new("casper.blocks.Proposer"),
                                 &format!(
-                                    "Self-created block #{} (seq {}) failed its own replay with \
-                                     {} — a local fault, not a view divergence (C270 does not \
-                                     apply). Re-deriving; after {} identical refusals this deploy \
-                                     set will be held out of selection.",
-                                    block.block_number,
-                                    block.seq_num,
-                                    failure.describe(),
-                                    SELF_REPLAY_EXCLUSION_AFTER
+                                    "Self-created block #{} (seq {}) failed its own replay and the \
+                                     attestation build failed — {reason}. Proposing and attesting \
+                                     are halted until an operator resumes (#564).",
+                                    block.block_number, block.seq_num
                                 ),
                             );
+                            Err(reason)
                         }
                     }
-                    Ok((
-                        ProposeResult {
-                            propose_status: ProposeStatus::NotEnoughNewBlocks,
-                        },
-                        None,
-                    ))
                 }
                 // **A divergence is not this node's accounting being broken** (C270, pass §92).
                 //
@@ -910,6 +1174,7 @@ impl Proposer {
             dyn Fn(
                     &ValidatorIdentity,
                     ProposeSource,
+                    ProposalMode,
                     Option<usize>,
                 ) -> BoxFuture<Result<BlockCreatorResult, String>>
                 + Send
@@ -934,7 +1199,10 @@ impl Proposer {
             // It belongs to this shard/proposer, not a process-global clock.
             let quiet_retry_since: Arc<Mutex<Option<Instant>>> = Arc::new(Mutex::new(None));
             Arc::new(
-                move |vi: &ValidatorIdentity, source: ProposeSource, batch_limit: Option<usize>| {
+                move |vi: &ValidatorIdentity,
+                      source: ProposeSource,
+                      mode: ProposalMode,
+                      batch_limit: Option<usize>| {
                     let runtime = runtime.clone();
                     let dag = dag.clone();
                     let block_store = block_store.clone();
@@ -966,6 +1234,7 @@ impl Proposer {
                             &blocked_since,
                             &quiet_retry_since,
                             source,
+                            mode,
                             &health,
                             &self_replay,
                             batch_limit,
@@ -1055,6 +1324,98 @@ impl Proposer {
             })
         };
 
+        // **The self-replay fault's reset transition** (#564). It runs only after the attestation
+        // fallback also failed, so it is the node-level rung: the anchor is the last finalised block,
+        // which is the only state that is safe to rewind to, and the request carries the refused
+        // block so the engine can log it. The `ResetRequested` stage and the anchor are written
+        // **before** the request is raised, so a crash between the two leaves a record that names the
+        // one attempt this fault is allowed. A view with no finalised anchor cannot name one and the
+        // proposer halts instead — "nothing to rewind to" never becomes "rewind to genesis".
+        let self_replay_reset: Arc<
+            dyn Fn(SelfReplayRecord) -> BoxFuture<Option<[u8; 32]>> + Send + Sync,
+        > = {
+            let dag = dag.clone();
+            let shard_id = shard_id.clone();
+            let log = log.clone();
+            Arc::new(move |record: SelfReplayRecord| {
+                let dag = dag.clone();
+                let shard_id = shard_id.clone();
+                let log = log.clone();
+                Box::pin(async move {
+                    let plan = dag.get_representation().await.rewind_plan();
+                    match (plan.anchor, plan.anchor_height) {
+                        (Some(anchor), Some(anchor_height)) => {
+                            let mut requested = record.clone();
+                            requested.stage = SelfReplayStage::ResetRequested;
+                            requested.reset_anchor = Some(*anchor.as_bytes());
+                            requested.reset_attempted = true;
+                            if let Err(e) = dag.write_self_replay_record(requested).await {
+                                log.error(
+                                    LogSource::new("casper.blocks.Proposer"),
+                                    &format!(
+                                        "the self-replay reset request could not be recorded: {e} — \
+                                         the reset is still raised, but a restart cannot tell that \
+                                         it was already attempted (#564)"
+                                    ),
+                                );
+                            }
+                            let raised = crate::interpreter_util::request_reset(
+                                shard_id.clone(),
+                                crate::interpreter_util::ResetRequest {
+                                    anchor,
+                                    anchor_height,
+                                    blocks_above: plan.blocks_above,
+                                    refused: BlockHash::new(record.block_hash),
+                                    reason: crate::interpreter_util::ResetReason::SelfReplayFault,
+                                },
+                            );
+                            log.error(
+                                LogSource::new("casper.blocks.Proposer"),
+                                &format!(
+                                    "self-replay fault at block {} (seq {}) at height {}: the \
+                                     attestation fallback also failed, so this node {} a reset to the \
+                                     last finalised block {} at height {} (#564)",
+                                    rchain_shared::base16::encode(&record.block_hash),
+                                    record.seq_num,
+                                    record.height,
+                                    if raised { "requested" } else { "found pending" },
+                                    anchor.to_hex(),
+                                    i64::from(anchor_height)
+                                ),
+                            );
+                            Some(*anchor.as_bytes())
+                        }
+                        _ => {
+                            log.error(
+                                LogSource::new("casper.blocks.Proposer"),
+                                &format!(
+                                    "self-replay fault at block {} (seq {}) at height {}: no \
+                                     finalised anchor exists, so no reset can be named; the node \
+                                     halts proposing and attesting (#564)",
+                                    rchain_shared::base16::encode(&record.block_hash),
+                                    record.seq_num,
+                                    record.height
+                                ),
+                            );
+                            None
+                        }
+                    }
+                })
+            })
+        };
+
+        // **The durable half** (#564): the same DAG store as the reset marker and halt record. A write
+        // that fails is surfaced by the caller as `durable: false`; it never cancels the recovery.
+        let self_replay_persist: Arc<
+            dyn Fn(SelfReplayRecord) -> BoxFuture<Result<(), String>> + Send + Sync,
+        > = {
+            let dag = dag.clone();
+            Arc::new(move |record: SelfReplayRecord| {
+                let dag = dag.clone();
+                Box::pin(async move { dag.write_self_replay_record(record).await })
+            })
+        };
+
         let batch = runtime.batch_policy();
         let batch_cap = if batch.enabled {
             batch.max_batch.max(1)
@@ -1077,6 +1438,8 @@ impl Proposer {
         .with_batch_cap(batch_cap)
         .with_self_validation_refusal(self_validation_refusal)
         .with_self_replay_tracker(self_replay)
+        .with_self_replay_reset(self_replay_reset)
+        .with_self_replay_persist(self_replay_persist)
     }
 }
 
@@ -1393,6 +1756,7 @@ async fn create_block<'a, F, Fut>(
     blocked_since: &Mutex<Option<Instant>>,
     quiet_retry_since: &Mutex<Option<Instant>>,
     source: ProposeSource,
+    mode: ProposalMode,
     health: &ShardHealth,
     self_replay: &Mutex<SelfReplayTracker>,
     batch_limit: Option<usize>,
@@ -1809,13 +2173,20 @@ where
     // Only a proposal the node raised on its own is paced (C171): the storm is a node reacting to remote
     // blocks, and a caller's explicit propose is not a reaction.
     let paced = source == ProposeSource::Automatic;
-    let suppress_attestation = attestation_suppressed(
-        nothing_to_finalize,
-        new_state_transition,
-        quorum_reachable,
-        cadence || quiet_retry,
-        paced,
-    );
+    // **The recovery transition forces the attestation** (#564). `suppress_attestation` is the
+    // empty-block storm's pace rule; an `AttestOnly` build exists precisely because the node must
+    // move its latest message after a deploy-bearing refusal, so the pace rule must not withhold it.
+    let suppress_attestation = if mode == ProposalMode::AttestOnly {
+        false
+    } else {
+        attestation_suppressed(
+            nothing_to_finalize,
+            new_state_transition,
+            quorum_reachable,
+            cadence || quiet_retry,
+            paced,
+        )
+    };
     // **Why this node did or did not attest, in its own log** (#213's diagnostic). Without it a validator
     // that stays silent looks exactly like one with nothing to do: the R3 arm on #219 showed the genesis
     // signer making no block after genesis, and no run could say which input held it.
@@ -1841,7 +2212,11 @@ where
     // may hold far more than one block can carry, and the leftover stays pooled (AUDIT C123).
     // **And skip the set this node's own replay refused three times** (#564): the exclusion is
     // proposer-local, so the deploy stays valid for every other node.
-    let excluded = self_replay.lock().unpoison().excluded();
+    let pre_state_bytes = pre_state_hash.as_bytes().to_vec();
+    let excluded = self_replay
+        .lock()
+        .unpoison()
+        .effective_exclusion(&pre_state_bytes);
     let (mut deploys, pooled_ids) = select_deploys(
         dag,
         next_block_num,
@@ -1849,6 +2224,13 @@ where
         &excluded,
     )
     .await?;
+    // **The recovery transition carries no user deploy** (#564). The block is still built over the
+    // same pre-state and still carries the system deploys the pre-state requires; the refused set
+    // stays pooled and is retried on a later pre-state. Clearing the id list (rather than passing a
+    // different selection) is what makes the second build a *different input* by construction.
+    if mode == ProposalMode::AttestOnly {
+        deploys.clear();
+    }
     // Remember what selection actually chose, **before** the dev-mode dummy fallback: a refusal of a
     // dummy-only block is not deploy-set-scoped, and the refusal arm distinguishes the two by this set.
     // Keyed by the block it will produce, so a later create/validate cannot overwrite it.
@@ -1869,8 +2251,9 @@ where
     }
 
     // Dev-mode dummy deploy: when there is nothing pooled to include, inject a signed `Nil` deploy so
-    // `--autopropose` can keep producing blocks (port of Scala `Proposer.dummyDeployOpt`).
-    if deploys.is_empty() {
+    // `--autopropose` can keep producing blocks (port of Scala `Proposer.dummyDeployOpt`). The
+    // recovery transition is **not** a dummy-deploy path: its block must carry no user deploy at all.
+    if mode == ProposalMode::Normal && deploys.is_empty() {
         if let Some((key, term)) = dummy_deploy_opt {
             eprintln!(
                 "No pooled deploys; injecting dummy deploy for block #{}",
@@ -1907,7 +2290,8 @@ where
     // A suppressed attestation with outstanding work is not an idle proposer.
     // Without this distinction the stream receives NoNewDeploys and never wakes
     // the monotonic quiet-finality timer on a no-autopropose network.
-    if deploys.is_empty()
+    if mode == ProposalMode::Normal
+        && deploys.is_empty()
         && to_slash.is_empty()
         && !change_epoch
         && suppress_attestation
@@ -2701,11 +3085,12 @@ mod tests {
             dyn Fn(
                     &ValidatorIdentity,
                     ProposeSource,
+                    ProposalMode,
                     Option<usize>,
                 ) -> BoxFuture<Result<BlockCreatorResult, String>>
                 + Send
                 + Sync,
-        > = Arc::new(move |_v, _source, _limit| {
+        > = Arc::new(move |_v, _source, _mode, _limit| {
             let create = create.clone();
             Box::pin(async move { Ok(create) })
         });
@@ -2749,11 +3134,12 @@ mod tests {
             dyn Fn(
                     &ValidatorIdentity,
                     ProposeSource,
+                    ProposalMode,
                     Option<usize>,
                 ) -> BoxFuture<Result<BlockCreatorResult, String>>
                 + Send
                 + Sync,
-        > = Arc::new(|_v, _source, _limit| {
+        > = Arc::new(|_v, _source, _mode, _limit| {
             Box::pin(async { Ok(BlockCreatorResult::Created(block())) })
         });
         let validate: Arc<
@@ -2808,13 +3194,14 @@ mod tests {
             dyn Fn(
                     &ValidatorIdentity,
                     ProposeSource,
+                    ProposalMode,
                     Option<usize>,
                 ) -> BoxFuture<Result<BlockCreatorResult, String>>
                 + Send
                 + Sync,
         > = {
             let built = built.clone();
-            Arc::new(move |_v, _source, _limit| {
+            Arc::new(move |_v, _source, _mode, _limit| {
                 let built = built.clone();
                 Box::pin(async move { Ok(BlockCreatorResult::Created(built)) })
             })
@@ -2830,6 +3217,88 @@ mod tests {
         };
         let effect: Arc<dyn Fn(&BlockMessage) -> BoxFuture<()> + Send + Sync> =
             Arc::new(|_b| Box::pin(async {}));
+        let validator = ValidatorIdentity::from_hex(
+            "67e56582298859ddae725f972992a07c6c4fb9f62a8fff58ce3ca926a1063530",
+        )
+        .unwrap();
+        Proposer::new(
+            get_seq,
+            check_active,
+            create_block,
+            validate,
+            effect,
+            validator,
+            Arc::new(rchain_shared::log::NopLog),
+            Arc::new(AtomicU64::new(0)),
+            Arc::new(AtomicU64::new(0)),
+            false,
+            block_store(),
+        )
+        .with_self_replay_tracker(tracker)
+    }
+
+    /// A proposer that **recovers** (#564): `Normal` builds a deploy-bearing block, `AttestOnly`
+    /// builds an empty one, and validation fails only the deploy-bearing block. The modes and the
+    /// broadcasts are recorded so a test can assert the second build is a different input and the
+    /// refused one is never broadcast. (The halt rig above returns the same block for both modes and
+    /// fails both, which is the node-level fault.)
+    fn proposer_recovering_a_self_replay(
+        failure: crate::rholang::ReplayFailure,
+        tracker: Arc<Mutex<SelfReplayTracker>>,
+        modes: Arc<Mutex<Vec<ProposalMode>>>,
+        broadcast: Arc<Mutex<Vec<BlockMessage>>>,
+    ) -> Proposer {
+        let get_seq: Arc<dyn Fn(Validator) -> BoxFuture<i64> + Send + Sync> =
+            Arc::new(|_v| Box::pin(async { 0i64 }));
+        let check_active: Arc<
+            dyn Fn(&ValidatorIdentity) -> BoxFuture<Result<bool, String>> + Send + Sync,
+        > = Arc::new(|_v| Box::pin(async { Ok(true) }));
+        let create_block: Arc<
+            dyn Fn(
+                    &ValidatorIdentity,
+                    ProposeSource,
+                    ProposalMode,
+                    Option<usize>,
+                ) -> BoxFuture<Result<BlockCreatorResult, String>>
+                + Send
+                + Sync,
+        > = {
+            let modes = modes.clone();
+            let deploy_block = block_with_deploy_sig(7);
+            let attestation = block();
+            Arc::new(move |_v, _source, mode, _limit| {
+                modes.lock().unpoison().push(mode);
+                let built = if mode == ProposalMode::AttestOnly {
+                    attestation.clone()
+                } else {
+                    deploy_block.clone()
+                };
+                Box::pin(async move { Ok(BlockCreatorResult::Created(built)) })
+            })
+        };
+        let validate: Arc<
+            dyn Fn(&BlockMessage) -> BoxFuture<Result<(), ValidateError>> + Send + Sync,
+        > = {
+            let failure = failure.clone();
+            Arc::new(move |b| {
+                let failure = failure.clone();
+                let carries_deploys = !b.state.deploys.is_empty();
+                Box::pin(async move {
+                    if carries_deploys {
+                        Err(ValidateError::SelfReplayFailed(failure))
+                    } else {
+                        Ok(())
+                    }
+                })
+            })
+        };
+        let effect: Arc<dyn Fn(&BlockMessage) -> BoxFuture<()> + Send + Sync> = {
+            let broadcast = broadcast.clone();
+            Arc::new(move |b| {
+                broadcast.lock().unpoison().push(b.clone());
+                Box::pin(async {})
+            })
+        };
         let validator = ValidatorIdentity::from_hex(
             "67e56582298859ddae725f972992a07c6c4fb9f62a8fff58ce3ca926a1063530",
         )
@@ -2891,11 +3360,12 @@ mod tests {
             dyn Fn(
                     &ValidatorIdentity,
                     ProposeSource,
+                    ProposalMode,
                     Option<usize>,
                 ) -> BoxFuture<Result<BlockCreatorResult, String>>
                 + Send
                 + Sync,
-        > = Arc::new(|_v, _source, _limit| {
+        > = Arc::new(|_v, _source, _mode, _limit| {
             Box::pin(async { Ok(BlockCreatorResult::Created(block())) })
         });
         let validate: Arc<
@@ -3022,9 +3492,10 @@ mod tests {
         assert!(matches!(rx.await.unwrap(), ProposerResult::Failure { .. }));
     }
 
-    /// **The incident's arm** (#564): a self-built block fails its own replay, and the failure is
-    /// neither a divergence nor unbounded. Three identical refusals hold the deploy set out of
-    /// selection; none of them touches the autopropose halt.
+    /// **The incident's arm** (#564): a self-built block fails its own replay, and the node does
+    /// **not** rebuild it. The next build is an attestation over the same pre-state with no user
+    /// deploy; that is a different input by construction, it is the block that is broadcast, and the
+    /// refused set stays pooled for a later pre-state. No counter is touched.
     #[tokio::test]
     async fn a_self_replay_failure_is_bounded_and_not_counted_as_divergence() {
         let tracker = Arc::new(Mutex::new(SelfReplayTracker::default()));
@@ -3037,57 +3508,78 @@ mod tests {
                 BTreeSet::from([id.clone()]),
             );
         }
-        let p = proposer_failing_self_replay(
+        let modes = Arc::new(Mutex::new(Vec::new()));
+        let broadcast = Arc::new(Mutex::new(Vec::new()));
+        let p = proposer_recovering_a_self_replay(
             crate::rholang::ReplayFailure::replay_cost_mismatch(5576, 5302),
-            block_with_deploy_sig(7),
             tracker.clone(),
+            modes.clone(),
+            broadcast.clone(),
         );
 
-        for attempt in 1..=SELF_REPLAY_EXCLUSION_AFTER {
-            let (tx, _rx) = tokio::sync::oneshot::channel();
-            let (result, block_opt) = p
-                .propose(ProposeSource::Explicit { is_async: false }, tx)
-                .await
-                .expect("a deploy-scoped refusal is 'not due', not an error");
-            assert_eq!(result.propose_status, ProposeStatus::NotEnoughNewBlocks);
-            assert!(block_opt.is_none(), "the refused block is never broadcast");
-            assert_eq!(
-                p.consecutive_failures.load(Ordering::Relaxed),
-                0,
-                "a self-replay failure of a pooled set must not halt production"
-            );
+        let (tx, _rx) = tokio::sync::oneshot::channel();
+        let (result, block_opt) = p
+            .propose(ProposeSource::Explicit { is_async: false }, tx)
+            .await
+            .expect("the recovery is a success, not an error");
 
-            let refusal = p
-                .self_validation_refusal
-                .snapshot()
-                .expect("the refusal is recorded");
-            assert_eq!(refusal.code, "replay-cost-mismatch");
-            assert_eq!(refusal.initial_cost, Some(5576));
-            assert_eq!(refusal.replay_cost, Some(5302));
-            assert_eq!(refusal.attempts, attempt);
-            assert_eq!(refusal.deploy_ids, vec![rchain_shared::base16::encode(&id)]);
-            assert_eq!(refusal.deploy_count, 1);
-            assert_eq!(
-                refusal.excluded,
-                attempt == SELF_REPLAY_EXCLUSION_AFTER,
-                "the set is held out only when the run reaches the threshold"
-            );
-        }
-
+        assert_eq!(result.propose_status, ProposeStatus::SelfReplayRecovered);
+        let attestation = block_opt.expect("the attestation is the proposed block");
         assert!(
-            tracker.lock().unpoison().excluded().contains(&id),
-            "the refused pooled deploy is the one held out of selection"
+            attestation.state.deploys.is_empty(),
+            "the recovery block carries no user deploy"
         );
         assert_eq!(
-            p.self_validation_refusal.quarantined(),
+            *modes.lock().unpoison(),
+            vec![ProposalMode::Normal, ProposalMode::AttestOnly],
+            "one refusal, one different input — never the same block twice"
+        );
+        assert_eq!(
+            broadcast.lock().unpoison().len(),
             1,
-            "the operator surface carries the excluded count"
+            "only the attestation is broadcast; the refused block never leaves"
+        );
+        assert!(
+            broadcast.lock().unpoison()[0].state.deploys.is_empty(),
+            "and the broadcast block is the attestation, not the refused block"
+        );
+        assert_eq!(
+            p.consecutive_failures.load(Ordering::Relaxed),
+            0,
+            "the recovery produced a block, so it is not a counted failure"
+        );
+        let refusal = p
+            .self_validation_refusal
+            .snapshot()
+            .expect("the refusal is recorded and is not cleared by the recovery");
+        assert_eq!(refusal.code, "replay-cost-mismatch");
+        assert_eq!(refusal.initial_cost, Some(5576));
+        assert_eq!(refusal.replay_cost, Some(5302));
+        assert_eq!(refusal.deploy_ids, vec![rchain_shared::base16::encode(&id)]);
+        assert_eq!(refusal.deploy_count, 1);
+        assert!(
+            refusal.excluded,
+            "the refused set is held out at the pre-state that refused it"
+        );
+
+        let guard = tracker.lock().unpoison();
+        assert!(
+            guard.effective_exclusion(&[0u8; 32]).contains(&id),
+            "the refusing pre-state does not re-select the set"
+        );
+        assert!(
+            guard.effective_exclusion(&[9u8; 32]).is_empty(),
+            "a later pre-state is a different input and retries the set once"
+        );
+        assert!(
+            !p.self_validation_refusal.self_replay_halted(),
+            "a recovered refusal does not halt the node"
         );
     }
 
-    /// **No pooled deploy to hold out**: an attestation-only or dummy-only block is not
-    /// deploy-set-scoped, so it stays on the counted/fail-loudly path (#564). A node that cannot
-    /// rebuild *any* block is a different fault from one that cannot rebuild one set.
+    /// **The attestation also fails**: a block with no user deploy still cannot replay, so the fault
+    /// is node-level. The node counts it once, latches the fault, and every proposal trigger — not
+    /// just this one — reads the latch (#564). This is the state the incident lacked.
     #[tokio::test]
     async fn a_self_replay_failure_with_no_pool_deploy_is_counted() {
         let tracker = Arc::new(Mutex::new(SelfReplayTracker::default()));
@@ -3097,13 +3589,17 @@ mod tests {
             tracker.clone(),
         );
         let (tx, _rx) = tokio::sync::oneshot::channel();
-        let _ = p
+        let result = p
             .propose(ProposeSource::Explicit { is_async: false }, tx)
             .await;
+        assert!(
+            result.is_err(),
+            "the attestation fallback also failed, so the node halts with an error"
+        );
         assert_eq!(
             p.consecutive_failures.load(Ordering::Relaxed),
             1,
-            "with nothing to exclude, the node-level fault is counted"
+            "the node-level fault is counted"
         );
         let refusal = p
             .self_validation_refusal
@@ -3112,45 +3608,151 @@ mod tests {
         assert_eq!(refusal.code, "replay-status-mismatch");
         assert!(!refusal.excluded);
         assert_eq!(p.self_validation_refusal.quarantined(), 0);
+        assert!(
+            p.self_validation_refusal.self_replay_halted(),
+            "the fault latch is set"
+        );
+        assert!(
+            p.self_validation_refusal
+                .self_replay_halt_reason()
+                .is_some_and(|r| r.contains("attestation fallback")),
+            "the halt names the failed fallback"
+        );
+
+        // Every trigger arrives through `do_propose`, so the latch stops the next one too.
+        let (tx, _rx) = tokio::sync::oneshot::channel();
+        let (halted, none) = p
+            .propose(ProposeSource::Explicit { is_async: false }, tx)
+            .await
+            .expect("a halted proposer answers a status, not an error");
+        assert_eq!(halted.propose_status, ProposeStatus::SelfReplayFaultHalted);
+        assert!(none.is_none());
     }
 
-    /// The tracker's identity rule: a run is per `(deploy set, code)`, a different set starts again,
-    /// a success clears the run, and an exclusion survives the clear.
+    /// **The node-level fault reaches the reset exactly once and records the halt** (#564). The
+    /// refusal is persisted first, the reset names one finalised anchor, and the halted stage is
+    /// written after it — the ordering that lets a restart tell "already attempted" from "never
+    /// tried" and stops a reset storm.
+    #[tokio::test]
+    async fn a_self_replay_fault_raises_one_reset_and_records_the_halt() {
+        let tracker = Arc::new(Mutex::new(SelfReplayTracker::default()));
+        let resets = Arc::new(Mutex::new(Vec::new()));
+        let records = Arc::new(Mutex::new(Vec::new()));
+        let p = proposer_failing_self_replay(
+            crate::rholang::ReplayFailure::replay_status_mismatch(false, true),
+            block_with_deploy_sig(9),
+            tracker,
+        )
+        .with_self_replay_reset({
+            let resets = resets.clone();
+            Arc::new(move |record: SelfReplayRecord| {
+                resets.lock().unpoison().push(record);
+                Box::pin(async { Some([4u8; 32]) })
+            })
+        })
+        .with_self_replay_persist({
+            let records = records.clone();
+            Arc::new(move |record: SelfReplayRecord| {
+                records.lock().unpoison().push(record);
+                Box::pin(async { Ok(()) })
+            })
+        });
+
+        let (tx, _rx) = tokio::sync::oneshot::channel();
+        assert!(
+            p.propose(ProposeSource::Explicit { is_async: false }, tx)
+                .await
+                .is_err(),
+            "the attestation also failed, so the fault is terminal for this attempt"
+        );
+
+        let resets = resets.lock().unpoison();
+        assert_eq!(resets.len(), 1, "one reset attempt per fault, not a storm");
+        assert_eq!(resets[0].stage, SelfReplayStage::Refused);
+        assert_eq!(resets[0].code, "replay-status-mismatch");
+
+        let records = records.lock().unpoison();
+        assert_eq!(
+            records.iter().map(|r| r.stage).collect::<Vec<_>>(),
+            vec![SelfReplayStage::Refused, SelfReplayStage::Halted],
+            "the evidence is written before the transition, and the halt after it"
+        );
+        assert_eq!(records[1].reset_anchor, Some([4u8; 32]));
+        assert!(records[1].reset_attempted);
+        assert!(p.self_validation_refusal.self_replay_halted());
+    }
+
+    /// The tracker's identity rule: a run is per `(pre-state, deploy set, failure kind)`. A different
+    /// set or kind starts again; a **different pre-state is a different input**, so the set is
+    /// suspect only at the pre-state that refused it and a second pre-state quarantines it. A
+    /// success clears the run, and an exclusion survives the clear.
     #[test]
     fn the_tracker_counts_only_identical_sets_and_keeps_exclusions_on_success() {
         let mut tracker = SelfReplayTracker::default();
         let a: BTreeSet<DeployId> = BTreeSet::from([vec![1u8]]);
         let b: BTreeSet<DeployId> = BTreeSet::from([vec![2u8]]);
+        let pre_a = [1u8; 32];
+        let pre_b = [2u8; 32];
 
-        assert_eq!(tracker.record(&a, "replay-cost-mismatch"), 1);
-        assert_eq!(tracker.record(&a, "replay-cost-mismatch"), 2);
         assert_eq!(
-            tracker.record(&b, "replay-cost-mismatch"),
+            tracker.record_refusal(&pre_a, &a, "replay-cost-mismatch").0,
+            1
+        );
+        assert_eq!(
+            tracker.record_refusal(&pre_a, &a, "replay-cost-mismatch").0,
+            2,
+            "the same pre-state, set and kind is one run"
+        );
+        assert_eq!(
+            tracker.record_refusal(&pre_a, &b, "replay-cost-mismatch").0,
             1,
             "a different deploy set is a different attempt"
         );
         assert_eq!(
-            tracker.record(&a, "replay-status-mismatch"),
+            tracker
+                .record_refusal(&pre_a, &a, "replay-status-mismatch")
+                .0,
             1,
             "a different failure kind is a different attempt"
         );
 
-        assert_eq!(tracker.exclude(&a).0, 1);
+        // `a` was first refused at `pre_a`: it is held out there, not at `pre_b`.
+        assert!(tracker.effective_exclusion(&pre_a).contains(&vec![1u8]));
+        assert!(
+            tracker.effective_exclusion(&pre_b).is_empty(),
+            "a later pre-state is a different input and retries the set once"
+        );
+        let (_, refused_elsewhere) = tracker.record_refusal(&pre_b, &a, "replay-cost-mismatch");
+        assert!(
+            refused_elsewhere,
+            "a second pre-state is what moves the set from suspect to quarantined"
+        );
+        tracker.exclude(&a);
+        assert!(
+            tracker.excluded().contains(&vec![1u8]),
+            "the quarantine holds the id out at every pre-state"
+        );
+
         tracker.set_pooled(BTreeSet::from([vec![1u8]]));
-        assert_eq!(tracker.prune(), 1, "an id still in the pool stays excluded");
+        assert_eq!(tracker.prune(), 1, "an id still in the pool stays held");
         tracker.set_pooled(BTreeSet::new());
         assert_eq!(
             tracker.prune(),
             0,
             "an id that left the pool is no longer held"
         );
-        tracker.exclude(&a);
-        tracker.clear_attempts();
-        assert_eq!(tracker.record(&a, "replay-cost-mismatch"), 1);
-        assert!(
-            tracker.excluded().contains(&vec![1u8]),
-            "a success must not put an unrebuildable deploy back into selection"
+
+        // A success clears the run but must not put an unrebuildable deploy back into selection.
+        let mut after_success = SelfReplayTracker::default();
+        after_success.exclude(&a);
+        after_success.clear_attempts();
+        assert_eq!(
+            after_success
+                .record_refusal(&pre_a, &a, "replay-cost-mismatch")
+                .0,
+            1
         );
+        assert!(after_success.excluded().contains(&vec![1u8]));
 
         // The cap is a fault condition, not a reason to grow for ever.
         let mut capped = SelfReplayTracker::default();
@@ -3255,11 +3857,12 @@ mod tests {
             dyn Fn(
                     &ValidatorIdentity,
                     ProposeSource,
+                    ProposalMode,
                     Option<usize>,
                 ) -> BoxFuture<Result<BlockCreatorResult, String>>
                 + Send
                 + Sync,
-        > = Arc::new(|_v, _source, _limit| {
+        > = Arc::new(|_v, _source, _mode, _limit| {
             Box::pin(async { Ok(BlockCreatorResult::Created(block())) })
         });
         let validate: Arc<
@@ -4059,13 +4662,14 @@ mod equivocation_injection_tests {
             dyn Fn(
                     &ValidatorIdentity,
                     super::ProposeSource,
+                    super::ProposalMode,
                     Option<usize>,
                 ) -> super::BoxFuture<Result<super::BlockCreatorResult, String>>
                 + Send
                 + Sync,
         > = {
             let created = created.clone();
-            Arc::new(move |_v, _s, _limit| {
+            Arc::new(move |_v, _s, _mode, _limit| {
                 let created = created.clone();
                 Box::pin(async move { Ok(super::BlockCreatorResult::Created(created)) })
             })

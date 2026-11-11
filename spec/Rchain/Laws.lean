@@ -5236,6 +5236,40 @@ def lawsC : List Law := [
       incident's block was state-correct: the refused body, the terms and A's store are unavailable, so \
       the shadow's verdict is a future-occurrence instrument, not a retroactive one. The Rust witness \
       is the cost-only tamper plus the shadow, which proves the mechanism, not the incident's state." },
+  { number := 94, layer := "Casper",
+    statement := "**A local fault has a bounded exit.** From the refused state there is **no \
+      transition back to itself**: a local fault either changes the proposal input (the refused set is \
+      held out and the immediate rebuild is an attestation with no user deploy), moves to a reset of a \
+      **finalised** anchor, or halts. An unrecognised step is a halt, the safe fallback. Every fault \
+      therefore reaches a safe state in one transition, and the incident's 45-hour loop — the same \
+      deterministic block rebuilt and refused — has no representation to write. The Rust's \
+      `ProposalMode::AttestOnly`, the self-replay latch and the finalised-anchor reset are the model's \
+      implementation.",
+    status := .provedModel,
+    declarations := [`Rchain.RecoveryState, `Rchain.RecoveryStep, `Rchain.nextState,
+      `Rchain.RecoverySafe, `Rchain.no_unchanged_retry, `Rchain.every_fault_reaches_safe,
+      `Rchain.resetAdmitted, `Rchain.a_non_finalised_anchor_is_refused,
+      `Rchain.a_finalised_anchor_is_admitted],
+    axioms := [],
+    rust := ["casper/src/blocks/proposer/proposer.rs", "casper/src/api/block_api.rs",
+      "casper/src/engine/reset.rs", "block-storage/src/dag/dag_storage.rs"],
+    rustWitness := ["casper/src/blocks/proposer/proposer.rs:a_self_replay_failure_is_bounded_and_not_counted_as_divergence",
+      "casper/src/blocks/proposer/proposer.rs:a_self_replay_fault_raises_one_reset_and_records_the_halt"],
+    witness := [`Rchain.no_unchanged_retry, `Rchain.every_fault_reaches_safe,
+      `Rchain.a_non_finalised_anchor_is_refused],
+    falsifiable := "**Add a transition from `refused` to `refused`** (the incident's retry). Then \
+      `no_unchanged_retry` cannot be proved (`decide` fails on the equality) and the proposer witness \
+      reddens, because the second build is the refused block again rather than an attestation. The \
+      live negative case is the incident: the same block, the same refusal, 45 hours. The reset half \
+      is falsified by admitting a non-finalised anchor — `a_non_finalised_anchor_is_refused` fails to \
+      decide — which is the state `rewind_plan`'s finalised arm and the pre-flight's absent-anchor \
+      refusal exist to prevent.",
+    note := "**What this law does not claim.** It does not model the replay's cause (RC-B, open), the \
+      cost/state ordering (law 93), or the reset's durable bracket (laws 72/73/76). It says only that \
+      the fault state has an exit and that the exit is not a no-op. The automatic post-catch-up resume \
+      is not part of the model: the implemented reset latches the halt and the operator resume is the \
+      explicit way back. The Rust witnesses are the recovery and reset/halt proposer tests; the boot \
+      seed and the `create_block` pace rule remain owed (U23 F-05/F-07/F-11)." },
 ]
 
 def laws : List Law := lawsA ++ lawsB ++ lawsC

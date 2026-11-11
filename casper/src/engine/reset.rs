@@ -50,7 +50,9 @@ use rchain_shared::log::{Log, LogSource};
 use rchain_shared::refined::BlockHeight;
 
 use crate::interpreter_util::ResetRequest;
+use crate::multi_parent_casper::DEPLOY_LIFESPAN;
 use crate::runtime_manager::RuntimeManager;
+use crate::validate::deploy_expired_at_block;
 
 /// Rewind the DAG to `anchor_height` and remove the bodies of everything it dropped.
 ///
@@ -230,6 +232,75 @@ async fn anchor_body(block_store: &BlockStore, anchor: BlockHash) -> Result<Bloc
         })
 }
 
+/// **Return the deploys that only unfinalised blocks above the anchor still hold** (#564).
+///
+/// A reset rewinds the DAG and purges the bodies above the anchor, and a deploy leaves the pool *on
+/// inclusion*. Without this step the rewind could drop this node's only copy of a deploy. The reset
+/// is safe by construction only if it is not also a censorship: every user deploy in a block above
+/// the anchor that is not pooled is re-admitted, and a re-admission the pool refuses refuses the
+/// reset — the caller halts rather than dropping a deploy.
+///
+/// A deploy already expired at the anchor could not have been included at or above it, so it is not
+/// a loss and is skipped. Every other failure is a refusal: the caller must not rewind on an
+/// inventory it could not build.
+async fn return_unfinalised_deploys(
+    dag: &Arc<dyn BlockDagStorage>,
+    block_store: &BlockStore,
+    anchor_height: BlockHeight,
+) -> Result<usize, String> {
+    let keys = block_store.keys().await?;
+    let mut returned = 0usize;
+    for hash in keys {
+        let Some(meta) = dag.lookup(&hash).await? else {
+            // A body the DAG does not hold is an orphan the reset purges; its deploys are not in
+            // the chain this node is rewinding, so there is nothing to return.
+            continue;
+        };
+        if meta.block_num <= anchor_height {
+            continue;
+        }
+        let block = block_store
+            .get(&[hash])
+            .await?
+            .pop()
+            .flatten()
+            .ok_or_else(|| {
+                format!(
+                    "the reset would drop block {} above the anchor, but its body is not in the \
+                     store, so the deploys it carries cannot be returned to the pool — refusing the \
+                     reset (#564)",
+                    hash.to_hex()
+                )
+            })?;
+        for processed in &block.state.deploys {
+            let deploy = &processed.deploy;
+            if deploy_expired_at_block(
+                deploy.data.valid_after_block_number,
+                i64::from(anchor_height),
+                DEPLOY_LIFESPAN,
+            ) {
+                continue;
+            }
+            if dag.contains_deploy_in_pool(&deploy.sig).await? {
+                continue;
+            }
+            if let Err(e) = dag.add_deploy(deploy.clone()).await {
+                // A concurrent admission of the same deploy is not a loss; anything else is.
+                if dag.contains_deploy_in_pool(&deploy.sig).await? {
+                    continue;
+                }
+                return Err(format!(
+                    "the reset could not return deploy {} to the pool: {e} — refusing the reset \
+                     rather than dropping a deploy this node alone holds (#564)",
+                    rchain_shared::base16::encode(&deploy.sig)
+                ));
+            }
+            returned += 1;
+        }
+    }
+    Ok(returned)
+}
+
 /// Remove every body the DAG does not hold — **the receiver's own re-injection set**, which is what the
 /// boot guard has to delete when a reset crashed part-way.
 ///
@@ -285,6 +356,7 @@ async fn purge_orphan_bodies(
 pub async fn act_on_reset_request(
     shard_id: &str,
     self_reset: bool,
+    self_replay_reset: bool,
     dag: &Arc<dyn BlockDagStorage>,
     block_store: &BlockStore,
     runtime_manager: &Arc<RuntimeManager>,
@@ -298,7 +370,17 @@ pub async fn act_on_reset_request(
     let Some(request) = crate::interpreter_util::reset_request(shard_id) else {
         return Ok(None);
     };
-    if !self_reset {
+    // **The reason selects the switch.** A self-replay fault is on by default: it has broadcast
+    // nothing, so the rewind to the last finalised anchor loses no accepted state. The divergence
+    // budget is the operator's `casper.self-reset`, unchanged. With either off, the request is
+    // consumed and the caller's proposer halts — never a silent retry.
+    let (enabled, switch) = match request.reason {
+        crate::interpreter_util::ResetReason::SelfReplayFault => {
+            (self_replay_reset, "casper.self-replay-reset")
+        }
+        crate::interpreter_util::ResetReason::DivergenceBudget => (self_reset, "casper.self-reset"),
+    };
+    if !enabled {
         // Consumed rather than left pending: a surface that showed a request for ever would be the same
         // silence in a different place, and the switch is a *terminal* configuration, not a transient
         // fault — which is why this arm takes and the pre-flight arm below does not.
@@ -306,12 +388,11 @@ pub async fn act_on_reset_request(
         log.warn(
             source,
             &format!(
-                "a reset was requested (rewind to {} at height {}) but `casper.self-reset` is off, so \
-                 this node keeps refusing {} and its descendants. Turn it on to let the node reset \
-                 itself (#320)",
+                "a reset was requested (rewind to {} at height {}) but `{switch}` is off, so this \
+                 node does not act on it; the self-replay fault path halts proposing and attesting \
+                 rather than retrying the same input (#320, #564)",
                 request.anchor.to_hex(),
                 i64::from(request.anchor_height),
-                request.refused.to_hex(),
             ),
         );
         return Ok(None);
@@ -356,6 +437,20 @@ async fn perform_reset(
         height: request.anchor_height,
         phase,
     };
+    // **Return the deploys the rewind would drop** (#564). This runs before the marker and before
+    // any destructive step, so a pool that refuses one is a free refusal. The rewind drops bodies
+    // above the anchor; a deploy that only they held must be back in the pool first, or the reset
+    // is a silent censorship.
+    let returned = return_unfinalised_deploys(dag, block_store, request.anchor_height).await?;
+    if returned > 0 {
+        log.warn(
+            source.clone(),
+            &format!(
+                "returned {returned} deploy(s) from unfinalised blocks above the anchor to the pool \
+                 before the rewind — the reset must not drop a deploy it alone holds (#564)"
+            ),
+        );
+    }
     // **The intent is durable before anything is destroyed** (law 72). A write that fails stops the
     // reset before it has touched a store, which is the only point at which refusing is free.
     dag.write_reset_marker(mark(ResetPhase::Rewinding)).await?;

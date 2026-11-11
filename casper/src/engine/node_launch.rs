@@ -348,6 +348,9 @@ pub async fn apply<I: RSpaceImporter + Send + 'static, E: RSpaceExporter>(
     // counts, logs and dry-runs the divergence but nothing acts on it — the behaviour of every build
     // before this one. See `CasperConf::self_reset` for why it is an operator switch and not automatic.
     self_reset: bool,
+    // **May a self-replay fault reset this node?** (#564) On by default; see
+    // `CasperConf::self_replay_reset` for the constructive safety case. Off means the fault halts.
+    self_replay_reset: bool,
     // Operator switch, threaded to `NodeRunning`: when set, this node refuses store-items
     // (state-sync) requests (port of the Scala's `disableStateExporter`).
     disable_state_exporter: bool,
@@ -857,6 +860,7 @@ pub async fn apply<I: RSpaceImporter + Send + 'static, E: RSpaceExporter>(
         match crate::engine::reset::act_on_reset_request(
             &shard_lane,
             self_reset,
+            self_replay_reset,
             &dag,
             &block_store,
             &runtime_manager,

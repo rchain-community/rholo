@@ -8,6 +8,10 @@ use rchain_models::casper::protocol::casper_message::BlockMessage;
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ProposeStatus {
     ProposeSuccess,
+    /// **A self-replay refusal was recovered by an attestation-only block** (#564). The refused
+    /// deploy set stays pooled; the block that was broadcast has no user deploys. This is a success
+    /// for liveness and a recorded fault for the operator — not a silent retry.
+    SelfReplayRecovered,
     InternalDeployError,
     BugError(String),
     NotBonded,
@@ -19,12 +23,38 @@ pub enum ProposeStatus {
     /// The node's resource fallback state is `Critical` or `Unavailable`: it has stopped producing
     /// (unit C, barrier B37). The word is the state that withheld the proposal.
     ResourcePressure(String),
+    /// A self-replay fault survived the attestation fallback and the reset either is not enabled or
+    /// did not clear it. Every proposal trigger is stopped until an operator resumes. This is the
+    /// loud terminal state the incident lacked.
+    SelfReplayFaultHalted,
+}
+
+/// **What a proposal attempt is allowed to carry** (#564).
+///
+/// `Normal` selects pooled deploys as usual. `AttestOnly` is the safe recovery transition after a
+/// self-replay refusal: the block is built over the same pre-state with **no user deploys** (the
+/// system deploys the pre-state requires stay), so it cannot repeat the refused deploy replay and it
+/// still moves this validator's latest message. The refused deploys remain in the pool and are
+/// retried on a later pre-state.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ProposalMode {
+    Normal,
+    AttestOnly,
 }
 
 impl fmt::Display for ProposeStatus {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ProposeStatus::ProposeSuccess => write!(f, "Propose succeed: Valid"),
+            ProposeStatus::SelfReplayRecovered => {
+                write!(
+                    f,
+                    "Propose succeeded by attestation after a self-replay refusal"
+                )
+            }
+            ProposeStatus::SelfReplayFaultHalted => {
+                write!(f, "Proposal halted: self-replay fault")
+            }
             ProposeStatus::AwaitingFinality => {
                 write!(f, "Proposal deferred: unfinalized work awaits its retry")
             }
@@ -84,6 +114,8 @@ pub enum BlockCreatorResult {
     /// extend a chain no peer has accepted; the proposer returns
     /// [`ProposeStatus::TooFarAheadOfLastFinalized`] and the node stops proposing/attesting.
     TooFarAheadOfLastFinalized,
+    /// A self-replay fault is latched: every proposal trigger is stopped until an operator resumes.
+    SelfReplayFaultHalted,
     Created(BlockMessage),
 }
 

@@ -20,7 +20,7 @@ use rchain_shared::base16;
 use rchain_shared::refined::NonNegI64;
 use serde::{Deserialize, Serialize};
 
-use rchain_block_storage::dag::dag_storage::{BlockDagStorage, HaltRecord};
+use rchain_block_storage::dag::dag_storage::{BlockDagStorage, HaltRecord, SelfReplayStage};
 use rchain_shared::lock::Unpoison;
 
 use crate::runtime_manager::CapturedReply;
@@ -172,6 +172,12 @@ impl SelfValidationRefusal {
 pub struct SelfValidationRefusalSink {
     cell: Arc<Mutex<Option<SelfValidationRefusal>>>,
     quarantined: Arc<AtomicU64>,
+    /// **The self-replay fault latch** (#564). Distinct from the autopropose timer halt and from
+    /// `PROPOSAL_ISOLATED`: it is set only when the attestation fallback also fails, and it is
+    /// consulted by every proposal trigger (timer, attest tap, retry, explicit propose). The reason
+    /// is a closed code so the operator surface can say why the shard stopped.
+    self_replay_halted: Arc<AtomicBool>,
+    self_replay_halt_reason: Arc<Mutex<Option<String>>>,
 }
 
 impl SelfValidationRefusalSink {
@@ -239,6 +245,32 @@ impl SelfValidationRefusalSink {
     pub fn quarantined(&self) -> u64 {
         self.quarantined.load(Ordering::Relaxed)
     }
+
+    /// Latch the self-replay fault. Every proposal trigger reads this; the reason is the closed
+    /// code plus the sentence the operator needs. Idempotent: a second refusal at the same fault
+    /// does not replace the first reason.
+    pub fn set_self_replay_halted(&self, reason: impl Into<String>) {
+        let mut cell = self.self_replay_halt_reason.lock().unpoison();
+        if cell.is_none() {
+            *cell = Some(reason.into());
+        }
+        self.self_replay_halted.store(true, Ordering::Relaxed);
+    }
+
+    /// Clear the latch (the operator's explicit resume). The durable record is cleared by the same
+    /// caller, store-first, so a restart cannot re-seed a fault the operator has cleared.
+    pub fn clear_self_replay_halted(&self) {
+        self.self_replay_halted.store(false, Ordering::Relaxed);
+        *self.self_replay_halt_reason.lock().unpoison() = None;
+    }
+
+    pub fn self_replay_halted(&self) -> bool {
+        self.self_replay_halted.load(Ordering::Relaxed)
+    }
+
+    pub fn self_replay_halt_reason(&self) -> Option<String> {
+        self.self_replay_halt_reason.lock().unpoison().clone()
+    }
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -254,6 +286,12 @@ pub struct ProposerHealth {
     /// proposer-local liveness bound, not a pool capacity figure: the deploys stay in the pool and
     /// remain valid for every other node. Zero on a healthy proposer.
     pub pool_quarantined: u64,
+    /// **A self-replay fault has latched this shard** (#564): the attestation fallback also failed,
+    /// so proposing and attesting are stopped until an operator resumes. Distinct from
+    /// `autopropose_timer_halted` (the timer's own halt) and from the isolation latch.
+    pub self_replay_fault_halted: bool,
+    /// The reason behind [`Self::self_replay_fault_halted`], when it is set.
+    pub self_replay_fault_reason: Option<String>,
     /// The shard's autopropose timer has stopped. The value is sticky — a later success does **not**
     /// clear it — and two things restart it: the process (the halt is durable, re-seeded at boot) and
     /// the operator's `POST /api/v1/autopropose/resume`. Not the same as production having stopped:
@@ -379,6 +417,36 @@ impl ProposeHealth {
         }
     }
 
+    /// **Seed the self-replay fault latch from the durable record** (#564). A record whose stage is
+    /// `ResetRequested` or `Halted` means the previous process reached the node-level rung; this one
+    /// must not retry the same input. `Refused` and `Recovered` are evidence, not a stop, so they do
+    /// not latch. A read that fails leaves the latch clear and returns the error so the caller can
+    /// say "unknown" — a boot refusal would trade a silence for an outage.
+    pub async fn seed_self_replay_from_store(
+        &self,
+        dag: &dyn BlockDagStorage,
+    ) -> Result<(), String> {
+        match dag.read_self_replay_record().await {
+            Ok(Some(record)) => {
+                if matches!(
+                    record.stage,
+                    SelfReplayStage::ResetRequested | SelfReplayStage::Halted
+                ) {
+                    self.self_validation_refusal.set_self_replay_halted(format!(
+                        "boot seed: {:?} at block {} (seq {}) — {}",
+                        record.stage,
+                        base16::encode(&record.block_hash),
+                        record.seq_num,
+                        record.code
+                    ));
+                }
+                Ok(())
+            }
+            Ok(None) => Ok(()),
+            Err(e) => Err(e),
+        }
+    }
+
     /// Record that the autopropose timer has stopped, and hand back **the record the caller must
     /// persist** — the timer cannot write the store itself, and it has already decided to stop, so it
     /// cannot refuse either.
@@ -427,6 +495,9 @@ impl ProposeHealth {
         self.timer_halted.store(false, Ordering::Relaxed);
         self.failures.store(0, Ordering::Relaxed);
         self.self_validation_refusal.clear();
+        // **The self-replay fault is a halt too** (#564): an operator resume clears it and wakes the
+        // parked timer, or the one way out would leave the shard stopped.
+        self.self_validation_refusal.clear_self_replay_halted();
         self.halt_durable.store(true, Ordering::Relaxed);
         *self.halt_record.lock().unpoison() = None;
         // `notify_one`, not `notify_waiters`: a permit is *stored* when nobody is parked, so a clear
@@ -452,9 +523,23 @@ impl ProposeHealth {
     /// It parks on the notify rather than returning an error, so the operator's
     /// `POST /api/v1/autopropose/resume` resumes this shard **in-process**.
     pub async fn park_while_halted(&self) {
-        while self.timer_halted() {
+        // **Both halts park here** (#564): the autopropose timer's own and the self-replay fault's.
+        // A timer that ticks through the fault would be the same "reported but not obeyed" defect
+        // one level up, and the resume is the single wake for both.
+        while self.timer_halted() || self.self_validation_refusal.self_replay_halted() {
             self.resume.notified().await;
         }
+    }
+
+    /// Whether a self-replay fault has latched this shard (#564). The same cell the proposer and the
+    /// taps read; a surface that reads a copy would drift from the decision.
+    pub fn self_replay_halted(&self) -> bool {
+        self.self_validation_refusal.self_replay_halted()
+    }
+
+    /// The sentence behind the self-replay halt, for the operator surface.
+    pub fn self_replay_halt_reason(&self) -> Option<String> {
+        self.self_validation_refusal.self_replay_halt_reason()
     }
 
     /// All three values as one observation, so a reader cannot see a count from one instant and a flag
@@ -464,6 +549,8 @@ impl ProposeHealth {
             consecutive_self_validation_failures: self.failures.load(Ordering::Relaxed),
             self_validation_refusal: self.self_validation_refusal.snapshot(),
             pool_quarantined: self.self_validation_refusal.quarantined(),
+            self_replay_fault_halted: self.self_validation_refusal.self_replay_halted(),
+            self_replay_fault_reason: self.self_validation_refusal.self_replay_halt_reason(),
             autopropose_timer_halted: self.timer_halted.load(Ordering::Relaxed),
             autopropose_halt: HaltStatus {
                 at: self.halt_record.lock().unpoison().as_ref().map(|r| r.at_ms),
@@ -839,6 +926,33 @@ fn construct_light_block_info(block: &BlockMessage) -> LightBlockInfo {
 
 #[cfg(test)]
 mod tests {
+    /// **The self-replay latch is read by every gate and cleared by the same resume as the timer
+    /// halt** (#564). The latch is the state the incident lacked: a node-level replay fault that
+    /// stops proposing and attesting instead of retrying the unchanged input.
+    #[test]
+    fn a_self_replay_halt_is_read_by_the_gates_and_cleared_by_the_resume() {
+        let health = ProposeHealth::new();
+        assert!(!health.self_replay_halted());
+        health
+            .self_validation_refusal()
+            .set_self_replay_halted("the attestation fallback also failed");
+        assert!(health.self_replay_halted());
+        assert_eq!(
+            health.self_replay_halt_reason().as_deref(),
+            Some("the attestation fallback also failed")
+        );
+        assert!(
+            health.snapshot().self_replay_fault_halted,
+            "the operator snapshot carries the latch"
+        );
+        health.clear_halt();
+        assert!(
+            !health.self_replay_halted(),
+            "the operator resume is the one way out, and it clears this latch too"
+        );
+        assert!(health.self_replay_halt_reason().is_none());
+    }
+
     use super::*;
     use rchain_models::block_hash::BlockHash;
     use rchain_models::casper::protocol::casper_message::RholangState;

@@ -212,6 +212,10 @@ pub struct ProposerHealthDto {
     pub self_validation_refusal: Option<SelfValidationRefusalDto>,
     /// Pooled deploy ids held out of selection after repeated self-replay refusals (#564).
     pub pool_quarantined: u64,
+    /// A self-replay fault latched this shard: the attestation fallback also failed, so proposing
+    /// and attesting are stopped until an operator resumes (#564).
+    pub self_replay_fault_halted: bool,
+    pub self_replay_fault_reason: Option<String>,
     pub autopropose_timer_halted: bool,
     pub autopropose_timer_halt_episodes: u64,
     pub autopropose_halt: HaltStatusDto,

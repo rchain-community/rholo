@@ -21,7 +21,8 @@ use rchain_shared::refined::BlockHeight;
 
 use crate::block_status::BlockStatus;
 use crate::interpreter_util::{
-    validate_block_checkpoint, ReplayVerdict, ResetRequest, ShardHealth, ValidationOrigin,
+    validate_block_checkpoint, ReplayVerdict, ResetReason, ResetRequest, ShardHealth,
+    ValidationOrigin,
 };
 use crate::merging::{
     BlockIndex, DeployChainIndex, MergeOutcome, MergeReport, MergeScope, ParentsMergedState,
@@ -1164,6 +1165,7 @@ async fn note_unrestorable_if_exhausted(
                     anchor_height,
                     blocks_above,
                     refused,
+                    reason: ResetReason::DivergenceBudget,
                 },
             );
             let prefix = if raised {

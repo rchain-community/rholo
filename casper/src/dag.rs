@@ -8,8 +8,8 @@ use async_trait::async_trait;
 
 use rchain_block_storage::dag::dag_storage::{
     BlockDagStorage, DeployId, DeployIdPermit, DeployPermit, DeployerLookup, HaltRecord,
-    HealthCounters, ResetMarker, HALT_RECORD_KEY, HEALTH_COUNTERS_KEY, LEGACY_BODY_SCAN_KEY,
-    RESET_MARKER_KEY,
+    HealthCounters, ResetMarker, SelfReplayRecord, HALT_RECORD_KEY, HEALTH_COUNTERS_KEY,
+    LEGACY_BODY_SCAN_KEY, RESET_MARKER_KEY, SELF_REPLAY_RECORD_KEY,
 };
 
 use rchain_block_storage::dag::finalizer::Message;
@@ -1255,6 +1255,50 @@ impl BlockDagStorage for BlockDagKeyValueStorage {
             return Ok(());
         };
         store.delete(&[HALT_RECORD_KEY.to_vec()]).await.map(|_| ())
+    }
+
+    /// **The self-replay fault, under its own reserved key** (#564). The same store and the same
+    /// refusing-default rule as the halt: a backend with nowhere to keep the fault must not look like
+    /// one that recorded it.
+    async fn write_self_replay_record(&self, record: SelfReplayRecord) -> Result<(), String> {
+        let Some(store) = &self.reset_marker else {
+            return Err(
+                "this DAG storage has no durable-records store attached, so this shard's self-replay \
+                 fault would be honoured by this process and forgotten by the next"
+                    .to_string(),
+            );
+        };
+        store
+            .put(&[(SELF_REPLAY_RECORD_KEY.to_vec(), record.encode())])
+            .await
+    }
+
+    async fn read_self_replay_record(&self) -> Result<Option<SelfReplayRecord>, String> {
+        let Some(store) = &self.reset_marker else {
+            return Err(
+                "this DAG storage has no durable-records store attached, so this shard's self-replay \
+                 fault history cannot be read — unknown, not empty"
+                    .to_string(),
+            );
+        };
+        let raw = store
+            .get(&[SELF_REPLAY_RECORD_KEY.to_vec()])
+            .await?
+            .into_iter()
+            .next()
+            .flatten();
+        raw.map(|bytes| SelfReplayRecord::decode(&bytes))
+            .transpose()
+    }
+
+    async fn clear_self_replay_record(&self) -> Result<(), String> {
+        let Some(store) = &self.reset_marker else {
+            return Ok(());
+        };
+        store
+            .delete(&[SELF_REPLAY_RECORD_KEY.to_vec()])
+            .await
+            .map(|_| ())
     }
 
     /// **The shard's monotone health counters, in the same store under a third reserved key** (see

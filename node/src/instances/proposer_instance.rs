@@ -363,7 +363,7 @@ mod tests {
     use std::sync::atomic::{AtomicU64, AtomicUsize};
 
     use rchain_block_storage::block_store::BlockStore;
-    use rchain_casper::blocks::proposer::propose_result::BlockCreatorResult;
+    use rchain_casper::blocks::proposer::propose_result::{BlockCreatorResult, ProposalMode};
     use rchain_casper::multi_parent_casper::ValidateError;
     use rchain_casper::validator_identity::ValidatorIdentity;
     use rchain_models::validator::Validator;
@@ -395,11 +395,12 @@ mod tests {
             dyn Fn(
                     &ValidatorIdentity,
                     ProposeSource,
+                    ProposalMode,
                     Option<usize>,
                 ) -> BoxFuture<Result<BlockCreatorResult, String>>
                 + Send
                 + Sync,
-        > = Arc::new(move |_v, _source, _limit| {
+        > = Arc::new(move |_v, _source, _mode, _limit| {
             let previous = calls.fetch_add(1, Ordering::SeqCst);
             let outcome = if previous > 0 && matches!(outcome, BlockCreatorResult::Created(_)) {
                 BlockCreatorResult::NoNewDeploys
@@ -446,11 +447,12 @@ mod tests {
             dyn Fn(
                     &ValidatorIdentity,
                     ProposeSource,
+                    ProposalMode,
                     Option<usize>,
                 ) -> BoxFuture<Result<BlockCreatorResult, String>>
                 + Send
                 + Sync,
-        > = Arc::new(move |_v, _source, limit| {
+        > = Arc::new(move |_v, _source, _mode, limit| {
             *seen.lock().expect("recorded limit") = limit;
             calls.fetch_add(1, Ordering::SeqCst);
             let outcome = outcome.clone();

@@ -541,6 +541,13 @@ fn casper_conf_from_hocon(h: &Hocon) -> Result<CasperConf, String> {
             Some(v) => to_bool(v)?,
             None => false,
         },
+        // **On by default** (#564): the self-replay fault has broadcast nothing, so the rewind to
+        // the last finalised anchor is safe by construction. A deployment that wants the halt
+        // instead sets `casper.self-replay-reset = false`.
+        self_replay_reset: match get_opt(h, "self-replay-reset") {
+            Some(v) => to_bool(v)?,
+            None => true,
+        },
         effect_mode: to_optional_string(h, "effect-scheduler")?
             .unwrap_or_else(|| "dfs".to_string()),
     })

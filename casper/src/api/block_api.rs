@@ -136,6 +136,12 @@ pub struct SelfValidationRefusal {
     pub attempts: u64,
     /// Whether this refusal's deploy set is now held out of the proposer's selection.
     pub excluded: bool,
+    /// **The shadow replay's state verdict** (#564): `Some(true/false)` when the diagnostic second
+    /// pass reached the checkpoint, `None` when it did not. The enforcing path decides the cost
+    /// before the state, so without this the operator cannot tell a state-correct refusal from a
+    /// divergence.
+    pub state_hash_matched: Option<bool>,
+    pub replayed_state_hash: Option<String>,
 }
 
 impl SelfValidationRefusal {
@@ -153,6 +159,8 @@ impl SelfValidationRefusal {
             deploy_count: 0,
             attempts: 1,
             excluded: false,
+            state_hash_matched: None,
+            replayed_state_hash: None,
         }
     }
 }
@@ -184,6 +192,8 @@ impl SelfValidationRefusalSink {
         deploy_count: usize,
         attempts: u64,
         excluded: bool,
+        state_hash_matched: Option<bool>,
+        replayed_state_hash: Option<String>,
     ) {
         let (initial_cost, replay_cost) = match cost_pair {
             Some((initial, replay)) => (Some(initial), Some(replay)),
@@ -200,6 +210,8 @@ impl SelfValidationRefusalSink {
             deploy_count,
             attempts,
             excluded,
+            state_hash_matched,
+            replayed_state_hash,
         });
     }
 
@@ -964,6 +976,8 @@ mod tests {
             3,
             5,
             true,
+            Some(true),
+            Some("deadbeef".to_string()),
         );
         sink.set_quarantined(5);
         let snap = health.snapshot();
@@ -977,6 +991,8 @@ mod tests {
         assert_eq!(refusal.deploy_count, 3);
         assert_eq!(refusal.attempts, 5);
         assert!(refusal.excluded);
+        assert_eq!(refusal.state_hash_matched, Some(true));
+        assert_eq!(refusal.replayed_state_hash.as_deref(), Some("deadbeef"));
         assert_eq!(snap.pool_quarantined, 5);
 
         sink.note("justification-regression", 3122, 3122);
@@ -990,6 +1006,8 @@ mod tests {
         assert_eq!(counted.deploy_count, 0);
         assert_eq!(counted.attempts, 1);
         assert!(!counted.excluded);
+        assert_eq!(counted.state_hash_matched, None);
+        assert_eq!(counted.replayed_state_hash, None);
     }
 
     /// **The count is of halts, not of calls** (W-N10-01).

@@ -48,6 +48,8 @@ fn to_self_validation_refusal_dto(
         deploy_count: r.deploy_count,
         attempts: r.attempts,
         excluded: r.excluded,
+        state_hash_matched: r.state_hash_matched,
+        replayed_state_hash: r.replayed_state_hash,
     })
 }
 
@@ -515,6 +517,8 @@ mod tests {
                 deploy_count: 0,
                 attempts: 1,
                 excluded: false,
+                state_hash_matched: None,
+                replayed_state_hash: None,
             }),
             pool_quarantined: 0,
             autopropose_timer_halted: true,

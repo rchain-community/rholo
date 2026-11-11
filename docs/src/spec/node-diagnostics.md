@@ -127,9 +127,10 @@ It is **not** a superset of `/health`. The two surfaces overlap in three groups,
 **The operator object is the detailed one** (#564). On `/api/v1/status/operator` — and only there —
 the refusal object also carries `initialCost` and `replayCost` (the `ReplayCostMismatch` pair, null
 for every other code), `deployIds` (base16, capped at 16; `deployCount` is the true count),
-`attempts` (the run length for this exact deploy set and code) and `excluded` (whether the set is now
-held out of the proposer's selection). `poolQuarantined` beside it is the number of pooled deploy ids
-currently held out. **These are proposer-local operating facts, not consensus state**: the deploys stay
+`attempts` (the run length for this exact deploy set and code), `excluded` (whether the set is now
+held out of the proposer's selection), `stateHashMatched` (the shadow replay's verdict on the declared
+post-state, null when it did not reach the checkpoint) and `replayedStateHash`. `poolQuarantined`
+beside it is the number of pooled deploy ids currently held out. **These are proposer-local operating facts, not consensus state**: the deploys stay
 in the pool, another validator may include them, and they expire with the pool at height + 50. The
 public `/health` object keeps the four-field summary above; deploy ids and costs are not published on
 an unauthenticated listener.

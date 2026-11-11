@@ -1691,7 +1691,9 @@ pub const OPENAPI_JSON: &str = r##"{
           "deployIds": { "type": "array", "items": { "type": "string" }, "description": "Refused deploy ids, base16, capped; deployCount is the true count" },
           "deployCount": { "type": "integer", "format": "int64" },
           "attempts": { "type": "integer", "format": "int64", "description": "Run length for this exact (deploy set, code) pair; a counted refusal is 1" },
-          "excluded": { "type": "boolean", "description": "Whether this refusal's deploy set is now held out of the proposer's selection" }
+          "excluded": { "type": "boolean", "description": "Whether this refusal's deploy set is now held out of the proposer's selection" },
+          "stateHashMatched": { "type": "boolean", "nullable": true, "description": "The shadow replay's verdict on the declared post-state; null when it did not reach the checkpoint. Separates a state-correct cost refusal from a divergence (#564)" },
+          "replayedStateHash": { "type": "string", "nullable": true, "description": "The shadow replay's computed post-state hash, when it reached the checkpoint" }
         }
       },
       "FinalityHealthDto": {
@@ -3863,6 +3865,8 @@ mod tests {
                         deploy_count: 0,
                         attempts: 1,
                         excluded: false,
+                        state_hash_matched: None,
+                        replayed_state_hash: None,
                     },
                 ),
                 ..Default::default()

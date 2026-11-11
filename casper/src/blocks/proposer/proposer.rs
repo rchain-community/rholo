@@ -537,6 +537,16 @@ impl Proposer {
                         (attempts, pool_ids)
                     };
                     let cost_pair = failure.cost_pair();
+                    let (state_hash_matched, replayed_state_hash) = match &failure {
+                        crate::rholang::ReplayFailure::ReplayCostMismatchWithDetail {
+                            detail,
+                            ..
+                        } => (
+                            detail.state_hash_matched,
+                            detail.replayed_state_hash.clone(),
+                        ),
+                        _ => (None, None),
+                    };
                     let deploy_count = refused.len();
                     let deploy_ids: Vec<String> = refused
                         .iter()
@@ -559,6 +569,8 @@ impl Proposer {
                             deploy_count,
                             attempts,
                             false,
+                            state_hash_matched,
+                            replayed_state_hash.clone(),
                         );
                         self.log.error(
                             LogSource::new("casper.blocks.Proposer"),
@@ -614,6 +626,8 @@ impl Proposer {
                             deploy_count,
                             attempts,
                             true,
+                            state_hash_matched,
+                            replayed_state_hash.clone(),
                         );
                         self.log.error(
                             LogSource::new("casper.blocks.Proposer"),
@@ -637,6 +651,8 @@ impl Proposer {
                             deploy_count,
                             attempts,
                             false,
+                            state_hash_matched,
+                            replayed_state_hash.clone(),
                         );
                         // Log on the first attempt, not every tick: the count is on the refusal
                         // record and the exclusion at the threshold is the next loud event.

@@ -196,6 +196,11 @@ pub struct SelfValidationRefusalDto {
     pub attempts: u64,
     /// Whether this refusal's deploy set is now held out of the proposer's selection.
     pub excluded: bool,
+    /// The shadow replay's verdict on the declared post-state: `true`/`false` when it reached the
+    /// checkpoint, null when it did not. The enforcing path decides the cost first, so this is the
+    /// field that separates a state-correct refusal from a divergence (#564).
+    pub state_hash_matched: Option<bool>,
+    pub replayed_state_hash: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]

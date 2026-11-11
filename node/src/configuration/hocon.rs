@@ -8,7 +8,9 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 use hocon::Hocon;
-use rchain_casper::{CasperConf, GenesisBlockData, ShardMemberships, ShardSpec};
+use rchain_casper::{
+    CasperConf, GenesisBlockData, SelfReplayInjection, ShardMemberships, ShardSpec,
+};
 use rchain_comm::peer_node::PeerNode;
 use rchain_comm::transport::tls_conf::TlsConf;
 
@@ -547,6 +549,11 @@ fn casper_conf_from_hocon(h: &Hocon) -> Result<CasperConf, String> {
         self_replay_reset: match get_opt(h, "self-replay-reset") {
             Some(v) => to_bool(v)?,
             None => true,
+        },
+        // Absent means off: a node that does not ask to inject a fault must behave as before.
+        self_replay_injection: match get_opt(h, "self-replay-injection") {
+            Some(v) => SelfReplayInjection::parse(&to_string(v)?)?,
+            None => SelfReplayInjection::Off,
         },
         effect_mode: to_optional_string(h, "effect-scheduler")?
             .unwrap_or_else(|| "dfs".to_string()),

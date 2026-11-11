@@ -201,6 +201,14 @@ pub struct SelfValidationRefusalDto {
     /// field that separates a state-correct refusal from a divergence (#564).
     pub state_hash_matched: Option<bool>,
     pub replayed_state_hash: Option<String>,
+    /// **Whether the durable record holds the refused block body** (#564, C359/C365). The body is
+    /// capped; `refusedBodyLen` is the true length, so an over-cap body is visible rather than
+    /// implied. Read from the record, so it survives a restart.
+    pub refused_body_available: bool,
+    pub refused_body_len: u64,
+    /// Whether this fault's finalised anchor has had its one reset attempt, and which anchor.
+    pub reset_attempted: bool,
+    pub reset_anchor: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]

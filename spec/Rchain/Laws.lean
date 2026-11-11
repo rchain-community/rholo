@@ -5242,35 +5242,45 @@ def lawsC : List Law := [
       held out and the immediate rebuild is an attestation with no user deploy), moves to a reset of a \
       **finalised** anchor, or halts. An unrecognised step is a halt, the safe fallback. Every fault \
       therefore reaches a safe state in one transition, and the incident's 45-hour loop — the same \
-      deterministic block rebuilt and refused — has no representation to write. The Rust's \
-      `ProposalMode::AttestOnly`, the self-replay latch and the finalised-anchor reset are the model's \
-      implementation.",
+      deterministic block rebuilt and refused — has no representation to write. **The reset is not \
+      terminal:** once the catch-up walk passes the finalised anchor it rewound to, \
+      `resumeAfterCatchup` returns the node to healthy. The Rust's `ProposalMode::AttestOnly`, the \
+      self-replay latch, the finalised-anchor reset and the automatic post-catch-up resume are the \
+      model's implementation.",
     status := .provedModel,
     declarations := [`Rchain.RecoveryState, `Rchain.RecoveryStep, `Rchain.nextState,
       `Rchain.RecoverySafe, `Rchain.no_unchanged_retry, `Rchain.every_fault_reaches_safe,
+      `Rchain.a_caught_up_reset_resumes, `Rchain.resume_requires_a_reset,
       `Rchain.resetAdmitted, `Rchain.a_non_finalised_anchor_is_refused,
       `Rchain.a_finalised_anchor_is_admitted],
     axioms := [],
     rust := ["casper/src/blocks/proposer/proposer.rs", "casper/src/api/block_api.rs",
-      "casper/src/engine/reset.rs", "block-storage/src/dag/dag_storage.rs"],
+      "casper/src/engine/reset.rs", "casper/src/engine/catchup.rs",
+      "block-storage/src/dag/dag_storage.rs"],
     rustWitness := ["casper/src/blocks/proposer/proposer.rs:a_self_replay_failure_is_bounded_and_not_counted_as_divergence",
-      "casper/src/blocks/proposer/proposer.rs:a_self_replay_fault_raises_one_reset_and_records_the_halt"],
+      "casper/src/blocks/proposer/proposer.rs:a_self_replay_fault_raises_one_reset_and_records_the_halt",
+      "casper/src/blocks/proposer/proposer.rs:a_reset_at_an_anchor_already_attempted_is_refused",
+      "casper/tests/reset.rs:a_caught_up_self_replay_reset_resumes_without_an_operator_post",
+      "casper/tests/reset.rs:a_self_replay_reset_below_its_anchor_does_not_resume"],
     witness := [`Rchain.no_unchanged_retry, `Rchain.every_fault_reaches_safe,
-      `Rchain.a_non_finalised_anchor_is_refused],
+      `Rchain.a_caught_up_reset_resumes, `Rchain.a_non_finalised_anchor_is_refused],
     falsifiable := "**Add a transition from `refused` to `refused`** (the incident's retry). Then \
       `no_unchanged_retry` cannot be proved (`decide` fails on the equality) and the proposer witness \
       reddens, because the second build is the refused block again rather than an attestation. The \
       live negative case is the incident: the same block, the same refusal, 45 hours. The reset half \
       is falsified by admitting a non-finalised anchor — `a_non_finalised_anchor_is_refused` fails to \
       decide — which is the state `rewind_plan`'s finalised arm and the pre-flight's absent-anchor \
-      refusal exist to prevent.",
+      refusal exist to prevent. The resume half is falsified by admitting `resumeAfterCatchup` from \
+      `refused` (`resume_requires_a_reset` fails to decide) and in Rust by resuming below the anchor \
+      or at another anchor (`a_self_replay_reset_below_its_anchor_does_not_resume`, \
+      `a_marker_from_another_anchors_reset_does_not_clear_the_self_replay_fault`).",
     note := "**What this law does not claim.** It does not model the replay's cause (RC-B, open), the \
       cost/state ordering (law 93), or the reset's durable bracket (laws 72/73/76). It says only that \
-      the fault state has an exit and that the exit is not a no-op. The automatic post-catch-up resume \
-      is not part of the model: the implemented reset latches the halt and the operator resume is the \
-      explicit way back. The Rust witnesses are the recovery and reset/halt proposer tests; the boot \
-      seed and the `AttestOnly` pace rule now have tests; the automatic post-catch-up resume is not
-      part of the model." },
+      the fault state has an exit, that the exit is not a no-op, and that a completed reset returns \
+      the node to healthy. The one-reset-per-finalised-anchor bound is operating policy rather than a \
+      consensus invariant, but the Rust witness refuses a second reset at the same anchor; the \
+      operator's explicit resume remains the fallback when no anchor was named, the reset was \
+      disabled, or the anchor has already had its attempt." },
 ]
 
 def laws : List Law := lawsA ++ lawsB ++ lawsC

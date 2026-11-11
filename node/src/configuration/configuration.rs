@@ -158,6 +158,7 @@ impl Configuration {
         check_merge_divergence_injection(&node_conf)?;
         check_sync_anchor(&node_conf)?;
         check_self_reset(&node_conf)?;
+        check_self_replay_injection(&node_conf)?;
         // **The production recipient is a repository constant** (`genesis::dev_tax`): an empty
         // configured address resolves to it outside dev mode and to no allocation inside it. Applied
         // before validation, so the genesis builder, the replay descriptors and the checks see one
@@ -448,6 +449,22 @@ fn check_merge_divergence_injection(node_conf: &NodeConf) -> Result<(), String> 
     Ok(())
 }
 
+/// **`casper.self-replay-injection` is refused outside `--dev-mode`** (#564). The injection makes a
+/// node reject its own valid blocks with the incident's own cost mismatch — indistinguishable from a
+/// node-side fault, and it stops that validator's proposals. A production node must not be able to
+/// be put in that shape by a flag; a devnet is exactly where the recovery ladder is drilled.
+fn check_self_replay_injection(node_conf: &NodeConf) -> Result<(), String> {
+    if node_conf.casper.self_replay_injection.is_on() && !node_conf.dev_mode {
+        return Err(
+            "casper.self-replay-injection requires --dev-mode: the injection makes this node reject \
+             its own valid blocks on purpose, which is indistinguishable from a node-side fault and \
+             stops its proposals"
+                .to_string(),
+        );
+    }
+    Ok(())
+}
+
 /// **`casper.self-reset` without a bootstrap is refused here, not discovered at the reset** (#320).
 ///
 /// A reset rewinds the node to its last finalised block, which puts it *deliberately behind* its peers:
@@ -575,7 +592,9 @@ mod tests {
         ApiServer, DevConf, Metrics, PeersDiscovery, ProtocolClient, ProtocolServer,
         ResourceGuardConf, Storage,
     };
-    use rchain_casper::{CasperConf, GenesisBlockData, ShardMemberships, ShardSpec};
+    use rchain_casper::{
+        CasperConf, GenesisBlockData, SelfReplayInjection, ShardMemberships, ShardSpec,
+    };
     use rchain_comm::peer_node::PeerNode;
     use rchain_comm::transport::tls_conf::TlsConf;
     use std::time::Duration;
@@ -645,6 +664,35 @@ mod tests {
         conf.casper.merge_divergence_injection = 0;
         assert!(
             check_merge_divergence_injection(&conf).is_ok(),
+            "a node that injects nothing needs no dev-mode"
+        );
+    }
+
+    /// **The self-replay injector is devnet-only** (#564). A production node must not be able to be
+    /// put in the shape the incident had by a flag; the pair of assertions mirrors the guard above,
+    /// so the test cannot pass by refusing everything.
+    #[test]
+    fn the_self_replay_injection_requires_dev_mode() {
+        let mut conf = default_expected();
+        conf.casper.self_replay_injection = SelfReplayInjection::All { limit: Some(2) };
+        conf.dev_mode = false;
+        let err = check_self_replay_injection(&conf)
+            .expect_err("arming the injector outside dev-mode must be refused");
+        assert!(
+            err.contains("requires --dev-mode"),
+            "the refusal has to name what is missing: {err}"
+        );
+
+        conf.dev_mode = true;
+        assert!(
+            check_self_replay_injection(&conf).is_ok(),
+            "…and dev-mode is the whole of the requirement"
+        );
+
+        conf.dev_mode = false;
+        conf.casper.self_replay_injection = SelfReplayInjection::Off;
+        assert!(
+            check_self_replay_injection(&conf).is_ok(),
             "a node that injects nothing needs no dev-mode"
         );
     }
@@ -886,6 +934,7 @@ mod tests {
                 self_reset: false,
                 self_replay_reset: true,
                 effect_mode: "dfs".to_string(),
+                self_replay_injection: SelfReplayInjection::Off,
             },
             metrics: Metrics {
                 prometheus: false,
@@ -1538,6 +1587,7 @@ mod tests {
                 self_reset: false,
                 self_replay_reset: true,
                 effect_mode: "dfs".to_string(),
+                self_replay_injection: SelfReplayInjection::Off,
             },
             metrics: Metrics {
                 prometheus: true,

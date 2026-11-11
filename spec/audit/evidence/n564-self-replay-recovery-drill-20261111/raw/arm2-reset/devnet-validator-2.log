@@ -1,0 +1,179 @@
+2026-11-11T15:04:16.152Z INFO  [coop.rchain.node.runtime.NodeRuntime] trying to open ports using UPnP....
+2026-11-11T15:04:16.153Z INFO  [coop.rchain.node.runtime.NodeRuntime] INFO - No gateway devices found
+2026-11-11T15:04:16.153Z INFO  [coop.rchain.node.runtime.NodeRuntime] No need to open any port
+2026-11-11T15:04:16.200Z INFO  [operator-risk] validator operator risk notice: an invalid block or proven equivocation can cost a stated share of your bond; an absent validator is not currently slashed but forfeits income and can stall finality, and enough silence stops the >2/3 quorum. Read TERMS.md.
+2026-11-11T15:04:16.200Z INFO  [resource-preflight] host resources: 32209 MiB available, cgroup v2, data dir 62066 MiB free, 1 rnode process(es), 24 CPU(s), 0 persisted block(s)
+2026-11-11T15:04:16.200Z WARN  [resource-preflight] no CPU quota is set for the node's cgroup; a busy host can starve it
+2026-11-11T15:04:16.271Z INFO  [casper.engine.NodeLaunch] Starting from bootstrap node, syncing LFS...
+2026-11-11T15:04:16.272Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is not-running and is not producing (resource fallback,                      unit C)
+replay complete — starting listeners; the API answers once they are up
+2026-11-11T15:04:16.313Z INFO  [casper.protocol.CommUtil] LFS fringe request 1/10 sent; awaiting admitted reply from rnode://75f3b58b9b897202183296a927a9393ceb7f59f5@devnet-bootstrap?protocol=40400&discovery=40404
+2026-11-11T15:04:16.320Z INFO  [casper.engine.NodeSyncing] Received finalized fringe from bootstrap node (cf9d572a74b729d1a8a11462acb9003572046d64995173d57458032764f12af1) def3eb164f6fe98b0e3c00a7cd0a67f7a23878642de87f4efc3fec4cc49271ed.
+2026-11-11T15:04:16.330Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([207, 157, 87, 42, 116, 183, 41, 209, 168, 161, 20, 98, 172, 185, 0, 53, 114, 4, 109, 100, 153, 81, 115, 213, 116, 88, 3, 39, 100, 241, 42, 241])), None)]
+2026-11-11T15:04:16.405Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://75f3b58b9b897202183296a927a9393ceb7f59f5@devnet-bootstrap?protocol=40400&discovery=40404.
+2026-11-11T15:04:16.440Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path []
+2026-11-11T15:04:16.458Z INFO  [casper.engine.NodeSyncing] BlockMessage received #0 from rnode://75f3b58b9b897202183296a927a9393ceb7f59f5@devnet-bootstrap?protocol=40400&discovery=40404.
+2026-11-11T15:04:16.461Z INFO  [casper.engine.LfsBlockRequester] Latest blocks downloaded.
+2026-11-11T15:04:16.537Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 0, data: 0) from rnode://75f3b58b9b897202183296a927a9393ceb7f59f5@devnet-bootstrap?protocol=40400&discovery=40404.
+2026-11-11T15:04:16.542Z INFO  [casper.engine.NodeSyncing] Requesting tuple-space data for 1 approved block state roots.
+2026-11-11T15:04:16.550Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([14, 87, 81, 192, 38, 229, 67, 178, 232, 171, 46, 176, 96, 153, 218, 161, 209, 229, 223, 71, 119, 143, 119, 135, 250, 171, 69, 205, 241, 47, 227, 168])), None)]
+2026-11-11T15:04:16.633Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 0, data: 0) from rnode://75f3b58b9b897202183296a927a9393ceb7f59f5@devnet-bootstrap?protocol=40400&discovery=40404.
+2026-11-11T15:04:16.633Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path []
+2026-11-11T15:04:16.715Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 0, data: 0) from rnode://75f3b58b9b897202183296a927a9393ceb7f59f5@devnet-bootstrap?protocol=40400&discovery=40404.
+2026-11-11T15:04:16.733Z INFO  [casper.engine.RecoveryReplay] Independently replayed 1 recovery blocks; all supplied fringe claims match.
+2026-11-11T15:04:16.758Z INFO  [casper.engine.NodeSyncing] LFS state is successfully restored.
+2026-11-11T15:04:16.773Z INFO  [casper.blocks.BlockDisposition] start-up disposition audit: 0 unsettled block(s) re-offered, 0 skipped for missing parents, 0 already inserted, 0 quarantined, 0 unreadable
+2026-11-11T15:04:16.773Z INFO  [casper.engine.NodeLaunch] start-up disposition audit: 0 pre-ledger body/bodies adopted, 0 re-offered, 0 skipped for missing parents, 0 still pending when the drain closed
+2026-11-11T15:04:16.773Z INFO  [casper.engine.NodeLaunch] Making a transition to Running state.
+2026-11-11T15:04:16.815Z INFO  [casper.protocol.CommUtil] Requested fork tip from peers
+2026-11-11T15:04:16.856Z INFO  [casper.blocks.BlockRetriever] Adding ebc629b79aa81d9c1f8148de5fd3e752519f101d62412677700e00088deebe24 hash to RequestedBlocks because of HasBlockMessageReceived.
+2026-11-11T15:04:16.897Z INFO  [casper.blocks.BlockRetriever] Adding a1bd503b9c653c918169f088420b6834e751fdad95ade98fc763d664c912e734 hash to RequestedBlocks because of HasBlockMessageReceived.
+2026-11-11T15:04:16.943Z INFO  [casper.blocks.BlockRetriever] Block ebc629b79aa81d9c1f8148de5fd3e752519f101d62412677700e00088deebe24 marked as received.
+2026-11-11T15:04:16.964Z WARN  [casper.interpreter.validate] finality did not advance at tip 0: a layer exists but its supporting stake is not a supermajority — 0 of 300 (0 full partition(s) among 0 candidate(s) of a 1-sender partition)
+[pos] close_block 1 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-11T15:04:16.986Z INFO  [casper.blocks.BlockRetriever] Block a1bd503b9c653c918169f088420b6834e751fdad95ade98fc763d664c912e734 marked as received.
+2026-11-11T15:04:17.032Z INFO  [casper.blocks.Proposer] attestation at tip 1: licensed — nothing_to_finalize=false new_state_transition=true quorum_reachable=true cadence_due=true paced=true round=[04f700a4] blocked_attempts=0 escape=false
+No pooled deploys; injecting dummy deploy for block #1
+[deploy] deployer=04f700a417754b77 ok cost=3 
+[pos] close_block 1 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-11T15:04:17.053Z INFO  [casper.protocol.CommUtil] Block hash ebc629b79aa81d9c1f8148de5fd3e752519f101d62412677700e00088deebe24: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+[pos] close_block 1 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 1 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-11T15:04:17.115Z INFO  [casper.protocol.CommUtil] Block hash a1bd503b9c653c918169f088420b6834e751fdad95ade98fc763d664c912e734: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-11T15:04:17.171Z INFO  [casper.protocol.CommUtil] Block hash e20e4b6ac5ccbeb2005374a79c4cd2f04bf3f27112c477e0c74cf839405e71ef: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-11T15:04:17.171Z INFO  [coop.rchain.node.instances.ProposerInstance] proposed and added block #1 (seq 0)
+2026-11-11T15:04:17.193Z INFO  [casper.blocks.Proposer] attestation at tip 1: licensed — nothing_to_finalize=false new_state_transition=true quorum_reachable=true cadence_due=false paced=true round=[04d8b6c3 04dbe32c 04f700a4] blocked_attempts=0 escape=false
+No pooled deploys; injecting dummy deploy for block #2
+[deploy] deployer=04f700a417754b77 ok cost=3 
+[pos] close_block 2 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-11T15:04:17.244Z WARN  [casper.interpreter.validate] finality did not advance at tip 1: a layer exists but its supporting stake is not a supermajority — 0 of 300 (0 full partition(s) among 0 candidate(s) of a 3-sender partition)
+2026-11-11T15:04:17.253Z INFO  [casper.engine.NodeRunning] Received request for block e20e4b6ac5ccbeb2005374a79c4cd2f04bf3f27112c477e0c74cf839405e71ef from rnode://75f3b58b9b897202183296a927a9393ceb7f59f5@devnet-bootstrap?protocol=40400&discovery=40404. Response sent.
+[pos] close_block 2 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-11T15:04:17.323Z INFO  [casper.protocol.CommUtil] Block hash 5ccc23e0d1c0bd0e1a33c65601d96fbf3b455888223d77c58e9bb5c9c0eb9f22: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-11T15:04:17.323Z INFO  [coop.rchain.node.instances.ProposerInstance] proposed and added block #2 (seq 1)
+2026-11-11T15:04:17.390Z INFO  [casper.engine.NodeRunning] Received request for block 5ccc23e0d1c0bd0e1a33c65601d96fbf3b455888223d77c58e9bb5c9c0eb9f22 from rnode://75f3b58b9b897202183296a927a9393ceb7f59f5@devnet-bootstrap?protocol=40400&discovery=40404. Response sent.
+2026-11-11T15:04:17.482Z INFO  [casper.blocks.BlockRetriever] Adding ab9aac237e9bc213b5e4535c266e7b2302792685d0896bcebd23ae1a77bbd225 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-11T15:04:17.570Z INFO  [casper.blocks.BlockRetriever] Block ab9aac237e9bc213b5e4535c266e7b2302792685d0896bcebd23ae1a77bbd225 marked as received.
+[pos] close_block 2 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-11T15:04:17.668Z INFO  [casper.protocol.CommUtil] Block hash ab9aac237e9bc213b5e4535c266e7b2302792685d0896bcebd23ae1a77bbd225: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-11T15:04:17.812Z INFO  [casper.blocks.BlockRetriever] Adding 0ba6a275bf9fb4d28284f534ff493ac7a7f7c77f55188c8698c978e734396707 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-11T15:04:17.897Z INFO  [casper.blocks.BlockRetriever] Block 0ba6a275bf9fb4d28284f534ff493ac7a7f7c77f55188c8698c978e734396707 marked as received.
+[pos] close_block 2 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-11T15:04:17.941Z INFO  [casper.blocks.BlockRetriever] Adding 11a2aae8dbb3c62682bf80018812cccca7ef882e97addf8a55a88a9942becef5 hash to RequestedBlocks because of HashBroadcastRecieved.
+No pooled deploys; injecting dummy deploy for block #3
+[deploy] deployer=04f700a417754b77 ok cost=3 
+2026-11-11T15:04:17.983Z INFO  [casper.protocol.CommUtil] Block hash 0ba6a275bf9fb4d28284f534ff493ac7a7f7c77f55188c8698c978e734396707: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+[pos] close_block 3 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-11T15:04:18.027Z WARN  [casper.interpreter.validate] finality did not advance at tip 2: a layer exists but its supporting stake is not a supermajority — 0 of 300 (0 full partition(s) among 3 candidate(s) of a 3-sender partition)
+[pos] close_block 3 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-11T15:04:18.072Z INFO  [casper.blocks.BlockRetriever] Block 11a2aae8dbb3c62682bf80018812cccca7ef882e97addf8a55a88a9942becef5 marked as received.
+[pos] close_block 3 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-11T15:04:18.120Z INFO  [casper.protocol.CommUtil] Block hash 4eb45a2a660de66bb81bc407dba4263e174933b285462ea987ea17427999b3c4: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-11T15:04:18.120Z INFO  [coop.rchain.node.instances.ProposerInstance] proposed and added block #3 (seq 2)
+2026-11-11T15:04:18.162Z INFO  [casper.blocks.BlockRetriever] Adding 45169625b6592fe524ca35a6da834b2b28ba18bda38ad77b01508c9996d18488 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-11T15:04:18.174Z INFO  [casper.protocol.CommUtil] Block hash 11a2aae8dbb3c62682bf80018812cccca7ef882e97addf8a55a88a9942becef5: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-11T15:04:18.258Z INFO  [casper.engine.NodeRunning] Received request for block 4eb45a2a660de66bb81bc407dba4263e174933b285462ea987ea17427999b3c4 from rnode://75f3b58b9b897202183296a927a9393ceb7f59f5@devnet-bootstrap?protocol=40400&discovery=40404. Response sent.
+2026-11-11T15:04:18.265Z INFO  [casper.blocks.BlockRetriever] Block 45169625b6592fe524ca35a6da834b2b28ba18bda38ad77b01508c9996d18488 marked as received.
+[pos] close_block 3 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-11T15:04:18.367Z INFO  [casper.protocol.CommUtil] Block hash 45169625b6592fe524ca35a6da834b2b28ba18bda38ad77b01508c9996d18488: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+["#define $Kudos", `rho:id:9spnmtw9g3qdi1kpxcbgbuyuukbkryp1wfdwsy6iunb9g44icrjy`]
+"begin"
+["#define $Inbox", `rho:id:3spfkanxkeq3d1s6wdbjz5gpy4oio5uzd9hnsmfbukjeakyiubky`]
+["#define $Directory", `rho:id:zcn8i36nea5u7sgkkuoh38nomzcg9gpfi4qs3c5ou7bmp6ygasio`]
+["#define $Issue", `rho:id:netuaaypr6ryw3ab5yk8e7fjhqx1gfxnnkm9mdif7wswmgkegfxo`]
+["#define $Ballot", `rho:id:kuhtaexp36f3rjygs8t5oosxfhx7m6kuy9iwi3ew5jz63fppbroy`]
+`rho:id:kuhtaexp36f3rjygs8t5oosxfhx7m6kuy9iwi3ew5jz63fppbroy`
+"starting"
+["#define $Chat", `rho:id:twqdgghs4dz3sd8ronngpg1kdwrtikq8pdgmjzd7z9d1k5kt1poy`]
+"request"
+["#define $Group", `rho:id:s9hd3eoq1trqjsbeay3j1ihsue6zfz6tauy1wyii3zwj1pkh7r3o`]
+["MCAread", bundle+ {   Unforgeable(0x7ab62ea39c23346344dedf8aa6548802c0432374b6a4a4d81a357a6ec284915e) }]
+["GetMe", ("published", "11112VYAt8rUGNRRZX3eJdgagaAhtWTK8Js7F7X5iqddMVqyDTtYau/GetMe", 0), "SendThem", ("published", "11112VYAt8rUGNRRZX3eJdgagaAhtWTK8Js7F7X5iqddMVqyDTtYau/SendThem", 0)]
+["getting deployer rev address"]
+["got pub key", "04f700a417754b775d95421973bdbdadb2d23c8a5af46f1829b1431f5c136e549e8a0d61aa0c793f1a614f8e437711c7758473c6ceb0859ac7e9e07911ca66b5c4".hexToBytes()]
+["got revaddr", {"deployer REV address" : "11112VYAt8rUGNRRZX3eJdgagaAhtWTK8Js7F7X5iqddMVqyDTtYau", "deployerId" : DeployerId(0x04f700a417754b775d95421973bdbdadb2d23c8a5af46f1829b1431f5c136e549e8a0d61aa0c793f1a614f8e437711c7758473c6ceb0859ac7e9e07911ca66b5c4), "pubKeyBytes" : "04f700a417754b775d95421973bdbdadb2d23c8a5af46f1829b1431f5c136e549e8a0d61aa0c793f1a614f8e437711c7758473c6ceb0859ac7e9e07911ca66b5c4".hexToBytes()}]
+["getMe", "11112VYAt8rUGNRRZX3eJdgagaAhtWTK8Js7F7X5iqddMVqyDTtYau", "everyone size", 0]
+["creating your stuff", "11112VYAt8rUGNRRZX3eJdgagaAhtWTK8Js7F7X5iqddMVqyDTtYau"]
+["inbox creation", bundle+ {   Unforgeable(0x109d074f7ca037d43d4a42c063c37bf3a6980cb86a5ed9c242e23ec27277d088) }, "dir creation", bundle+ {   Unforgeable(0x74206e9f2a2fd1d16e885372201da64ffc57070d693c85556af5cb2811852e94) }]
+["read", bundle+ {   Unforgeable(0x9c3e3fa972dc564a5fed48f03053fb0376f6d9bc91d745f33cfdc1710d55c10b) }, "write", bundle+ {   Unforgeable(0x67945f3348c4e24133e4ac67f8cdbf94600c1dedeba8820d27c50fc01cfa9662) }, "peek", bundle+ {   Unforgeable(0xdd2e50727b44423dbb4fb121bbd77046322b47fff7f310d5562600e92172edb1) }, "dirMap", {"grant" : bundle+ {   Unforgeable(0x930d5e796b482da0445c99179ca84aaeb5712c0b4f986b15dbb9f34c1835b2a1) }, "read" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "write" : bundle+ {   Unforgeable(0xb2eacb8ed80f56f0a20860e77f960e22be12aeba0b087f33047cd9b4d37a66ef) }}]
+["creating you", "11112VYAt8rUGNRRZX3eJdgagaAhtWTK8Js7F7X5iqddMVqyDTtYau", "with your stuff", {"claimed" : false, "dictionary" : {"grant" : bundle+ {   Unforgeable(0x930d5e796b482da0445c99179ca84aaeb5712c0b4f986b15dbb9f34c1835b2a1) }, "read" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "write" : bundle+ {   Unforgeable(0xb2eacb8ed80f56f0a20860e77f960e22be12aeba0b087f33047cd9b4d37a66ef) }}, "inbox" : {"URI" : `rho:id:1dowt16ek6squ9iycd3iyz8gtzn8wfp8wzef59qtwuyqz5z5cgby`, "dict" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "inbox" : bundle+ {   Unforgeable(0x67945f3348c4e24133e4ac67f8cdbf94600c1dedeba8820d27c50fc01cfa9662) }, "peek" : bundle+ {   Unforgeable(0xdd2e50727b44423dbb4fb121bbd77046322b47fff7f310d5562600e92172edb1) }, "receive" : bundle+ {   Unforgeable(0x9c3e3fa972dc564a5fed48f03053fb0376f6d9bc91d745f33cfdc1710d55c10b) }}}]
+["Inbox returning", bundle+ {   Unforgeable(0x9c3e3fa972dc564a5fed48f03053fb0376f6d9bc91d745f33cfdc1710d55c10b) }, bundle+ {   Unforgeable(0x67945f3348c4e24133e4ac67f8cdbf94600c1dedeba8820d27c50fc01cfa9662) }, bundle+ {   Unforgeable(0xdd2e50727b44423dbb4fb121bbd77046322b47fff7f310d5562600e92172edb1) }]
+["you don't exist", "11112VYAt8rUGNRRZX3eJdgagaAhtWTK8Js7F7X5iqddMVqyDTtYau"]
+["your inserted stuff", {"claimed" : false, "dictionary" : {"grant" : bundle+ {   Unforgeable(0x930d5e796b482da0445c99179ca84aaeb5712c0b4f986b15dbb9f34c1835b2a1) }, "read" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "write" : bundle+ {   Unforgeable(0xb2eacb8ed80f56f0a20860e77f960e22be12aeba0b087f33047cd9b4d37a66ef) }}, "inbox" : {"URI" : `rho:id:1dowt16ek6squ9iycd3iyz8gtzn8wfp8wzef59qtwuyqz5z5cgby`, "dict" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "inbox" : bundle+ {   Unforgeable(0x67945f3348c4e24133e4ac67f8cdbf94600c1dedeba8820d27c50fc01cfa9662) }, "peek" : bundle+ {   Unforgeable(0xdd2e50727b44423dbb4fb121bbd77046322b47fff7f310d5562600e92172edb1) }, "receive" : bundle+ {   Unforgeable(0x9c3e3fa972dc564a5fed48f03053fb0376f6d9bc91d745f33cfdc1710d55c10b) }}}, "everyone size", 1]
+["inbox", {"URI" : `rho:id:1dowt16ek6squ9iycd3iyz8gtzn8wfp8wzef59qtwuyqz5z5cgby`, "dict" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "inbox" : bundle+ {   Unforgeable(0x67945f3348c4e24133e4ac67f8cdbf94600c1dedeba8820d27c50fc01cfa9662) }, "peek" : bundle+ {   Unforgeable(0xdd2e50727b44423dbb4fb121bbd77046322b47fff7f310d5562600e92172edb1) }, "receive" : bundle+ {   Unforgeable(0x9c3e3fa972dc564a5fed48f03053fb0376f6d9bc91d745f33cfdc1710d55c10b) }}]
+["x", {"claimed" : false, "dictionary" : {"grant" : bundle+ {   Unforgeable(0x930d5e796b482da0445c99179ca84aaeb5712c0b4f986b15dbb9f34c1835b2a1) }, "read" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "write" : bundle+ {   Unforgeable(0xb2eacb8ed80f56f0a20860e77f960e22be12aeba0b087f33047cd9b4d37a66ef) }}, "inbox" : {"URI" : `rho:id:1dowt16ek6squ9iycd3iyz8gtzn8wfp8wzef59qtwuyqz5z5cgby`, "dict" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "inbox" : bundle+ {   Unforgeable(0x67945f3348c4e24133e4ac67f8cdbf94600c1dedeba8820d27c50fc01cfa9662) }, "peek" : bundle+ {   Unforgeable(0xdd2e50727b44423dbb4fb121bbd77046322b47fff7f310d5562600e92172edb1) }, "receive" : bundle+ {   Unforgeable(0x9c3e3fa972dc564a5fed48f03053fb0376f6d9bc91d745f33cfdc1710d55c10b) }}}]
+["writing inbox and dictionary for bootstrap", {"URI" : `rho:id:1dowt16ek6squ9iycd3iyz8gtzn8wfp8wzef59qtwuyqz5z5cgby`, "dict" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "inbox" : bundle+ {   Unforgeable(0x67945f3348c4e24133e4ac67f8cdbf94600c1dedeba8820d27c50fc01cfa9662) }, "peek" : bundle+ {   Unforgeable(0xdd2e50727b44423dbb4fb121bbd77046322b47fff7f310d5562600e92172edb1) }, "receive" : bundle+ {   Unforgeable(0x9c3e3fa972dc564a5fed48f03053fb0376f6d9bc91d745f33cfdc1710d55c10b) }}, {"grant" : bundle+ {   Unforgeable(0x930d5e796b482da0445c99179ca84aaeb5712c0b4f986b15dbb9f34c1835b2a1) }, "read" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "write" : bundle+ {   Unforgeable(0xb2eacb8ed80f56f0a20860e77f960e22be12aeba0b087f33047cd9b4d37a66ef) }}]
+["everyone size", 0]
+No pooled deploys; injecting dummy deploy for block #4
+[deploy] deployer=04f700a417754b77 ok cost=3 
+[pos] close_block 4 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 4 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-11T15:04:19.726Z INFO  [casper.protocol.CommUtil] Block hash 44f1da8bd9b41ce8847ca125c836fba4df778b901f396f26014d7f27bad7b4cb: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-11T15:04:19.726Z INFO  [coop.rchain.node.instances.ProposerInstance] proposed and added block #4 (seq 3)
+2026-11-11T15:04:19.808Z INFO  [casper.engine.NodeRunning] Received request for block 44f1da8bd9b41ce8847ca125c836fba4df778b901f396f26014d7f27bad7b4cb from rnode://75f3b58b9b897202183296a927a9393ceb7f59f5@devnet-bootstrap?protocol=40400&discovery=40404. Response sent.
+2026-11-11T15:04:19.808Z INFO  [casper.blocks.BlockRetriever] Adding beb5c6826c62580208d92b3c6a9e4f42d8a8369e73a214c989e98187fe2e899a hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-11T15:04:19.903Z INFO  [casper.blocks.BlockRetriever] Block beb5c6826c62580208d92b3c6a9e4f42d8a8369e73a214c989e98187fe2e899a marked as received.
+[pos] close_block 4 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-11T15:04:20.020Z INFO  [casper.protocol.CommUtil] Block hash beb5c6826c62580208d92b3c6a9e4f42d8a8369e73a214c989e98187fe2e899a: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-11T15:04:20.148Z INFO  [casper.blocks.BlockRetriever] Adding ad6167c3d0b22b4540b68c208af80f04fb5ee63c7e58501331e3a08ec4b28e0a hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-11T15:04:20.235Z INFO  [casper.blocks.BlockRetriever] Block ad6167c3d0b22b4540b68c208af80f04fb5ee63c7e58501331e3a08ec4b28e0a marked as received.
+[pos] close_block 4 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-11T15:04:20.328Z INFO  [casper.blocks.BlockRetriever] Adding 657279fdfa34a94f98807833535f001417120fe5ecdadb5b5b59311c405d6a10 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-11T15:04:20.359Z INFO  [casper.protocol.CommUtil] Block hash ad6167c3d0b22b4540b68c208af80f04fb5ee63c7e58501331e3a08ec4b28e0a: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+No pooled deploys; injecting dummy deploy for block #5
+[deploy] deployer=04f700a417754b77 ok cost=3 
+[pos] close_block 5 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-11T15:04:20.406Z INFO  [casper.blocks.BlockRetriever] Block 657279fdfa34a94f98807833535f001417120fe5ecdadb5b5b59311c405d6a10 marked as received.
+[pos] close_block 5 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 5 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-11T15:04:20.537Z INFO  [casper.protocol.CommUtil] Block hash 657279fdfa34a94f98807833535f001417120fe5ecdadb5b5b59311c405d6a10: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-11T15:04:20.538Z INFO  [casper.protocol.CommUtil] Block hash 72a66d643f485c9567f0784f692554718cee44123c4002ce104f0d7b3076df52: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-11T15:04:20.538Z INFO  [coop.rchain.node.instances.ProposerInstance] proposed and added block #5 (seq 4)
+2026-11-11T15:04:20.745Z INFO  [casper.engine.NodeRunning] Received request for block 72a66d643f485c9567f0784f692554718cee44123c4002ce104f0d7b3076df52 from rnode://75f3b58b9b897202183296a927a9393ceb7f59f5@devnet-bootstrap?protocol=40400&discovery=40404. Response sent.
+2026-11-11T15:04:21.862Z INFO  [casper.blocks.BlockRetriever] Adding 5d9f09f18fa6f720de96140c91135101943305bbbd4d98e7b35b13041347e787 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-11T15:04:21.951Z INFO  [casper.blocks.BlockRetriever] Block 5d9f09f18fa6f720de96140c91135101943305bbbd4d98e7b35b13041347e787 marked as received.
+2026-11-11T15:04:21.980Z WARN  [casper.interpreter.validate] merge search: 24 merges · widest scope 14 chains / 0 conflict pairs / 0 asymmetric · most states expanded on one merge 15 · width buckets [24, 0, 0, 0, 0] · cost buckets [24, 0, 0, 0, 0]
+[pos] close_block 5 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-11T15:04:22.015Z INFO  [casper.blocks.BlockRetriever] Adding a6e5a6852619dd4b24d64e75ba38c7355c06439686898bcff1e791866892af1b hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-11T15:04:22.056Z INFO  [casper.protocol.CommUtil] Block hash 5d9f09f18fa6f720de96140c91135101943305bbbd4d98e7b35b13041347e787: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+No pooled deploys; injecting dummy deploy for block #6
+[deploy] deployer=04f700a417754b77 ok cost=3 
+[pos] close_block 6 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-11T15:04:22.146Z INFO  [casper.blocks.BlockRetriever] Block a6e5a6852619dd4b24d64e75ba38c7355c06439686898bcff1e791866892af1b marked as received.
+[pos] close_block 6 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-11T15:04:22.176Z INFO  [coop.rchain.node.runtime.BlockIndex] block indexing: 250 blocks indexed, 1 replay fallbacks (1068 ms, 0 not persisted), index cache 16 entries, 0 pruned, cap 64, 0 capacity evicted
+[pos] close_block 6 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-11T15:04:22.245Z INFO  [casper.protocol.CommUtil] Block hash 55ffc60a9de652c159f78a9ad841f3bae453a93b05972c27e4c61cd8d3aa4722: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-11T15:04:22.245Z INFO  [coop.rchain.node.instances.ProposerInstance] proposed and added block #6 (seq 5)
+2026-11-11T15:04:22.246Z INFO  [casper.protocol.CommUtil] Block hash a6e5a6852619dd4b24d64e75ba38c7355c06439686898bcff1e791866892af1b: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-11T15:04:22.327Z INFO  [casper.engine.NodeRunning] Received request for block 55ffc60a9de652c159f78a9ad841f3bae453a93b05972c27e4c61cd8d3aa4722 from rnode://75f3b58b9b897202183296a927a9393ceb7f59f5@devnet-bootstrap?protocol=40400&discovery=40404. Response sent.
+2026-11-11T15:04:22.622Z INFO  [casper.blocks.BlockRetriever] Adding 278d689c4c48d10e58c59a9550c0656fa8d2d0cf6a89cff034cc47c1dfcfe22a hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-11T15:04:22.711Z INFO  [casper.blocks.BlockRetriever] Block 278d689c4c48d10e58c59a9550c0656fa8d2d0cf6a89cff034cc47c1dfcfe22a marked as received.
+[pos] close_block 6 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-11T15:04:22.807Z INFO  [casper.blocks.BlockRetriever] Adding 673067786a8acc6f7f8a262f5baada376a24e94717f8dd69feef38e3e8caf6ac hash to RequestedBlocks because of HashBroadcastRecieved.
+No pooled deploys; injecting dummy deploy for block #7
+2026-11-11T15:04:22.826Z INFO  [casper.protocol.CommUtil] Block hash 278d689c4c48d10e58c59a9550c0656fa8d2d0cf6a89cff034cc47c1dfcfe22a: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+[deploy] deployer=04f700a417754b77 ok cost=3 
+[pos] close_block 7 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-11T15:04:22.870Z INFO  [casper.blocks.BlockRetriever] Block 673067786a8acc6f7f8a262f5baada376a24e94717f8dd69feef38e3e8caf6ac marked as received.
+[pos] close_block 7 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 7 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-11T15:04:23.024Z INFO  [casper.protocol.CommUtil] Block hash cf88a1d36ea6b862e149a1382d5ea595b76bf3db86624a85b36a40a87eed189e: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-11T15:04:23.025Z INFO  [casper.protocol.CommUtil] Block hash 673067786a8acc6f7f8a262f5baada376a24e94717f8dd69feef38e3e8caf6ac: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-11T15:04:23.025Z INFO  [coop.rchain.node.instances.ProposerInstance] proposed and added block #7 (seq 6)
+2026-11-11T15:04:23.096Z INFO  [casper.engine.NodeRunning] Received request for block cf88a1d36ea6b862e149a1382d5ea595b76bf3db86624a85b36a40a87eed189e from rnode://75f3b58b9b897202183296a927a9393ceb7f59f5@devnet-bootstrap?protocol=40400&discovery=40404. Response sent.
+2026-11-11T15:04:23.096Z INFO  [casper.blocks.BlockRetriever] Adding c4fb7a77aa0355869d18ab00754faf2c8dd2e907f9db0dcef220455c66cb26f1 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-11T15:04:23.183Z INFO  [casper.blocks.BlockRetriever] Block c4fb7a77aa0355869d18ab00754faf2c8dd2e907f9db0dcef220455c66cb26f1 marked as received.
+[pos] close_block 7 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+No pooled deploys; injecting dummy deploy for block #8
+2026-11-11T15:04:23.308Z INFO  [casper.protocol.CommUtil] Block hash c4fb7a77aa0355869d18ab00754faf2c8dd2e907f9db0dcef220455c66cb26f1: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+[deploy] deployer=04f700a417754b77 ok cost=3 
+[pos] close_block 8 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 8 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-11T15:04:23.400Z INFO  [casper.blocks.BlockRetriever] Adding f45acad639f64661abf40a57c7ddb39e685735d0a97ea2e3e5023ab049e35504 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-11T15:04:23.442Z INFO  [casper.protocol.CommUtil] Block hash c7aa87d95d59b737da5b738a554a81cece9ff013b0d7d6deef659b7664f4ead7: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-11T15:04:23.442Z INFO  [coop.rchain.node.instances.ProposerInstance] proposed and added block #8 (seq 7)
+2026-11-11T15:04:23.520Z INFO  [casper.blocks.BlockRetriever] Block f45acad639f64661abf40a57c7ddb39e685735d0a97ea2e3e5023ab049e35504 marked as received.
+[pos] close_block 8 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-11T15:04:23.599Z INFO  [casper.protocol.CommUtil] Block hash f45acad639f64661abf40a57c7ddb39e685735d0a97ea2e3e5023ab049e35504: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-11T15:04:23.599Z INFO  [casper.engine.NodeRunning] Received request for block c7aa87d95d59b737da5b738a554a81cece9ff013b0d7d6deef659b7664f4ead7 from rnode://75f3b58b9b897202183296a927a9393ceb7f59f5@devnet-bootstrap?protocol=40400&discovery=40404. Response sent.

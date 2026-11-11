@@ -43,7 +43,8 @@ jobs:
         uses: taiki-e/install-action@6db3a280da9eee4283c045c7431ab5116f1a0089 # cargo-llvm-cov
 
       - name: Install protoc
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq protobuf-compiler
+        # Bounded retries against a flaky runner mirror (tools/ci-apt-install.sh).
+        run: sudo tools/ci-apt-install.sh protobuf-compiler
 
       - name: Coverage
         # The line and function floors, and why the second is a *function* floor (AUDIT C107): the

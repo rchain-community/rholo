@@ -1,0 +1,22 @@
+==> devnet: 3 validator(s) + 0 observer(s)
+    autopropose=true propose-on-deploy=true admin=true deployer=true
+==> starting devnet-bootstrap (validator 0, standalone, creates genesis)
+f5917e209c4ca64c675771ad3066fa7716b5e1fda56c98712ae60e31d075013c
+==> bootstrap id: 4b4bc62934f2d880814a544f97006bfb71ca9916
+==> devnet-bootstrap has committed genesis (latestBlockNumber=2); starting the network
+==> starting devnet-validator-1 (validator 1, bootstraps from devnet-bootstrap)
+6aa3312e4a185daaffeadb3c458d92ef3f33a8ab12163ff5fca1d8161af52fb5
+==> starting devnet-validator-2 (validator 2, bootstraps from devnet-bootstrap)
+f5457fd43863942c1d396b453769eddfbbd9f53e8c312a3d53d6c16f4a1db83e
+==> devnet-bootstrap serving /api/v1/status (latestBlockNumber=2)
+==> devnet-validator-1 synced genesis and serves /api/v1/status (latestBlockNumber=1 port=41403)
+==> devnet-validator-2 synced genesis and serves /api/v1/status (latestBlockNumber=2 port=42403)
+
+==> up. Interact with:
+    tools/devnet.sh deploy <contract.rho>   # signed deploy to devnet-bootstrap
+    tools/devnet.sh query <name>            # listen for data at a public name
+    tools/devnet.sh propose [--admin]       # force a block
+    tools/devnet.sh status | logs <node> | diagnose | down
+
+    Public HTTP API:  http://localhost:40403/api/v1/status
+    Admin HTTP API:   http://localhost:40405/api/v1/propose

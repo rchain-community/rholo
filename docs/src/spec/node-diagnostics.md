@@ -129,10 +129,13 @@ the refusal object also carries `initialCost` and `replayCost` (the `ReplayCostM
 for every other code), `deployIds` (base16, capped at 16; `deployCount` is the true count),
 `attempts` (the run length for this exact pre-state, deploy set and code), `excluded` (whether the set
 is held out of the proposer's selection at the refusing pre-state), `stateHashMatched` (the shadow
-replay's verdict on the declared post-state, null when it did not reach the checkpoint) and
-`replayedStateHash`. `poolQuarantined` beside it is the number of pooled deploy ids currently held
-out. **These are proposer-local operating facts, not consensus state**: the deploys stay in the pool,
-another validator may include them, and they expire with the pool at height + 50.
+replay's verdict on the declared post-state, null when it did not reach the checkpoint),
+`replayedStateHash`, and the durable record's view: `refusedBodyAvailable`/`refusedBodyLen` (the
+refused block body is capped; the length is the true one, so an over-cap body is visible rather than
+implied), `resetAttempted` (the fault's finalised anchor has had its one reset) and `resetAnchor`.
+`poolQuarantined` beside it is the number of pooled deploy ids currently held out. **These are
+proposer-local operating facts, not consensus state**: the deploys stay in the pool, another
+validator may include them, and they expire with the pool at height + 50.
 
 **The recovery fields, and why the refusal can stand while the node is healthy** (#564). A self-replay
 refusal is followed by an attestation-only block, so a successful propose does **not** by itself clear
@@ -140,11 +143,16 @@ the refusal record (it stays as evidence until the suspect set is resolved); a n
 clears it with the counter. The operator snapshot adds `selfReplayFaultHalted` and
 `selfReplayFaultReason`: set only when the attestation fallback also failed, the node-level rung. The
 latch is read by the autopropose timer, the attest-on-new-blocks tap and every `propose`, so it stops
-production even with `--no-autopropose`; `POST /api/v1/autopropose/resume` clears it with the timer
-halt, store-first. The refused block body (capped), the verdict and the suspect ids are in the durable
-`SelfReplayRecord`; a `ResetRequested`/`Halted` stage re-seeds the latch at boot. The public `/health`
-object keeps the four-field summary above; deploy ids, costs, the halt sentence and the record are not
-published on an unauthenticated listener.
+production even with `--no-autopropose`. **The reset's completed catch-up clears it automatically**:
+once the walk passes the finalised anchor the record moves to `Recovered` store-first and the parked
+timer is woken with the same notify the operator route uses; `POST /api/v1/autopropose/resume`
+remains the fallback (reset disabled, no finalised anchor, or the anchor already had its one reset),
+and it clears the timer halt with the record, store-first. The refused block body (capped), the
+verdict and the suspect ids are in the durable `SelfReplayRecord`; a `ResetRequested`/`Halted` stage
+re-seeds the latch at boot, and the evidence fields above are seeded from the record whether or not
+it latches. The public `/health` object keeps the four-field summary above; deploy ids, costs, the
+refused body, the reset attempt and the halt sentence are not published on an unauthenticated
+listener.
 
 The health-only fields are `diagVersion`, `bootId`, `ok`, `ready`, `readyReasons`, `phase`,
 `nodePhase`, `shardPhases`, `height`, `maxObservedHeight`, `finalizedHeight`, `finalizedHeightError`,
@@ -208,12 +216,14 @@ silent classes in §1 still have no firing test. It does not make an alarm corre
 *nameable, scoped and falsifiable*. `bootId` is a correlation id, not an authentication token.
 `finalizedLag` is a difference of **block heights** (`maxObservedHeight − finalizedHeight`, both
 block numbers), not a maturity measure and not a rate; it reads `0` when the fence is at or ahead of
-the observed tip. `selfValidationRefusal` is **process-local**: it is cleared with the counter and is
-absent after a restart until the next refusal, so it names the last refusal this process saw, not the
-shard's history and not a root-cause diagnosis. `poolQuarantined` and the selection exclusion are
-process-local for the same reason: a restart re-derives and re-records a persistent refusal within
-three attempts, so the reading does not survive the restart even though the fault does. The deploy-side
-contract is the other half:
+the observed tip. `selfValidationRefusal` is **process-local with a durable floor**: it is cleared by
+a successful propose or an operator resume, and after a restart the `attempts` and `excluded` run
+counters start again, so those two name this process's run, not the shard's. But the fact of the
+refusal — the code, the block, the cost pair, the ids and, for a self-replay fault, the refused body's
+availability and the reset attempt — is seeded from the durable `SelfReplayRecord` when one exists.
+It is not a root-cause diagnosis. `poolQuarantined` and the selection exclusion are process-local:
+the exclusion is re-derived from the tracker after a restart, while the record keeps the evidence.
+The deploy-side contract is the other half:
 `acceptsDeploys` is local pool capacity, never a finality signal, and the four deploy states are in
 [Finality is not admission](../node/admission.md#finality-is-not-admission).
 
@@ -225,5 +235,12 @@ cargo test -p rchain-node --lib health_
 cargo test -p rchain-node --lib self_validation
 cargo test -p rchain-casper --lib self_validation
 cargo test -p rchain-node --lib the_operator_status_carries_every_readiness_gate
+cargo test -p rchain-casper --test reset
 tools/check-node-diagnostics.py --gate
+```
+
+The recovery fields are also exercised live, on a fresh three-validator devnet:
+
+```sh
+tools/self-replay-drill.sh
 ```

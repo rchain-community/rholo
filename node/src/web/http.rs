@@ -1695,7 +1695,11 @@ pub const OPENAPI_JSON: &str = r##"{
           "attempts": { "type": "integer", "format": "int64", "description": "Run length for this exact (deploy set, code) pair; a counted refusal is 1" },
           "excluded": { "type": "boolean", "description": "Whether this refusal's deploy set is now held out of the proposer's selection" },
           "stateHashMatched": { "type": "boolean", "nullable": true, "description": "The shadow replay's verdict on the declared post-state; null when it did not reach the checkpoint. Separates a state-correct cost refusal from a divergence (#564)" },
-          "replayedStateHash": { "type": "string", "nullable": true, "description": "The shadow replay's computed post-state hash, when it reached the checkpoint" }
+          "replayedStateHash": { "type": "string", "nullable": true, "description": "The shadow replay's computed post-state hash, when it reached the checkpoint" },
+          "refusedBodyAvailable": { "type": "boolean", "description": "Whether the durable self-replay record holds the refused block body (capped). Read from the record, so it survives a restart (#564, C359/C365)" },
+          "refusedBodyLen": { "type": "integer", "format": "int64", "description": "The refused body's true length; when the body is over the record's cap, refusedBodyAvailable is false and this still names the size" },
+          "resetAttempted": { "type": "boolean", "description": "Whether this fault's finalised anchor has had its one reset attempt (#564, law 94)" },
+          "resetAnchor": { "type": "string", "nullable": true, "description": "The finalised anchor that reset attempt named, base16; null when no anchor was named" }
         }
       },
       "FinalityHealthDto": {
@@ -3857,7 +3861,7 @@ mod tests {
                 consecutive_self_validation_failures: 8,
                 self_validation_refusal: Some(
                     rchain_casper::api::block_api::SelfValidationRefusal {
-                        code: "justification-regression",
+                        code: "justification-regression".to_string(),
                         block_number: 3122,
                         seq_num: 3122,
                         at_unix_ms: 1_790_000_000_000,
@@ -3869,6 +3873,10 @@ mod tests {
                         excluded: false,
                         state_hash_matched: None,
                         replayed_state_hash: None,
+                        refused_body_available: false,
+                        refused_body_len: 0,
+                        reset_attempted: false,
+                        reset_anchor: None,
                     },
                 ),
                 ..Default::default()
@@ -3897,6 +3905,19 @@ mod tests {
             json["selfValidationRefusal"]["atUnixMs"],
             1_790_000_000_000i64
         );
+        // **The public summary stays four fields** (#564): the refused body and the reset attempt
+        // are operator evidence, not readiness terms, and `/health` is unauthenticated.
+        for operator_only in [
+            "refusedBodyAvailable",
+            "refusedBodyLen",
+            "resetAttempted",
+            "resetAnchor",
+        ] {
+            assert!(
+                json["selfValidationRefusal"].get(operator_only).is_none(),
+                "`{operator_only}` belongs on the operator surface, not /health"
+            );
+        }
     }
 
     /// A node with no counted refusal answers `null`, not an empty object.

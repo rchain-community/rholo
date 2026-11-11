@@ -697,6 +697,13 @@ pub struct Run {
     #[arg(long = "no-self-replay-reset")]
     pub no_self_replay_reset: bool,
 
+    /// **Inject a deterministic self-replay refusal into this node's own blocks** (#564). A devnet
+    /// measurement instrument, not an operating mode: `deploy[:N]` refuses deploy-bearing blocks,
+    /// `all[:N]` also refuses the attestation-only fallback, and `N` spends the injection after N
+    /// refusals in this process. Requires `--dev-mode`.
+    #[arg(long = "self-replay-injection", value_name = "MODE")]
+    pub self_replay_injection: Option<String>,
+
     /// **Perturb this node's fringe records, so its merge answers differently from its peers'** — `0`
     /// (the default) injects nothing. A measurement instrument for the divergence class, and the
     /// staging instrument for the reconciliation drill: it makes four nodes reach four different merged

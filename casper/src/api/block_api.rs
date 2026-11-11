@@ -20,7 +20,9 @@ use rchain_shared::base16;
 use rchain_shared::refined::NonNegI64;
 use serde::{Deserialize, Serialize};
 
-use rchain_block_storage::dag::dag_storage::{BlockDagStorage, HaltRecord, SelfReplayStage};
+use rchain_block_storage::dag::dag_storage::{
+    BlockDagStorage, HaltRecord, SelfReplayRecord, SelfReplayStage,
+};
 use rchain_shared::lock::Unpoison;
 
 use crate::runtime_manager::CapturedReply;
@@ -121,7 +123,9 @@ pub struct HaltStatus {
 /// detail stays on the operator surface.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SelfValidationRefusal {
-    pub code: &'static str,
+    /// The closed code. A `String`, not a literal, because a boot-seeded record carries the code the
+    /// previous process wrote; refusing to show it would lose the incident's own vocabulary.
+    pub code: String,
     pub block_number: i64,
     pub seq_num: i64,
     pub at_unix_ms: i64,
@@ -142,6 +146,15 @@ pub struct SelfValidationRefusal {
     /// divergence.
     pub state_hash_matched: Option<bool>,
     pub replayed_state_hash: Option<String>,
+    /// **Whether the durable record holds the refused block body** (#564, C359/C365). The body is
+    /// capped at `SELF_REPLAY_BODY_MAX`; `refused_body_len` is the true length, so an over-cap body
+    /// is visible rather than implied.
+    pub refused_body_available: bool,
+    pub refused_body_len: u64,
+    /// Whether this fault's finalised anchor has had its one reset attempt (#564).
+    pub reset_attempted: bool,
+    /// The anchor that attempt named, base16.
+    pub reset_anchor: Option<String>,
 }
 
 impl SelfValidationRefusal {
@@ -149,7 +162,7 @@ impl SelfValidationRefusal {
     /// `Internal` arms record.
     pub fn counted(code: &'static str, block_number: i64, seq_num: i64) -> Self {
         Self {
-            code,
+            code: code.to_string(),
             block_number,
             seq_num,
             at_unix_ms: now_ms(),
@@ -161,6 +174,10 @@ impl SelfValidationRefusal {
             excluded: false,
             state_hash_matched: None,
             replayed_state_hash: None,
+            refused_body_available: false,
+            refused_body_len: 0,
+            reset_attempted: false,
+            reset_anchor: None,
         }
     }
 }
@@ -200,13 +217,15 @@ impl SelfValidationRefusalSink {
         excluded: bool,
         state_hash_matched: Option<bool>,
         replayed_state_hash: Option<String>,
+        refused_body_available: bool,
+        refused_body_len: usize,
     ) {
         let (initial_cost, replay_cost) = match cost_pair {
             Some((initial, replay)) => (Some(initial), Some(replay)),
             None => (None, None),
         };
         self.note_record(SelfValidationRefusal {
-            code,
+            code: code.to_string(),
             block_number,
             seq_num,
             at_unix_ms: now_ms(),
@@ -218,11 +237,56 @@ impl SelfValidationRefusalSink {
             excluded,
             state_hash_matched,
             replayed_state_hash,
+            refused_body_available,
+            refused_body_len: refused_body_len as u64,
+            reset_attempted: false,
+            reset_anchor: None,
         });
+    }
+
+    /// **Record the reset decision on the standing refusal** (#564). Called after the reset closure
+    /// returns; the refusal itself is not replaced, so the body/ids/cost evidence stays.
+    pub fn note_self_replay_reset(&self, reset_attempted: bool, reset_anchor: Option<String>) {
+        if let Some(record) = self.cell.lock().unpoison().as_mut() {
+            record.reset_attempted = reset_attempted;
+            record.reset_anchor = reset_anchor;
+        }
     }
 
     fn note_record(&self, record: SelfValidationRefusal) {
         *self.cell.lock().unpoison() = Some(record);
+    }
+
+    /// **Seed the operator surface from the durable record** (#564, C359/C365). A restart used to
+    /// lose the refusal and with it the refused body's availability; the record is the evidence
+    /// that outlives the process, so the surface reads it. `attempts` and `excluded` are
+    /// process-local run counters, not fault evidence, and seed as zero/false.
+    pub fn seed_record(&self, record: &SelfReplayRecord) {
+        let deploy_ids: Vec<String> = record
+            .deploy_ids
+            .iter()
+            .map(|id| base16::encode(id))
+            .collect();
+        self.note_record(SelfValidationRefusal {
+            code: record.code.clone(),
+            block_number: record.height,
+            seq_num: record.seq_num,
+            at_unix_ms: record.at_ms,
+            initial_cost: record.initial_cost,
+            replay_cost: record.replay_cost,
+            deploy_ids,
+            deploy_count: record.deploy_count as usize,
+            attempts: 0,
+            excluded: false,
+            state_hash_matched: record.state_hash_matched,
+            replayed_state_hash: record.replayed_state_hash.map(|h| base16::encode(&h)),
+            // **Durable availability** (#564): a record in hand was read from the store, so the
+            // `durable` marker is what makes the body's availability a fact rather than a hope.
+            refused_body_available: record.durable && record.body.is_some(),
+            refused_body_len: record.body_len as u64,
+            reset_attempted: record.reset_attempted,
+            reset_anchor: record.reset_anchor.map(|anchor| base16::encode(&anchor)),
+        });
     }
 
     /// Clear the record. Called by the successful propose that clears the counter, and by
@@ -428,6 +492,10 @@ impl ProposeHealth {
     ) -> Result<(), String> {
         match dag.read_self_replay_record().await {
             Ok(Some(record)) => {
+                // **The evidence outlives the process** (#564, C359/C365): the body's availability,
+                // the ids, the cost pair and the reset attempt are read from the record even when
+                // the stage is not latching, so a restart cannot erase the fault it must explain.
+                self.self_validation_refusal.seed_record(&record);
                 if matches!(
                     record.stage,
                     SelfReplayStage::ResetRequested | SelfReplayStage::Halted
@@ -511,6 +579,19 @@ impl ProposeHealth {
         self.resume.clone()
     }
 
+    /// **The automatic post-catch-up resume** (#564, F-U23-11): the reset completed and the
+    /// catch-up walk has passed its finalised anchor, so the self-replay fault is spent. Clear the
+    /// latch and wake a parked timer with the same notify the operator route uses.
+    ///
+    /// **Narrow on purpose.** Unlike [`Self::clear_halt`], this keeps the refusal cell — the refused
+    /// body, the ids and the reset attempt are the evidence the durable record exists to preserve —
+    /// and it does not clear an independent autopropose timer halt. The durable record is already
+    /// `Recovered` before this runs (the caller writes it store-first), so a restart does not latch.
+    pub fn resume_self_replay_after_reset(&self) {
+        self.self_validation_refusal.clear_self_replay_halted();
+        self.resume.notify_one();
+    }
+
     /// **Park until this shard is not halted** — the autopropose timer's own gate (W-N10-01).
     ///
     /// Extracted from the timer loop so the obedience is a function a test can drive rather than five
@@ -562,6 +643,12 @@ impl ProposeHealth {
                 .stale_snapshot_equivocations
                 .load(Ordering::Relaxed),
         }
+    }
+}
+
+impl crate::engine::reset::SelfReplayResume for ProposeHealth {
+    fn resume(&self) {
+        self.resume_self_replay_after_reset();
     }
 }
 
@@ -953,6 +1040,56 @@ mod tests {
         assert!(health.self_replay_halt_reason().is_none());
     }
 
+    /// **The automatic post-catch-up resume is narrow** (#564, F-U23-11): it clears the self-replay
+    /// latch and wakes the parked timer, but keeps the refused-body evidence and an independent
+    /// autopropose timer halt. The operator's `clear_halt` remains the full clear.
+    #[tokio::test]
+    async fn a_self_replay_resume_clears_the_latch_and_keeps_the_evidence() {
+        let health = ProposeHealth::new();
+        health.self_validation_refusal().note_self_replay(
+            "replay-cost-mismatch",
+            1115,
+            3,
+            Some((5576, 5302)),
+            vec!["ab".to_string()],
+            1,
+            1,
+            true,
+            Some(true),
+            None,
+            true,
+            42,
+        );
+        health
+            .self_validation_refusal()
+            .note_self_replay_reset(true, Some("cd".to_string()));
+        health
+            .self_validation_refusal()
+            .set_self_replay_halted("the attestation fallback also failed");
+        health.note_timer_halted();
+
+        let wake = health.resumed();
+        let waiting = wake.notified();
+        health.resume_self_replay_after_reset();
+        tokio::time::timeout(std::time::Duration::from_secs(1), waiting)
+            .await
+            .expect("the parked timer is woken");
+
+        assert!(!health.self_replay_halted());
+        let refusal = health
+            .snapshot()
+            .self_validation_refusal
+            .expect("the refused-body evidence survives the resume");
+        assert!(refusal.refused_body_available);
+        assert_eq!(refusal.refused_body_len, 42);
+        assert!(refusal.reset_attempted);
+        assert_eq!(refusal.reset_anchor.as_deref(), Some("cd"));
+        assert!(
+            health.snapshot().autopropose_timer_halted,
+            "an independent timer halt is not cleared by the self-replay resume"
+        );
+    }
+
     use super::*;
     use rchain_models::block_hash::BlockHash;
     use rchain_models::casper::protocol::casper_message::RholangState;
@@ -1092,6 +1229,8 @@ mod tests {
             true,
             Some(true),
             Some("deadbeef".to_string()),
+            true,
+            4096,
         );
         sink.set_quarantined(5);
         let snap = health.snapshot();

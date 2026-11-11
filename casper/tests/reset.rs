@@ -40,9 +40,11 @@ use rchain_models::casper::protocol::casper_message::{
     BlockMessage, DeployData, ProcessedDeploy, RholangState, SignedDeployData,
 };
 use rchain_models::validator::Validator;
+use rchain_shared::lmdb::LmdbStoreManager;
 use rchain_shared::log::{LogSource, NopLog};
 use rchain_shared::refined::BlockHeight;
 use rchain_shared::store::InMemoryKeyValueStore;
+use rchain_shared::store_manager::database;
 use rchain_shared::typed_store::{
     BytesCodec, KeyValueTypedStore, KeyValueTypedStoreCodec, SharedStore,
 };
@@ -50,6 +52,91 @@ use rchain_shared::typed_store::{
 /// Every cell call in this file names one lane (§107's D4): the reset cells are process-wide and
 /// keyed by shard, and these tests drive a single shard.
 const LANE: &str = "test-shard";
+
+/// A directory owned by one disk-backed fixture. It is created exclusively before the guard owns
+/// it, and all LMDB handles are dropped before normal cleanup.
+struct ResetDiskDir(std::path::PathBuf);
+
+impl ResetDiskDir {
+    fn new() -> Self {
+        let nonce = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let path = std::env::temp_dir().join(format!("rholo-n564-{}-{nonce}", std::process::id()));
+        std::fs::create_dir(&path).expect("an exclusive reset fixture directory");
+        Self(path)
+    }
+}
+
+impl Drop for ResetDiskDir {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.0);
+    }
+}
+
+/// Open the production codecs and DAG constructor on an actual LMDB environment. Named databases
+/// are stable across close/reopen. The evaluation runtime is still the ordinary test fixture;
+/// this helper does not model a running network, a process crash or power-loss durability.
+async fn open_reset_disk_stores(
+    path: &std::path::Path,
+) -> (LmdbStoreManager, Arc<BlockDagKeyValueStorage>, BlockStore) {
+    let manager = LmdbStoreManager::new(path, 64 * 1024 * 1024).expect("LMDB environment");
+    let metadata = Arc::new(
+        BlockMetadataStore::create(Arc::new(
+            database(
+                &manager,
+                "block-metadata",
+                Arc::new(BlockHashCodec),
+                Arc::new(BlockMetadataCodec),
+            )
+            .await
+            .unwrap(),
+        ))
+        .await
+        .unwrap(),
+    );
+    let deploy_index = Arc::new(
+        database(
+            &manager,
+            "deploy-index",
+            Arc::new(BytesCodec),
+            Arc::new(BlockHashCodec),
+        )
+        .await
+        .unwrap(),
+    );
+    let deploy_store = Arc::new(
+        database(
+            &manager,
+            "deploy-pool",
+            Arc::new(BytesCodec),
+            Arc::new(SignedDeployDataCodec),
+        )
+        .await
+        .unwrap(),
+    );
+    let reset_marker = Arc::new(
+        database(
+            &manager,
+            "reset-records",
+            Arc::new(BytesCodec),
+            Arc::new(BytesCodec),
+        )
+        .await
+        .unwrap(),
+    );
+    let dag = Arc::new(
+        BlockDagKeyValueStorage::create(metadata, deploy_index, deploy_store)
+            .await
+            .unwrap()
+            .with_reset_marker(reset_marker),
+    );
+    let blocks = rchain_block_storage::block_store::create(&manager)
+        .await
+        .unwrap();
+    (manager, dag, blocks)
+}
 
 fn hash(byte: u8) -> BlockHash {
     let mut bytes = [0u8; 32];
@@ -504,6 +591,147 @@ async fn a_self_replay_reset_returns_the_deploy_before_purging_its_only_block() 
     assert!(!has(&block_store, hash(1)).await);
     assert!(has(&block_store, hash(0)).await);
     assert!(reset_request(SHARD).is_none());
+}
+
+/// C366 on disk: a missing body refuses before mutation, and that refusal survives closing and
+/// reopening the stores. After an explicit fixture repair, the real reset returns the exact deploy
+/// and persists the purge and completion marker. Signature bytes are opaque test data here.
+#[tokio::test]
+async fn a_disk_backed_reset_preserves_the_inventory_across_store_reopen() {
+    const SHARD: &str = "n564-disk-backed-inventory";
+    let _ = take_reset_request(SHARD);
+    let directory = ResetDiskDir::new();
+    let runtime = Arc::new(common::build_runtime_manager().await);
+    let root = StateHash::new(runtime.get_history_repo().root().to_byte_array());
+    let (disk, dag, blocks) = open_reset_disk_stores(&directory.0).await;
+    let deploy = SignedDeployData {
+        data: DeployData {
+            attachments: Vec::new(),
+            term: "Nil".to_string(),
+            timestamp: 2,
+            phlo_price: 1,
+            phlo_limit: 500_000,
+            valid_after_block_number: 0,
+            shard_id: "root".to_string(),
+        },
+        deployer: vec![0u8; 65],
+        sig: vec![43u8; 65],
+        sig_algorithm: "secp256k1".to_string(),
+    };
+    let mut parents = Vec::new();
+    let mut refused_body = block(hash(2), root);
+    for n in 0..=2i64 {
+        let h = hash(n as u8);
+        let mut body = block(h, root);
+        body.block_number = BlockHeight::try_from(n).unwrap();
+        if n == 2 {
+            body.state.deploys.push(ProcessedDeploy {
+                deploy: deploy.clone(),
+                cost: Default::default(),
+                deploy_log: Vec::new(),
+                is_failed: false,
+                system_deploy_error: None,
+            });
+            refused_body = body.clone();
+        }
+        dag.insert(meta(h, &parents, n, n), body.clone())
+            .await
+            .unwrap();
+        blocks.put(&[(h, body)]).await.unwrap();
+        parents = vec![h];
+    }
+    assert_eq!(blocks.delete(&[hash(2)]).await.unwrap(), 1);
+    let request = ResetRequest {
+        anchor: hash(0),
+        anchor_height: BlockHeight::zero(),
+        blocks_above: 2,
+        refused: hash(2),
+        reason: ResetReason::SelfReplayFault,
+    };
+    assert!(rchain_casper::interpreter_util::request_reset(
+        SHARD.to_string(),
+        request.clone(),
+    ));
+    let log: Arc<dyn rchain_shared::log::Log> = Arc::new(NopLog);
+    let result = act_on_reset_request(
+        SHARD,
+        false,
+        true,
+        &(dag.clone() as Arc<dyn BlockDagStorage>),
+        &blocks,
+        &runtime,
+        &log,
+        LogSource::new("test"),
+    )
+    .await;
+    assert!(
+        result.is_err(),
+        "a missing disk body is not an empty inventory"
+    );
+    assert!(dag.read_reset_marker().await.unwrap().is_none());
+    assert_eq!(take_reset_request(SHARD), Some(request.clone()));
+    drop(blocks);
+    drop(dag);
+    drop(disk);
+
+    let (disk, dag, blocks) = open_reset_disk_stores(&directory.0).await;
+    assert!(dag.get_representation().await.contains(&hash(2)));
+    assert_eq!(
+        dag.lookup_by_deploy_id(&deploy.sig).await.unwrap(),
+        Some(hash(2))
+    );
+    assert!(!has(&blocks, hash(2)).await);
+    assert!(has(&blocks, hash(0)).await);
+    assert!(dag.read_reset_marker().await.unwrap().is_none());
+    assert!(!dag.contains_deploy_in_pool(&deploy.sig).await.unwrap());
+
+    // An explicit fixture repair is the positive control; it is not an automatic recovery claim.
+    blocks.put(&[(hash(2), refused_body)]).await.unwrap();
+    assert!(rchain_casper::interpreter_util::request_reset(
+        SHARD.to_string(),
+        request,
+    ));
+    assert!(act_on_reset_request(
+        SHARD,
+        false,
+        true,
+        &(dag.clone() as Arc<dyn BlockDagStorage>),
+        &blocks,
+        &runtime,
+        &log,
+        LogSource::new("test"),
+    )
+    .await
+    .unwrap()
+    .is_some());
+    assert_eq!(
+        dag.pooled_deploys().await.unwrap().get(&deploy.sig),
+        Some(&deploy)
+    );
+    drop(blocks);
+    drop(dag);
+    drop(disk);
+
+    let (disk, dag, blocks) = open_reset_disk_stores(&directory.0).await;
+    assert_eq!(
+        dag.pooled_deploys().await.unwrap().get(&deploy.sig),
+        Some(&deploy)
+    );
+    assert!(dag
+        .lookup_by_deploy_id(&deploy.sig)
+        .await
+        .unwrap()
+        .is_none());
+    assert!(!dag.get_representation().await.contains(&hash(2)));
+    assert!(!has(&blocks, hash(2)).await);
+    assert!(has(&blocks, hash(0)).await);
+    let marker = dag.read_reset_marker().await.unwrap().unwrap();
+    assert_eq!(marker.anchor, hash(0));
+    assert_eq!(marker.phase, ResetPhase::Rewound);
+    assert!(reset_request(SHARD).is_none());
+    drop(blocks);
+    drop(dag);
+    drop(disk);
 }
 
 /// **The reset's crash window, and the boot guard that closes it** (F-U5-01's owed marker, register

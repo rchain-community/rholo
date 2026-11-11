@@ -79,3 +79,15 @@ default-on. The cost comparison in
 [the incident source](https://github.com/rhovision-org/rholo/blob/0a1e02362a7c34e474e068ffd47469c8d4be707a/casper/src/runtime_replay.rs#L489)
 is per processed deploy; the incident cost pair should not be promoted into a
 block-total measurement. RC-B remains open.
+
+## LMDB store-reopen fixture (execution pending)
+
+The integration test
+`a_disk_backed_reset_preserves_the_inventory_across_store_reopen` uses the production
+LMDB manager and codecs. It removes a body, calls the real reset entry point,
+and closes/reopens the disk stores to inspect the unchanged DAG and absent
+marker. After an explicit fixture body repair, it resets and reopens again to
+check the exact pooled deploy, removed index/body, and completion marker.
+The evaluation runtime remains the in-memory test fixture. This is not a full
+node restart, a power-loss test, an authentication test, or the three-arm devnet
+drill. The test has been added and awaits execution on the pinned compiler.

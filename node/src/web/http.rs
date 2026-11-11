@@ -1671,6 +1671,8 @@ pub const OPENAPI_JSON: &str = r##"{
           "consecutiveSelfValidationFailures": { "type": "integer", "format": "int64" },
           "selfValidationRefusal": { "$ref": "#/components/schemas/SelfValidationRefusalDto" },
           "poolQuarantined": { "type": "integer", "format": "int64" },
+          "selfReplayFaultHalted": { "type": "boolean", "description": "The node-level self-replay rung latched: the attestation fallback also failed, so proposing and attesting are stopped until POST /api/v1/autopropose/resume clears it (#564)" },
+          "selfReplayFaultReason": { "type": "string", "nullable": true, "description": "The sentence behind selfReplayFaultHalted, null when the latch is clear" },
           "autoproposeTimerHalted": { "type": "boolean" },
           "autoproposeTimerHaltEpisodes": { "type": "integer", "format": "int64" },
           "autoproposeHalt": { "$ref": "#/components/schemas/HaltStatusDto" },

@@ -196,6 +196,18 @@ pub struct CasperConf {
     /// deliberately behind its peers, and the blocks above the anchor are re-requested *from a peer*.
     /// A node that cannot ask anybody has nothing to re-sync against.
     pub self_reset: bool,
+    /// **Whether a self-replay fault may reset this node to its last finalised anchor** (#564),
+    /// **on by default** — unlike `self_reset`, because the safety case is constructive rather than
+    /// a matter of operator judgement.
+    ///
+    /// The fault raises this reset only after two *different* blocks have failed this node's own
+    /// replay: the deploy-bearing block and the attestation-only block over the same pre-state.
+    /// Neither was inserted, stored or broadcast, so the rewind drops nothing this node ever
+    /// published; the anchor is the last finalised block, so nothing the network committed is lost;
+    /// and the reset is attempted at most once per anchor. If the reset is disabled (or the anchor
+    /// cannot be named), the node halts proposing and attesting instead — the loud terminal state
+    /// the 2026-11-08 incident lacked — rather than retrying an unchanged input.
+    pub self_replay_reset: bool,
     /// The effect-scheduler mode (Laws 20–25): `dfs` (default), `gate`, `relaxed`, or
     /// `relaxed-validated`. Parsed via `FromStr` at consumption (`EffectMode`); the block paths
     /// hard-reject `relaxed` (off-chain only) and accept `relaxed-validated` with

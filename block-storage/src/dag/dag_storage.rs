@@ -253,6 +253,275 @@ impl HaltRecord {
     }
 }
 
+/// **Where the self-replay fault was when this record was written** (#564). The stage is what makes a
+/// restart *obey* the fault rather than retry it: `ResetRequested` and `Halted` are terminal until an
+/// operator resumes; `Refused` and `Recovered` are evidence, not a stop.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SelfReplayStage {
+    Refused = 0,
+    Recovered = 1,
+    ResetRequested = 2,
+    Halted = 3,
+}
+
+impl SelfReplayStage {
+    fn from_u8(v: u8) -> Result<Self, String> {
+        match v {
+            0 => Ok(SelfReplayStage::Refused),
+            1 => Ok(SelfReplayStage::Recovered),
+            2 => Ok(SelfReplayStage::ResetRequested),
+            3 => Ok(SelfReplayStage::Halted),
+            other => Err(format!("unknown self-replay stage {other}")),
+        }
+    }
+}
+
+/// **A self-replay fault, on record** (#564).
+///
+/// The incident's refusal destroyed its own evidence: the block was never stored, the proposer's
+/// tracker was process-local, and a restart retried the same input. This record is the durable half
+/// of the recovery: it names the refused block and the replay verdict, carries the suspect deploy ids
+/// and (when it fits) the refused body, and records the recovery stage so a boot can seed the halt
+/// and bound the reset to one attempt per finalised anchor.
+///
+/// **Length-prefixed, not fixed-width, because a block body and its deploy ids are not.** The decoder
+/// still refuses ambiguity: every length is bounded, an unknown version is an error, and trailing
+/// bytes are an error. A truncated or invented record is never guessed at.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SelfReplayRecord {
+    pub version: u8,
+    pub at_ms: i64,
+    pub block_hash: [u8; 32],
+    pub height: i64,
+    pub seq_num: i64,
+    /// The closed replay code (`replay-cost-mismatch`, …), at most [`SELF_REPLAY_CODE_MAX`] bytes.
+    pub code: String,
+    pub initial_cost: Option<i64>,
+    pub replay_cost: Option<i64>,
+    pub state_hash_matched: Option<bool>,
+    pub replayed_state_hash: Option<[u8; 32]>,
+    /// The refused deploy ids, at most [`SELF_REPLAY_IDS_MAX`] and [`SELF_REPLAY_ID_MAX`] bytes each.
+    pub deploy_ids: Vec<Vec<u8>>,
+    /// The true count, which may exceed `deploy_ids.len()`.
+    pub deploy_count: u32,
+    pub stage: SelfReplayStage,
+    /// The finalised anchor this fault asked the node to rewind to, if it asked.
+    pub reset_anchor: Option<[u8; 32]>,
+    pub reset_attempted: bool,
+    /// The refused block body, if it fits under [`SELF_REPLAY_BODY_MAX`]; otherwise `None` with the
+    /// true `body_len` beside it.
+    pub body: Option<Vec<u8>>,
+    pub body_len: usize,
+    /// Whether the write reached the store. Not encoded — a record in the store is durable by
+    /// construction, and the reader sets this.
+    pub durable: bool,
+}
+
+/// The record's schema version. A record this build cannot read is refused, never guessed.
+pub const SELF_REPLAY_RECORD_VERSION: u8 = 1;
+/// The record's one key, a literal like the other durable-records keys.
+pub const SELF_REPLAY_RECORD_KEY: &[u8] = b"self-replay-record";
+pub const SELF_REPLAY_CODE_MAX: usize = 32;
+pub const SELF_REPLAY_IDS_MAX: usize = 16;
+pub const SELF_REPLAY_ID_MAX: usize = 65;
+pub const SELF_REPLAY_BODY_MAX: usize = 64 * 1024;
+
+impl SelfReplayRecord {
+    pub fn encode(&self) -> Vec<u8> {
+        let mut out = Vec::with_capacity(256 + self.body.as_ref().map_or(0, Vec::len));
+        out.push(self.version);
+        out.extend_from_slice(&self.at_ms.to_be_bytes());
+        out.extend_from_slice(&self.block_hash);
+        out.extend_from_slice(&self.height.to_be_bytes());
+        out.extend_from_slice(&self.seq_num.to_be_bytes());
+        let code = self.code.as_bytes();
+        let code = &code[..code.len().min(SELF_REPLAY_CODE_MAX)];
+        out.extend_from_slice(&(code.len() as u16).to_be_bytes());
+        out.extend_from_slice(code);
+        let mut flags = 0u8;
+        flags |= u8::from(self.initial_cost.is_some());
+        flags |= u8::from(self.replay_cost.is_some()) << 1;
+        flags |= u8::from(self.state_hash_matched.is_some()) << 2;
+        flags |= u8::from(self.state_hash_matched == Some(true)) << 3;
+        flags |= u8::from(self.replayed_state_hash.is_some()) << 4;
+        flags |= u8::from(self.reset_anchor.is_some()) << 5;
+        flags |= u8::from(self.reset_attempted) << 6;
+        flags |= u8::from(self.body.is_some()) << 7;
+        out.push(flags);
+        out.extend_from_slice(&self.initial_cost.unwrap_or(0).to_be_bytes());
+        out.extend_from_slice(&self.replay_cost.unwrap_or(0).to_be_bytes());
+        out.extend_from_slice(&self.replayed_state_hash.unwrap_or([0u8; 32]));
+        out.extend_from_slice(&self.reset_anchor.unwrap_or([0u8; 32]));
+        out.extend_from_slice(&self.deploy_count.to_be_bytes());
+        out.extend_from_slice(&(self.deploy_ids.len() as u16).to_be_bytes());
+        for id in self.deploy_ids.iter().take(SELF_REPLAY_IDS_MAX) {
+            let id = &id[..id.len().min(SELF_REPLAY_ID_MAX)];
+            out.extend_from_slice(&(id.len() as u16).to_be_bytes());
+            out.extend_from_slice(id);
+        }
+        out.push(self.stage as u8);
+        out.extend_from_slice(&(self.body_len as u32).to_be_bytes());
+        if let Some(body) = &self.body {
+            out.extend_from_slice(&(body.len() as u32).to_be_bytes());
+            out.extend_from_slice(body);
+        }
+        out
+    }
+
+    pub fn decode(bytes: &[u8]) -> Result<Self, String> {
+        struct Cursor<'a> {
+            bytes: &'a [u8],
+            at: usize,
+        }
+        impl<'a> Cursor<'a> {
+            fn take(&mut self, n: usize, what: &str) -> Result<&'a [u8], String> {
+                let end = self
+                    .at
+                    .checked_add(n)
+                    .ok_or_else(|| format!("{what}: length overflow"))?;
+                if end > self.bytes.len() {
+                    return Err(format!(
+                        "{what}: needs {n} bytes at {}, record has {}",
+                        self.at,
+                        self.bytes.len()
+                    ));
+                }
+                let out = &self.bytes[self.at..end];
+                self.at = end;
+                Ok(out)
+            }
+            fn u8(&mut self, what: &str) -> Result<u8, String> {
+                Ok(self.take(1, what)?[0])
+            }
+            fn u16(&mut self, what: &str) -> Result<u16, String> {
+                let b = self.take(2, what)?;
+                Ok(u16::from_be_bytes([b[0], b[1]]))
+            }
+            fn u32(&mut self, what: &str) -> Result<u32, String> {
+                let b = self.take(4, what)?;
+                Ok(u32::from_be_bytes([b[0], b[1], b[2], b[3]]))
+            }
+            fn i64(&mut self, what: &str) -> Result<i64, String> {
+                let b = self.take(8, what)?;
+                let mut a = [0u8; 8];
+                a.copy_from_slice(b);
+                Ok(i64::from_be_bytes(a))
+            }
+            fn hash(&mut self, what: &str) -> Result<[u8; 32], String> {
+                let b = self.take(32, what)?;
+                let mut a = [0u8; 32];
+                a.copy_from_slice(b);
+                Ok(a)
+            }
+        }
+        let mut c = Cursor { bytes, at: 0 };
+        let version = c.u8("version")?;
+        if version != SELF_REPLAY_RECORD_VERSION {
+            return Err(format!(
+                "self-replay record version {version} is not {SELF_REPLAY_RECORD_VERSION}"
+            ));
+        }
+        let at_ms = c.i64("at_ms")?;
+        let block_hash = c.hash("block_hash")?;
+        let height = c.i64("height")?;
+        let seq_num = c.i64("seq_num")?;
+        let code_len = usize::from(c.u16("code length")?);
+        if code_len > SELF_REPLAY_CODE_MAX {
+            return Err(format!(
+                "self-replay code is {code_len} bytes, max {SELF_REPLAY_CODE_MAX}"
+            ));
+        }
+        let code = String::from_utf8(c.take(code_len, "code")?.to_vec())
+            .map_err(|e| format!("self-replay code is not UTF-8: {e}"))?;
+        let flags = c.u8("flags")?;
+        // Every value is encoded (zeroed when absent) so the cursor consumes a fixed sequence; the
+        // flag says whether the value is meaningful. A decoder that skipped an absent value would
+        // read the next field out of position.
+        let initial_cost = if (flags & 1) != 0 {
+            Some(c.i64("initial_cost")?)
+        } else {
+            c.i64("initial_cost")?;
+            None
+        };
+        let replay_cost = if (flags & 2) != 0 {
+            Some(c.i64("replay_cost")?)
+        } else {
+            c.i64("replay_cost")?;
+            None
+        };
+        let state_hash_matched = ((flags & 4) != 0).then_some((flags & 8) != 0);
+        let replayed_state_hash = if (flags & 16) != 0 {
+            Some(c.hash("replayed_state_hash")?)
+        } else {
+            c.hash("replayed_state_hash")?;
+            None
+        };
+        let reset_anchor = if (flags & 32) != 0 {
+            Some(c.hash("reset_anchor")?)
+        } else {
+            c.hash("reset_anchor")?;
+            None
+        };
+        let reset_attempted = (flags & 64) != 0;
+        let deploy_count = c.u32("deploy_count")?;
+        let id_count = usize::from(c.u16("deploy id count")?);
+        if id_count > SELF_REPLAY_IDS_MAX {
+            return Err(format!(
+                "self-replay record carries {id_count} deploy ids, max {SELF_REPLAY_IDS_MAX}"
+            ));
+        }
+        let mut deploy_ids = Vec::with_capacity(id_count);
+        for _ in 0..id_count {
+            let len = usize::from(c.u16("deploy id length")?);
+            if len > SELF_REPLAY_ID_MAX {
+                return Err(format!(
+                    "self-replay deploy id is {len} bytes, max {SELF_REPLAY_ID_MAX}"
+                ));
+            }
+            deploy_ids.push(c.take(len, "deploy id")?.to_vec());
+        }
+        let stage = SelfReplayStage::from_u8(c.u8("stage")?)?;
+        let body_len = c.u32("body length")? as usize;
+        let body = if (flags & 128) != 0 {
+            let len = c.u32("body bytes")? as usize;
+            if len > SELF_REPLAY_BODY_MAX {
+                return Err(format!(
+                    "self-replay body is {len} bytes, max {SELF_REPLAY_BODY_MAX}"
+                ));
+            }
+            Some(c.take(len, "body")?.to_vec())
+        } else {
+            None
+        };
+        if c.at != bytes.len() {
+            return Err(format!(
+                "self-replay record has {} trailing byte(s)",
+                bytes.len() - c.at
+            ));
+        }
+        Ok(SelfReplayRecord {
+            version,
+            at_ms,
+            block_hash,
+            height,
+            seq_num,
+            code,
+            initial_cost,
+            replay_cost,
+            state_hash_matched,
+            replayed_state_hash,
+            deploy_ids,
+            deploy_count,
+            stage,
+            reset_anchor,
+            reset_attempted,
+            body,
+            body_len,
+            durable: true,
+        })
+    }
+}
+
 /// What a node knows about one deployer key: a block that includes a deploy it signed, and the height
 /// from which that knowledge is complete.
 ///
@@ -414,6 +683,29 @@ pub trait BlockDagStorage: Send + Sync {
     /// **Forget the halt** — the one way out, reached by `POST /api/v1/autopropose/resume` on the admin
     /// listener. The default does nothing, for the same reason the read answers `None`.
     async fn clear_halt_record(&self) -> Result<(), String> {
+        Ok(())
+    }
+
+    /// **Record a self-replay fault and its recovery stage** (#564). The default refuses: a backend
+    /// that cannot record the fault must not look like one that did. Unlike the timer halt, the
+    /// proposer is still deciding, so a failed write is reported as `durable: false` and the recovery
+    /// continues — the fault is real whether or not its evidence reached the store.
+    async fn write_self_replay_record(&self, _record: SelfReplayRecord) -> Result<(), String> {
+        Err(
+            "this DAG storage cannot record a self-replay fault (no `write_self_replay_record` impl)"
+                .to_string(),
+        )
+    }
+
+    /// The last self-replay fault this shard recorded, if any. The default answers `None`, which is
+    /// honest for a backend that records nothing.
+    async fn read_self_replay_record(&self) -> Result<Option<SelfReplayRecord>, String> {
+        Ok(None)
+    }
+
+    /// Forget the record — the operator's explicit resume. The default does nothing, like the halt's
+    /// clear.
+    async fn clear_self_replay_record(&self) -> Result<(), String> {
         Ok(())
     }
 
@@ -691,6 +983,66 @@ mod tests {
             HALT_RECORD_KEY, RESET_MARKER_KEY,
             "the two records share a store, so their keys must not"
         );
+    }
+
+    /// **The self-replay record is length-prefixed and still refuses ambiguity** (#564). It carries
+    /// a block body and deploy ids, so it cannot be fixed-width; every length is bounded, an unknown
+    /// version is refused, and so is a truncated or trailing-byte value. This is the record that
+    /// survives the process the incident's refusal did not.
+    #[test]
+    fn a_self_replay_record_round_trips_and_refuses_truncation_and_unknown_versions() {
+        let record = SelfReplayRecord {
+            version: SELF_REPLAY_RECORD_VERSION,
+            at_ms: 1_700_000_000_000,
+            block_hash: [7u8; 32],
+            height: 1115,
+            seq_num: 3,
+            code: "replay-cost-mismatch".to_string(),
+            initial_cost: Some(5576),
+            replay_cost: Some(5302),
+            state_hash_matched: Some(true),
+            replayed_state_hash: Some([9u8; 32]),
+            deploy_ids: vec![vec![0xab; 65], vec![0xcd; 3]],
+            deploy_count: 2,
+            stage: SelfReplayStage::Halted,
+            reset_anchor: Some([4u8; 32]),
+            reset_attempted: true,
+            body: Some(vec![1, 2, 3, 4]),
+            body_len: 4,
+            durable: false,
+        };
+        let bytes = record.encode();
+        let decoded = SelfReplayRecord::decode(&bytes).expect("its own encoding decodes");
+        assert_eq!(
+            decoded,
+            SelfReplayRecord {
+                durable: true,
+                ..record.clone()
+            },
+            "every field survives, and a stored record is durable by construction"
+        );
+
+        assert!(
+            SelfReplayRecord::decode(&bytes[..bytes.len() - 1]).is_err(),
+            "a truncated record is refused, never guessed at"
+        );
+        let mut wrong_version = bytes.clone();
+        wrong_version[0] = 99;
+        assert!(
+            SelfReplayRecord::decode(&wrong_version).is_err(),
+            "an unknown schema version is refused"
+        );
+        let mut trailing = bytes.clone();
+        trailing.push(0);
+        assert!(
+            SelfReplayRecord::decode(&trailing).is_err(),
+            "trailing bytes are a malformed record"
+        );
+        assert_ne!(
+            SELF_REPLAY_RECORD_KEY, HALT_RECORD_KEY,
+            "the records share a store, so their keys must not"
+        );
+        assert_ne!(SELF_REPLAY_RECORD_KEY, RESET_MARKER_KEY);
     }
 
     /// **The health counters' codec, and the keys that keep the three records apart** (W-N10-02).

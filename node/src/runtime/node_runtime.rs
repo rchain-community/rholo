@@ -1939,6 +1939,23 @@ async fn setup_shard_runtime(
         );
     }
 
+    // **The self-replay fault latch, seeded from its own record** (#564): a previous process that
+    // reached the reset/halt rung must not be retried by this one. The read is after the store exists
+    // and before the timer spawn, the same placement the halt seed uses.
+    if let Err(e) = propose_health
+        .seed_self_replay_from_store(parts.dag.as_ref())
+        .await
+    {
+        log.warn(
+            LogSource::new("coop.rchain.node.runtime.Setup"),
+            &format!(
+                "could not read the self-replay record for shard {}: {e} — this shard's self-replay \
+                 fault history is unknown, not empty",
+                spec.shard_id
+            ),
+        );
+    }
+
     // **The shard's own health counters, seeded the same way** (W-N10-02). Read here — after the store
     // exists and before the validation path starts — so the surface reports the shard's history rather
     // than this process's. A read that fails seeds zeros rather than refusing to boot: these are
@@ -2143,7 +2160,14 @@ async fn setup_shard_runtime(
             // so the round advances; the gate still bounds a burst to one request per sender per height.
             let answered: Arc<Mutex<BTreeMap<Vec<u8>, i64>>> =
                 Arc::new(Mutex::new(BTreeMap::new()));
+            // **The self-replay fault latch suppresses this tap too** (#564). Every trigger is the
+            // same fault, and a tap that keeps answering remote blocks would keep re-proposing the
+            // input the node has proved it cannot rebuild.
+            let tap_health = propose_health.clone();
             Some(Arc::new(move |block: &BlockMessage| {
+                if tap_health.self_replay_halted() {
+                    return;
+                }
                 let height = i64::from(block.block_number);
                 let sender = block.sender.as_bytes().to_vec();
                 // History being replayed is not a round to answer (#223) — see `ATTEST_MAX_BLOCK_AGE_MS`.
@@ -2205,6 +2229,8 @@ async fn setup_shard_runtime(
         conf.casper.expected_genesis_hash.clone(),
         // F-U5-01's acting half (#320): the operator's switch, off unless they turned it on.
         conf.casper.self_reset,
+        // #564: the self-replay fault's reset is safe by construction and on by default.
+        conf.casper.self_replay_reset,
         conf.protocol_server.disable_state_exporter,
         parts.validator_identity_opt.clone(),
         conf.standalone,
@@ -2359,7 +2385,10 @@ async fn setup_shard_runtime(
 /// case the suppression has been counted, because a refusal nobody can see is the same defect as a
 /// report that cannot become untrue.
 fn fire_autopropose_tap(health: &ProposeHealth, enqueue: impl FnOnce()) -> bool {
-    if health.timer_halted() {
+    // **Both halts suppress the tap** (#564): the autopropose timer's and the self-replay fault's.
+    // A fault that the tap ignored would keep re-proposing the input the node has just proved it
+    // cannot rebuild, which is the incident's loop with a different trigger name.
+    if health.timer_halted() || health.self_replay_halted() {
         health
             .tap_suppressed_halted()
             .fetch_add(1, std::sync::atomic::Ordering::Relaxed);

@@ -884,6 +884,7 @@ mod tests {
                 sync_anchor: None,
                 expected_genesis_hash: None,
                 self_reset: false,
+                self_replay_reset: true,
                 effect_mode: "dfs".to_string(),
             },
             metrics: Metrics {
@@ -1535,6 +1536,7 @@ mod tests {
                 sync_anchor: None,
                 expected_genesis_hash: None,
                 self_reset: false,
+                self_replay_reset: true,
                 effect_mode: "dfs".to_string(),
             },
             metrics: Metrics {

@@ -12265,3 +12265,45 @@ trace/refund mask on a state-neutral deploy; the matrix on `0a1e02362` and `dev`
 The `recover-pool` tool and the signed pool fields (`signature`, `sigAlgorithm`, attachments, shard)
 are the operational fallback; the durable refusal record and the local fault halt remain owed (C359,
 F-U22-08/09/10).
+
+## 155. The self-replay recovery: the safe exit the incident lacked (C357, C359, C361–C365, #564)
+
+The trigger pass (§154) found why the block was refused. This pass is the incident's other half: why
+the node stayed refused for ~45 hours. It had **no safe exit**. A deploy-scoped refusal with fewer than
+three attempts returned `NotEnoughNewBlocks` with no counter, no latch and no durable state, and
+`needs_retry` re-queued it in ~16 s; the autopropose timer ticked the same rebuild; exclusion at three
+was a selection filter, not a stop; the halt counter was read only by the timer; the tracker was
+process-local, so a restart re-entered the same input; and the only safe reset in the tree was wired to
+an exhausted divergence record, which a self-replay fault never spends. The refused block was never
+stored or broadcast, so the validator's latest message stayed at the last broadcast height. When its
+stake was needed for the two-thirds quorum, finality was capped there for every validator.
+
+**RC-A, established.** The recovery-state defect is the incident's cause. **RC-B, open.** The 274's
+cause (the trigger) is §154's subject and is not claimed here. The correction matters: the prior
+pass's sentence "the 274's cause is not established" was true of the trigger and was read as a
+statement about the incident.
+
+**The recovery state machine.** One refusal now rebuilds once as an **attestation-only block** over the
+same pre-state with no user deploy (`ProposalMode::AttestOnly`; the system deploys the pre-state
+requires stay), so the validator's latest message advances and finality is not capped; the refused set
+stays pooled and is suspect only at the refusing pre-state, retried once at a later pre-state and
+quarantined on a second. If the attestation also fails, the fault is node-level: a durable
+`SelfReplayRecord` (capped body, verdict, cost pair, suspect ids) is written before the transition, one
+reset to the **last finalised anchor** is raised (`ResetReason::SelfReplayFault`, on by default), and
+a shard-level latch stops proposing **and** attesting — read by the timer, the attest tap, the retry and
+every explicit propose — until the operator resume. The tracker's three-strike is deleted; an unchanged
+retry has no representation.
+
+**The reset's safety.** The refused block was never inserted, stored or broadcast, so the rewind drops
+nothing this node published; the anchor is `rewind_plan`'s finalised arm; and `return_unfinalised_deploys`
+re-admits every deploy only an unfinalised block above the anchor still held, refusing the reset if the
+pool cannot take one. The record's `reset_attempted` bounds the rung to one attempt per anchor.
+
+**The HAZOP.** U23 dispositions all eleven guide words; the companion study is
+`spec/audit/evidence/n564-self-replay/recovery-hazop.md`; `tools/check-hazop-worksheet.sh --gate` is
+green. Law 94 states the bounded exit; its Rust witnesses are the recovery and reset/halt proposer
+tests.
+
+**Owed.** The automatic post-catch-up resume (the reset currently halts and the operator resume is
+explicit), the devnet drill's three arms, and the refused-body surface test. The boot test for the
+`ResetRequested`/`Halted` stage and the `AttestOnly` pace-rule test have landed.

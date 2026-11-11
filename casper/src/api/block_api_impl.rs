@@ -843,6 +843,11 @@ impl BlockApi for BlockApiImpl {
     /// so a clear that did not reach the store cannot be allowed to read as a resume.
     async fn clear_autopropose_halt(&self) -> Result<(), String> {
         self.dag.clear_halt_record().await?;
+        // **The self-replay record is cleared with the halt** (#564). The operator resume is the one
+        // way out of both; a record left standing would re-seed the latch at the next boot and make
+        // the resume a formality. Store first, like the halt, so a failed clear cannot read as a
+        // resume.
+        self.dag.clear_self_replay_record().await?;
         self.propose_health.clear_halt();
         Ok(())
     }

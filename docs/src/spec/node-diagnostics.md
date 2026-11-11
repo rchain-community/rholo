@@ -127,13 +127,24 @@ It is **not** a superset of `/health`. The two surfaces overlap in three groups,
 **The operator object is the detailed one** (#564). On `/api/v1/status/operator` — and only there —
 the refusal object also carries `initialCost` and `replayCost` (the `ReplayCostMismatch` pair, null
 for every other code), `deployIds` (base16, capped at 16; `deployCount` is the true count),
-`attempts` (the run length for this exact deploy set and code), `excluded` (whether the set is now
-held out of the proposer's selection), `stateHashMatched` (the shadow replay's verdict on the declared
-post-state, null when it did not reach the checkpoint) and `replayedStateHash`. `poolQuarantined`
-beside it is the number of pooled deploy ids currently held out. **These are proposer-local operating facts, not consensus state**: the deploys stay
-in the pool, another validator may include them, and they expire with the pool at height + 50. The
-public `/health` object keeps the four-field summary above; deploy ids and costs are not published on
-an unauthenticated listener.
+`attempts` (the run length for this exact pre-state, deploy set and code), `excluded` (whether the set
+is held out of the proposer's selection at the refusing pre-state), `stateHashMatched` (the shadow
+replay's verdict on the declared post-state, null when it did not reach the checkpoint) and
+`replayedStateHash`. `poolQuarantined` beside it is the number of pooled deploy ids currently held
+out. **These are proposer-local operating facts, not consensus state**: the deploys stay in the pool,
+another validator may include them, and they expire with the pool at height + 50.
+
+**The recovery fields, and why the refusal can stand while the node is healthy** (#564). A self-replay
+refusal is followed by an attestation-only block, so a successful propose does **not** by itself clear
+the refusal record (it stays as evidence until the suspect set is resolved); a normal success still
+clears it with the counter. The operator snapshot adds `selfReplayFaultHalted` and
+`selfReplayFaultReason`: set only when the attestation fallback also failed, the node-level rung. The
+latch is read by the autopropose timer, the attest-on-new-blocks tap and every `propose`, so it stops
+production even with `--no-autopropose`; `POST /api/v1/autopropose/resume` clears it with the timer
+halt, store-first. The refused block body (capped), the verdict and the suspect ids are in the durable
+`SelfReplayRecord`; a `ResetRequested`/`Halted` stage re-seeds the latch at boot. The public `/health`
+object keeps the four-field summary above; deploy ids, costs, the halt sentence and the record are not
+published on an unauthenticated listener.
 
 The health-only fields are `diagVersion`, `bootId`, `ok`, `ready`, `readyReasons`, `phase`,
 `nodePhase`, `shardPhases`, `height`, `maxObservedHeight`, `finalizedHeight`, `finalizedHeightError`,

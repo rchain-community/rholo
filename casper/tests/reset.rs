@@ -30,7 +30,9 @@ use rchain_block_storage::dag::dag_storage::{BlockDagStorage, DeployId, ResetMar
 use rchain_casper::block_metadata_store::BlockMetadataStore;
 use rchain_casper::dag::BlockDagKeyValueStorage;
 use rchain_casper::engine::reset::{act_on_reset_request, resume_after_reset};
-use rchain_casper::interpreter_util::{reset_request, take_reset_request, ResetRequest};
+use rchain_casper::interpreter_util::{
+    reset_request, take_reset_request, ResetReason, ResetRequest,
+};
 use rchain_models::block::state_hash::StateHash;
 use rchain_models::block_hash::BlockHash;
 use rchain_models::block_metadata::{BlockMetadata, SlashSeverity};
@@ -238,6 +240,7 @@ async fn a_reset_request_rewinds_the_stores_when_the_switch_is_on_and_does_nothi
         anchor_height,
         blocks_above: 2,
         refused,
+        reason: ResetReason::DivergenceBudget,
     };
 
     // --- the switch off --------------------------------------------------------------------------
@@ -249,6 +252,7 @@ async fn a_reset_request_rewinds_the_stores_when_the_switch_is_on_and_does_nothi
     );
     let off = act_on_reset_request(
         LANE,
+        false,
         false,
         &(dag.clone() as Arc<dyn BlockDagStorage>),
         &block_store,
@@ -277,6 +281,7 @@ async fn a_reset_request_rewinds_the_stores_when_the_switch_is_on_and_does_nothi
     let acted = act_on_reset_request(
         LANE,
         true,
+        false,
         &(dag.clone() as Arc<dyn BlockDagStorage>),
         &block_store,
         &manager,
@@ -324,6 +329,7 @@ async fn a_reset_request_rewinds_the_stores_when_the_switch_is_on_and_does_nothi
         anchor_height: BlockHeight::try_from(1).unwrap(),
         blocks_above: 0,
         refused: hash(2),
+        reason: ResetReason::DivergenceBudget,
     };
     assert!(
         rchain_casper::interpreter_util::request_reset(LANE.to_string(), pending.clone()),
@@ -332,6 +338,7 @@ async fn a_reset_request_rewinds_the_stores_when_the_switch_is_on_and_does_nothi
     let unacted = act_on_reset_request(
         LANE,
         true,
+        false,
         &(bare_dag.clone() as Arc<dyn BlockDagStorage>),
         &bare_store,
         &manager,
@@ -709,6 +716,96 @@ async fn the_shard_health_counters_survive_a_restart() {
 /// **The third state, which is the whole point.** A read that *fails* must not become a boot refusal
 /// and must not read as "never halted": `seed_halt(None)` leaves `durable: false`, which is the surface
 /// saying it cannot vouch for the reading. That arm is asserted here as the `None` case.
+/// **A self-replay fault survives the restart, and the next boot obeys it** (#564, U23 F-05/F-11).
+///
+/// The incident's refusal died with the process: the tracker was an in-process cell and the refused
+/// body was never stored, so a restart retried the same deterministic input. This drives the durable
+/// `SelfReplayRecord` through the same real store and boot seed as the halt record above; a
+/// `ResetRequested`/`Halted` stage must latch the next process, while a `Refused`/`Recovered` record
+/// is evidence and must not.
+#[tokio::test]
+async fn a_self_replay_reset_record_latches_the_next_boot() {
+    use rchain_block_storage::dag::dag_storage::{
+        SelfReplayRecord, SelfReplayStage, SELF_REPLAY_RECORD_VERSION,
+    };
+    use rchain_casper::api::block_api::ProposeHealth;
+
+    let dag = build_dag().await;
+    let record = |stage| SelfReplayRecord {
+        version: SELF_REPLAY_RECORD_VERSION,
+        at_ms: 1_700_000_000_000,
+        block_hash: [7u8; 32],
+        height: 1115,
+        seq_num: 3,
+        code: "replay-cost-mismatch".to_string(),
+        initial_cost: Some(5576),
+        replay_cost: Some(5302),
+        state_hash_matched: Some(true),
+        replayed_state_hash: None,
+        deploy_ids: vec![vec![7u8; 65]],
+        deploy_count: 1,
+        stage,
+        reset_anchor: Some([4u8; 32]),
+        reset_attempted: stage == SelfReplayStage::ResetRequested,
+        body: None,
+        body_len: 0,
+        durable: false,
+    };
+
+    // A refusal that did not reach the node-level rung is evidence, not a stop.
+    dag.write_self_replay_record(record(SelfReplayStage::Refused))
+        .await
+        .expect("the refusal is recorded");
+    let health = ProposeHealth::new();
+    health
+        .seed_self_replay_from_store(dag.as_ref())
+        .await
+        .expect("a healthy store reads");
+    assert!(
+        !health.self_replay_halted(),
+        "a refused-only record must not halt the next process"
+    );
+
+    // The node-level rung does latch.
+    dag.write_self_replay_record(record(SelfReplayStage::ResetRequested))
+        .await
+        .expect("the reset request is recorded");
+    let health = ProposeHealth::new();
+    health
+        .seed_self_replay_from_store(dag.as_ref())
+        .await
+        .expect("a healthy store reads");
+    assert!(
+        health.self_replay_halted(),
+        "a ResetRequested record must halt the next process, not retry the unchanged input"
+    );
+    assert!(
+        health
+            .self_replay_halt_reason()
+            .is_some_and(|r| r.contains("ResetRequested")),
+        "the seeded reason names the stage"
+    );
+
+    // The operator resume clears the record; the next boot is clean.
+    dag.clear_self_replay_record()
+        .await
+        .expect("the record is cleared");
+    assert!(dag
+        .read_self_replay_record()
+        .await
+        .expect("the store reads")
+        .is_none());
+    let health = ProposeHealth::new();
+    health
+        .seed_self_replay_from_store(dag.as_ref())
+        .await
+        .expect("a healthy store reads");
+    assert!(
+        !health.self_replay_halted(),
+        "no record means no self-replay halt"
+    );
+}
+
 #[tokio::test]
 async fn a_halt_written_before_the_restart_is_read_at_the_next_boot() {
     use rchain_block_storage::dag::dag_storage::{HaltRecord, HALT_RECORD_KEY};

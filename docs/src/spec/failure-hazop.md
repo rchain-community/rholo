@@ -49,6 +49,14 @@ lock fixes are named where they narrow a row. The detailed RCA is §9, and the e
 (Internal/no-requeue), F-U8-02/F-U8-03 (ingress/retriever) and F-U9-01/F-U9-02 (insert lock) rows
 are cited rather than copied.
 
+**Extended 2026-11-11 — the self-replay recovery node U23.** U22 studied the *trigger* (a cost verdict
+before the state verdict). U23 studies the **incident**: after a self-built block failed its own
+replay, the proposer rebuilt the same deterministic input for ~45 hours, never broadcast, and finality
+froze at #1110. The root cause is not the 274-phlo delta; it is that the fault handler had **no safe
+exit** — no transition that changes the input, produces an attestation, resets to a finalised anchor,
+or halts every trigger loudly. U23 is the recovery state machine and its safety case, and it cites
+(F-U5-01/F-U5-02, U11–U16, F-U17-07/10/11, F-U18-11, U20) rather than duplicating the reset lifecycle.
+
 **Companion, not a replacement.** The hazards and their root-cause analysis live in
 `testnet-acceptance.md` §1 as rows `H-U*-*`; this page does not restate them. What it adds is the
 **disposition** — which rung of the ladder below the deviation lands on, what the node does today, and
@@ -691,11 +699,11 @@ bound.
 | **F-U22-03** | AS WELL AS | **A state hash and a cost pair are both computable, and the early return discards the first** | the shadow replay exists because the enforcing path cannot reach the checkpoint on a cost failure | the operator now gets `state_hash_matched` and the replayed hash when a self-built block is refused | Drift | R2 | casper/tests/determinism.rs::a_cost_only_tamper_is_refused_before_the_state_hash_is_compared |
 | **F-U22-04** | PART OF | **The recorded `PCost` is one block field and is not part of the post-state hash; refusal treats it as a state verdict** | the refund and executor payment use the recorded cost, not the replayed evaluation cost, and the evaluation cost is not an RSpace leaf | a state-correct block can be refused on accounting alone | Structural | R2 | owed: a refund-versus-state test proving the evaluation cost is not a state input |
 | **F-U22-05** | OTHER THAN | **A self-built failure is classified as a peer-view divergence** | `handle_errors` collapsed every non-internal failure to `InvalidStateHash`; fixed by `ValidationOrigin` and Law 92 | a self-replay failure is a local fault, never `Divergence` | Historic | R2 | casper/src/multi_parent_casper.rs::a_self_built_replay_failure_is_classified_as_a_local_fault |
-| **F-U22-06** | MORE | **The proposer retried the identical set more than the bound** | pre-fix there was no tracker; now three identical refusals hold the pooled set out of selection | the loop is bounded by construction, not by the operator noticing | Historic | R2 | casper/src/blocks/proposer/proposer.rs::a_self_replay_failure_is_bounded_and_not_counted_as_divergence |
+| **F-U22-06** | MORE | **The proposer retried the identical set more than the bound** | pre-fix there was no tracker; a deploy-scoped refusal now rebuilds once as an attestation, never as the same block (U23) | the loop is bounded by construction, not by the operator noticing | Historic | R2 | casper/src/blocks/proposer/proposer.rs::a_self_replay_failure_is_bounded_and_not_counted_as_divergence |
 | **F-U22-07** | LESS | **Less evidence than the diagnosis needs: no cost breakdown, no state verdict, no trace counters** | the refusal carried only a code and a block; the census, shadow and trace counters are new | the operator record now names the category, the state verdict and the trace shape | Drift | R2 | rholang/src/accounting.rs::the_census_records_each_charge_without_moving_the_total |
-| **F-U22-08** | LATE | **Detection is late: three refusals, and with autopropose off no halt at all** | the counted path bumps only the autopropose counter; the timer is off on the testnet | a local fault halt at a frozen height is owed | Drift | R2 | owed: a self-replay fault halt at a frozen height |
-| **F-U22-09** | BEFORE | **The block is refused before its state is checked, and the refused body is not stored, so the evidence is gone** | `put_block` runs only after validation succeeds | the durable refused-block record is owed | Terminal | R2 | owed: a durable refused-block record across restart |
-| **F-U22-10** | AFTER | **After exclusion there is no durable record, no pool prune and no cap; a restart forgets the set** | the tracker is process-local and `excluded` only extended | the exclusion is capped and pruned against the pool; the durable record is owed | Drift | R2 | casper/src/blocks/proposer/proposer.rs::the_tracker_counts_only_identical_sets_and_keeps_exclusions_on_success |
+| **F-U22-08** | LATE | **Detection is late: three refusals, and with autopropose off no halt at all** | the counted path bumped only the autopropose counter; the timer is off on the testnet | a shard-level self-replay latch stops propose and attest, is read by the timer and the attest tap, and is cleared only by the operator resume (U23) | Drift | R2 | casper/src/blocks/proposer/proposer.rs::a_self_replay_failure_with_no_pool_deploy_is_counted |
+| **F-U22-09** | BEFORE | **The block is refused before its state is checked, and the refused body is not stored, so the evidence is gone** | `put_block` runs only after validation succeeds | the refused body (capped), the verdict and the suspect ids are written durably before the recovery transition (U23) | Terminal | R2 | block-storage/src/dag/dag_storage.rs::a_self_replay_record_round_trips_and_refuses_truncation_and_unknown_versions |
+| **F-U22-10** | AFTER | **After exclusion there is no durable record, no pool prune and no cap; a restart forgets the set** | the tracker was process-local; `excluded` only extended | the exclusion is pruned against the pool, capped, and the recovery stage is durable (U23) | Drift | R2 | casper/src/blocks/proposer/proposer.rs::the_tracker_counts_only_identical_sets_and_keeps_exclusions_on_success |
 | **F-U22-11** | REVERSE | **A state-correct block is refused while the protocol treats the cost field as a state verdict** | C16; the port follows the Scala oracle, so accepting on a state match is a hard fork | the refusal is kept; the decision is recorded, not encoded | Structural | R2 | casper/tests/determinism.rs::a_cost_only_tamper_is_refused_before_the_state_hash_is_compared |
 | **F-U22-12** | REVERSE | **A peer block carrying an excluded deploy is still refused as `Divergence`; the exclusion is proposer-local** | `refusal_for(Peer, Failed) -> InvalidState`; the peer path is unchanged | the node excludes the deploy from its own proposals; it cannot accept it from a peer while its replay disagrees | Structural | R4 | owed: a peer-block-carrying-an-excluded-deploy test |
 
@@ -718,6 +726,54 @@ Read: `casper/src/runtime_replay.rs` (`replay_deploy_eval`, `check_replay_data_w
 `cargo test -p rchain-casper --lib`, `--test determinism`; `tools/check-hazop-worksheet.sh`.
 The incident's own store, terms and refused body are unavailable; the incident binary is
 `0a1e02362`. The 5576/5302 pair is a reported fact, not re-derived here.
+
+### U23 — Self-replay fault recovery and reset
+
+**Design intent.** A self-replay refusal takes the node to a state from which it continues within one
+transition: the next build has a **different input** — the refused set is held out at the refusing
+pre-state and the immediate rebuild is an **attestation-only block** over the same pre-state — so the
+node's latest message advances and finality is not capped by this validator. If the attestation also
+fails, the fault is node-level: the node requests a reset to the **last finalised anchor**, at most
+once per anchor, or halts proposing **and** attesting, loudly, with the refused body, the verdict and
+the recovery stage stored durably. No state retries an unchanged deterministic input.
+
+**Guide words.** row: NO, MORE, LESS, AS WELL AS, PART OF, OTHER THAN, REVERSE, EARLY, LATE, BEFORE, AFTER
+
+### Table A — deviations
+
+| ID | Guide word | Deviation | RCA → causal chain | Current behaviour | Class | Disposition | Falsifier |
+|---|---|---|---|---|---|---|---|
+| **F-U23-01** | NO | **No recovery transition exists**: the only modelled response is a rebuild of the same `(pre-state, deploy set)`; play/replay determinism makes the refusal reproducible, so the rebuild cannot succeed | `SelfReplayFailed` → `Ok(NotEnoughNewBlocks)` (`casper/src/blocks/proposer/proposer.rs`) → `needs_retry` re-queues (`node/src/instances/proposer_instance.rs`) → `create_block` re-selects the same canonical prefix; no attest-only mode existed | the refusal now rebuilds once as `AttestOnly`, over the same pre-state with no user deploy, and returns `SelfReplayRecovered`; the refused block is never rebuilt | Terminal | R1 | casper/src/blocks/proposer/proposer.rs::a_self_replay_failure_is_bounded_and_not_counted_as_divergence |
+| **F-U23-02** | MORE | **More attempts than the fault tolerates**: three identical refusals before any input change; `NotEnoughNewBlocks` has no retry cap; the cap overflow counted one failure and needed the timer to reach three | `SELF_REPLAY_EXCLUSION_AFTER = 3` and `record` keyed by `(ids, code)` treated a new pre-state as the same attempt; `needs_retry` always re-queued `NotEnoughNewBlocks` | the three-strike constant is deleted; the stage is keyed by `(pre_state, set, code)`; one refusal produces one different input | Terminal | R1 | casper/src/blocks/proposer/proposer.rs::the_tracker_counts_only_identical_sets_and_keeps_exclusions_on_success |
+| **F-U23-03** | LESS | **Less recovery than the fault needs**: the halt counter was read only by the autopropose timer; the attest-on-new-blocks tap and the explicit path never consulted it; the deploy-scoped path set no counter at all | `consecutive_failures` was written by the refusal arm and read only in the timer loop (`node/src/runtime/node_runtime.rs`); the attest tap had no halt input | a shard-level self-replay latch is read at the top of `do_propose` — so the timer, the attest tap, the not-due retry and an explicit propose all stop — and the timer parks on it | Terminal | R2 | casper/src/blocks/proposer/proposer.rs::a_self_replay_failure_with_no_pool_deploy_is_counted |
+| **F-U23-04** | AS WELL AS | **Recovers the proposal while the same refused set returns**: the exclusion happened only at three, and a successful attestation cleared the run without holding the set | `clear_attempts` kept the exclusion but the set was never added before the threshold; the success arm cleared the refusal record | the first refusal marks the set suspect at the refusing pre-state; selection skips it there; the recovery success keeps both the suspect mark and the refusal record | Drift | R1 | casper/src/blocks/proposer/proposer.rs::a_self_replay_failure_is_bounded_and_not_counted_as_divergence |
+| **F-U23-05** | PART OF | **Only part of the node recovers**: the proposer's tracker, selection, DAG view and runtime are separate; a runtime reset moves the root but not the tracker, and a tracker exclusion does not survive the reset or a restart | the tracker was process-local; `perform_reset` moves DAG, bodies and root with no proposer input | the durable `SelfReplayRecord` carries the stage and the fault's anchor; the boot read seeds the halt from a `ResetRequested`/`Halted` record; the proposer re-derives its selection after catch-up | Split | R3 | casper/tests/reset.rs::a_self_replay_reset_record_latches_the_next_boot |
+| **F-U23-06** | OTHER THAN | **The recovery acts on the wrong state**: excluding the deploy from the *pool* (censorship) instead of selection; resetting the DAG when the fault is deploy-scoped; rebuilding at the same `(sender, seq)` and broadcasting both | exclusion is selection-only; a refused block is never stored or inserted; the sequence is `pre_state.seq + 1` | the exclusion is selection-only and pruned against the pool; only the attestation is broadcast; the refused body is recorded, never inserted | Structural | R1 | casper/src/blocks/proposer/proposer.rs::a_self_replay_failure_is_bounded_and_not_counted_as_divergence |
+| **F-U23-07** | REVERSE | **The recovery reverses the intended direction**: after a refusal the node withholds the attestation (`suppress_attestation` sees nothing to finalise), making the cap permanent; or a reset rewinds past the finalised anchor | `attestation_suppressed` returns true when `nothing_to_finalize`, and the failed block left no work-bearing block; reset anchoring is `rewind_plan`'s finalised arm | `AttestOnly` bypasses the pace rule through `suppress_attestation_for`; the reset anchors at `rewind_plan.anchor`, the last finalised block | Terminal | R1 | casper/src/blocks/proposer/proposer.rs::an_attestation_only_build_is_not_withheld_by_the_pace_rule |
+| **F-U23-08** | EARLY | **Recovery before the fault is established**: an attestation-only block on the first refusal defers a deploy that a changed pre-state would have carried; a reset on the first failure drops unfinalised blocks for nothing | no policy existed (the opposite: three strikes) | the set is suspect only at the refusing pre-state; a later pre-state retries it once, and a second different pre-state quarantines it | Structural | R2 | casper/src/blocks/proposer/proposer.rs::the_tracker_counts_only_identical_sets_and_keeps_exclusions_on_success |
+| **F-U23-09** | LATE | **Recovery after the harm**: no time bound at a frozen height; the reset trigger was a divergence budget a self-replay fault never spends; the halt was the timer only | the reset was raised only from an exhausted divergence record (`casper/src/multi_parent_casper.rs`); the timer halt lived in the node loop | the node-level rung raises one finalised-anchor `ResetReason::SelfReplayFault` request, writes `ResetRequested` with the anchor first, and halts; a recurrence at the same anchor is `Halted` | Terminal | R3 | casper/src/blocks/proposer/proposer.rs::a_self_replay_fault_raises_one_reset_and_records_the_halt |
+| **F-U23-10** | BEFORE | **Recovery before evidence capture**: the refused body is never stored; the record is process-local; a reset or halt destroys the only copy | the refusal arm returned without writing any store; `put_block`/`insert` run only on `Ok` | `SelfReplayRecord` (capped body, verdict, cost pair, suspect ids) is written before the recovery transition; the codec refuses truncation, an unknown version and trailing bytes | Terminal | R2 | casper/src/blocks/proposer/proposer.rs::a_self_replay_fault_raises_one_reset_and_records_the_halt |
+| **F-U23-11** | AFTER | **No post-recovery verification**: the reset was reported as success without re-deriving; only the autopropose halt was seeded at boot; restart re-entered the refusal | `perform_reset` returns the act, not the next proposal; the tracker was fresh on every process | `seed_self_replay_from_store` latches `ResetRequested`/`Halted` before the timer spawn; the operator resume clears it. The automatic post-catch-up resume is not wired | Drift | R1 | casper/tests/reset.rs::a_self_replay_reset_record_latches_the_next_boot |
+
+### Table C — law coverage
+
+| deviation | law that captures it, or the law owed | why |
+|---|---|---|
+| U23-01/U23-02/U23-04/U23-07/U23-11 | **Law 94** — a local fault has a bounded exit: no transition retries an unchanged input (`Recovery.lean`) | the recovery is a state machine, not a retry policy; the theorem is `no_unchanged_retry` |
+| U23-05/U23-09 | **Law 94** — `every_fault_reaches_safe`, and a reset anchors only at a finalised block (`reset_only_to_finalised`); composes with laws 72/73/76 | the reset record exists, the request is spent by the act, a stop stops |
+| U23-03/U23-06/U23-08/U23-10 | **Operating policy**, not a consensus law: the halt is shard-local, the exclusion is proposer-local, the body is diagnostic | no state relation is changed; State-C rows in the register, not Lean |
+
+### Provenance
+
+Read: `casper/src/blocks/proposer/proposer.rs` (the refusal arm, the tracker, `create_block`'s
+`AttestOnly` branch, `do_propose`'s latch), `node/src/instances/proposer_instance.rs`
+(`needs_retry`), `node/src/runtime/node_runtime.rs` (the timer and attest taps, the boot seeds),
+`casper/src/api/block_api.rs` (the latch and the snapshot), `casper/src/engine/reset.rs`
+(`act_on_reset_request`, `perform_reset`, `return_unfinalised_deploys`),
+`casper/src/interpreter_util.rs` (`ResetRequest`, `ResetReason`),
+`block-storage/src/dag/dag_storage.rs` (`SelfReplayRecord`). Ran: the proposer, record, latch and
+reset tests; `tools/check-hazop-worksheet.sh`. The incident's store, terms and refused body are
+unavailable; the 45-hour timeline is a reported fact.
 
 ## 4. The fault tree
 
@@ -799,6 +855,15 @@ budget) and the reset primitive; they do not share a deliverable, and F-U5-01's 
 **Ships dark.** A reset is destructive. If F-U5-01 is built, it ships detect + log + count first, so an
 operator sees what it *would* have done before it is allowed to do it — and F-U10-01's stall-reason
 surface is the prerequisite, not a nicety.
+
+**The second owner, 2026-11-11 (#564).** The self-replay fault is the rung's other running-node case,
+and it is a different safety argument: the refused block was **never inserted, stored or broadcast**,
+so rewinding to the last finalised anchor drops nothing this node published, and the refused deploys
+are returned to the pool before the rewind. It is therefore on by default (`casper.self-replay-reset`)
+rather than behind `casper.self-reset`, attempted at most once per finalised anchor, and with the
+switch off the node halts proposing and attesting instead. The reset lifecycle it reuses is U11–U16's;
+what is still owed is the automatic re-derive after catch-up (F-U23-11), the devnet drill, and the
+refused-body surface test.
 
 **Built, 2026-10-10 (#320, register C274).** Dark first was the rule and it was kept: the detector, the
 `unrestorableRecords` count and the dry run shipped in §82, and the acting half came after, **off by
@@ -884,7 +949,7 @@ not read: the whole of `casper/src/merging.rs` (3,800+ lines), `casper/src/dag.r
 `spec/findings.tsv`'s C248 row in the register's emitted form; the remaining `spec/audit/evidence/`
 runs; and the `rspace` history and store internals beyond the named cache and lock sites.
 
-**Debt.** falsifiers owed: 30 · node-words owed: 44
+**Debt.** falsifiers owed: 28 · node-words owed: 44
 
 *(A `F-` row with an `owed` falsifier is a deviation this pass **dispositioned** but did not **prove**;
 the number above is checked against the page by `tools/check-hazop-worksheet.sh`, so it cannot rot.

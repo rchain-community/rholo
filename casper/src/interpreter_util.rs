@@ -640,6 +640,16 @@ fn verdict_partition(reason: &NoAdvance<Validator>) -> Option<usize> {
 /// finalised block. The second arm (no fringe) is deliberately **not** a request: a node with nothing
 /// finalised cannot name a safe state, which is C259's state, and "nothing to rewind to" must never
 /// become "rewind to genesis".
+/// **Why the reset was raised.** The two reasons have different safety preconditions and different
+/// operator switches: a self-replay fault has broadcast nothing, so resetting to the last finalised
+/// anchor is safe by construction and is on by default; the divergence budget is a repair of a
+/// view this node could not restore and stays behind the operator's `casper.self-reset`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ResetReason {
+    DivergenceBudget,
+    SelfReplayFault,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ResetRequest {
     /// The last finalised block — the height the rewind drops above.
@@ -651,6 +661,8 @@ pub struct ResetRequest {
     pub blocks_above: usize,
     /// The block this node gave up on, which is what makes the reset necessary.
     pub refused: BlockHash,
+    /// Which fault raised it; this selects the safety case and the operator switch.
+    pub reason: ResetReason,
 }
 
 /// **A shard's lane key** — the shard id as both halves derive it, `ShardId::to_string()`.
@@ -1327,6 +1339,7 @@ mod tests {
             anchor_height: BlockHeight::try_from(10i64).expect("a height"),
             blocks_above: 3,
             refused: BlockHash::new([2u8; 32]),
+            reason: ResetReason::DivergenceBudget,
         };
         let second = ResetRequest {
             anchor: BlockHash::new([9u8; 32]),

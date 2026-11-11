@@ -691,6 +691,12 @@ pub struct Run {
     #[arg(long = "self-reset")]
     pub self_reset: bool,
 
+    /// **Disable the safe self-replay reset** (#564). It is on by default because the fault has
+    /// broadcast nothing and the rewind anchors at the last finalised block; with it off, the node
+    /// halts proposing and attesting instead, loudly, until an operator resumes.
+    #[arg(long = "no-self-replay-reset")]
+    pub no_self_replay_reset: bool,
+
     /// **Perturb this node's fringe records, so its merge answers differently from its peers'** — `0`
     /// (the default) injects nothing. A measurement instrument for the divergence class, and the
     /// staging instrument for the reconciliation drill: it makes four nodes reach four different merged

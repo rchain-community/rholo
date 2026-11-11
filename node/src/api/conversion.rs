@@ -64,6 +64,8 @@ fn to_shard_health_dto(entry: &ShardHealthEntry) -> ShardHealthDto {
                 entry.proposer.self_validation_refusal.clone(),
             ),
             pool_quarantined: entry.proposer.pool_quarantined,
+            self_replay_fault_halted: entry.proposer.self_replay_fault_halted,
+            self_replay_fault_reason: entry.proposer.self_replay_fault_reason.clone(),
             autopropose_timer_halted: entry.proposer.autopropose_timer_halted,
             autopropose_timer_halt_episodes: entry.proposer.autopropose_halt.episodes,
             autopropose_halt: HaltStatusDto {
@@ -521,6 +523,8 @@ mod tests {
                 replayed_state_hash: None,
             }),
             pool_quarantined: 0,
+            self_replay_fault_halted: false,
+            self_replay_fault_reason: None,
             autopropose_timer_halted: true,
             autopropose_halt: HaltStatus {
                 at: Some(1_700_000_000_000),

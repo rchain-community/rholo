@@ -280,7 +280,9 @@ impl SelfValidationRefusalSink {
             excluded: false,
             state_hash_matched: record.state_hash_matched,
             replayed_state_hash: record.replayed_state_hash.map(|h| base16::encode(&h)),
-            refused_body_available: record.body.is_some(),
+            // **Durable availability** (#564): a record in hand was read from the store, so the
+            // `durable` marker is what makes the body's availability a fact rather than a hope.
+            refused_body_available: record.durable && record.body.is_some(),
             refused_body_len: record.body_len as u64,
             reset_attempted: record.reset_attempted,
             reset_anchor: record.reset_anchor.map(|anchor| base16::encode(&anchor)),

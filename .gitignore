@@ -84,6 +84,10 @@ integration-tests/.mypy_cache
 integration-tests/report.json
 integration-tests.log
 *.log
+# **Evidence packs are digest-verified records.** A `*.log` inside one is a hashed artifact, not a
+# stray build log: the drill packs commit their validator logs, and an ignored log makes the
+# manifest unverifiable from a clean checkout (found in review, 2026-11-11).
+!spec/audit/evidence/**/*.log
 .virtualenv
 .metals
 .history

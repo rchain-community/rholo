@@ -88,9 +88,11 @@ async fn block_paths_reject_relaxed_mode() {
             BlockData::empty(),
             &fringe_state(1),
         )
-        .await
-        .err()
-        .expect("relaxed compute_state must reject even a valid effectful deploy");
+        .await;
+    let block_err = match block_err {
+        Ok(_) => panic!("relaxed compute_state must reject even a valid effectful deploy"),
+        Err(e) => e,
+    };
     assert!(
         block_err.contains("off-chain only"),
         "unexpected reason: {block_err}"
@@ -106,9 +108,11 @@ async fn block_paths_reject_relaxed_mode() {
             &fringe_state(1),
             Some(1),
         )
-        .await
-        .err()
-        .expect("relaxed compute_state_with_limit must reject too");
+        .await;
+    let limited_err = match limited_err {
+        Ok(_) => panic!("relaxed compute_state_with_limit must reject too"),
+        Err(e) => e,
+    };
     assert!(
         limited_err.contains("off-chain only"),
         "unexpected reason: {limited_err}"

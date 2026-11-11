@@ -68,7 +68,7 @@
     "job": 130818963407,
     "harness_commit": "9d56ec4c47c786192381ac4f65544fd7081b7535",
     "source": "87583050ceb1d908516e67bdbfffb16defa72e2e",
-    "conclusion": "in_progress at evidence publication",
-    "scope": "current-source red/green and historical inputs; no success claimed until receipts available"
+    "conclusion": "success",
+    "scope": "current87583050 baseline4844/4554; historical5576/5302; same one-line correction passes strict cost/state;193 RSpace tests and cost register pass"
   }
 ]

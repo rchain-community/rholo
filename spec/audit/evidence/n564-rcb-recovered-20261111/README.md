@@ -18,7 +18,7 @@ The global shared matrix M21–M24 is unchanged. Earlier trace-deletion **raw lo
 | RCB-R25 | [43100598230](https://github.com/aixaria0/rchain-rust/actions/runs/43100598230) | Original unmodified source, exact historical cost mismatch and both declared post-state roots. |
 | RCB-R26 | [43101149837](https://github.com/aixaria0/rchain-rust/actions/runs/43101149837) | All274 phlo accounted for; observer ON/OFF preserves results. |
 | RCB-R27–RCB-R28 | [43101946226](https://github.com/aixaria0/rchain-rust/actions/runs/43101946226) | Ordering intervention succeeds; strict controls retained;192 RSpace tests pass. |
-| RCB-R29–RCB-R30 | [43108778606](https://github.com/aixaria0/rchain-rust/actions/runs/43108778606) | Current-source verification in progress; no pass claimed. |
+| RCB-R29–RCB-R30 | [43108778606](https://github.com/aixaria0/rchain-rust/actions/runs/43108778606) | SUCCESS: regression fails before and passes after; historical cases correct;193 RSpace tests and cost register pass. |
 
 `RUNS.json` pins every harness commit, source and job. The logs are committed intact; the diagnostic observer and one-line intervention patches are retained.
 
@@ -62,7 +62,7 @@ The raw-copy digest must equal the recorded digest before extraction proceeds. `
 
 ## Source-test provenance
 
-The previous current-source run43104341321 did not execute tests: attempt1 failed to acquire a runner; attempt2 failed during shallow-checkout setup. Both receipts are retained. The workflow now fetches the pinned base before comparison. Run43108778606 is the replacement, with unchanged production correction.
+The previous current-source run43104341321 did not execute tests: attempt1 failed to acquire a runner; attempt2 failed during shallow-checkout setup. Both receipts are retained. The workflow now fetches the pinned base before comparison. Run43108778606 succeeded with the unchanged production correction. Its artifact manifest was checked before import; corrected source and regression bytes exactly match this branch. The synthetic four-request regression is4844/4554 before the correction; zero/one request controls pass. After the correction all three pass, and both historical cases strictly replay to their original costs and roots. The current RSpace suite has193 passing tests.
 
 This is a source-pinned test evidence pack. Executable binary SHA-256 was not captured; no binary-pinned execution or project evidence-pack.py invocation is claimed. SHA-256 verifies the bytes retained here, not the truth of an assertion by itself.
 

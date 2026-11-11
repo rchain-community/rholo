@@ -1,0 +1,1605 @@
+{
+  "scope": "M26 actual1073 pre-state; diagnostic observer on only the first repetition, compared with unobserved repetitions",
+  "play_total": 5576,
+  "replay_total": 5302,
+  "difference": 274,
+  "first_charge_sequence_difference_zero_based": 29,
+  "operation_totals": [
+    {
+      "operation": "(lookup * 0)",
+      "play": 0,
+      "replay": 0,
+      "delta": 0
+    },
+    {
+      "operation": "1 new bindings",
+      "play": 12,
+      "replay": 12,
+      "delta": 0
+    },
+    {
+      "operation": "comm event storage cost",
+      "play": 1024,
+      "replay": 768,
+      "delta": 256
+    },
+    {
+      "operation": "consume storage",
+      "play": 3760,
+      "replay": 3760,
+      "delta": 0
+    },
+    {
+      "operation": "consume storage refund",
+      "play": -3200,
+      "replay": -2720,
+      "delta": -480
+    },
+    {
+      "operation": "event storage cost",
+      "play": 896,
+      "replay": 640,
+      "delta": 256
+    },
+    {
+      "operation": "match eval",
+      "play": 96,
+      "replay": 72,
+      "delta": 24
+    },
+    {
+      "operation": "method call",
+      "play": 40,
+      "replay": 20,
+      "delta": 20
+    },
+    {
+      "operation": "parsing",
+      "play": 1092,
+      "replay": 1092,
+      "delta": 0
+    },
+    {
+      "operation": "produces storage",
+      "play": 371,
+      "replay": 207,
+      "delta": 164
+    },
+    {
+      "operation": "produces storage refund",
+      "play": -508,
+      "replay": -422,
+      "delta": -86
+    },
+    {
+      "operation": "receive eval",
+      "play": 55,
+      "replay": 55,
+      "delta": 0
+    },
+    {
+      "operation": "send eval",
+      "play": 55,
+      "replay": 33,
+      "delta": 22
+    },
+    {
+      "operation": "substitution",
+      "play": 1793,
+      "replay": 1715,
+      "delta": 78
+    },
+    {
+      "operation": "var eval",
+      "play": 90,
+      "replay": 70,
+      "delta": 20
+    }
+  ],
+  "streams": {
+    "play": [
+      {
+        "value": 1092,
+        "operation": "parsing",
+        "previous": 5000000,
+        "remaining": 4998908
+      },
+      {
+        "value": 12,
+        "operation": "1 new bindings",
+        "previous": 4998908,
+        "remaining": 4998896
+      },
+      {
+        "value": 11,
+        "operation": "send eval",
+        "previous": 4998896,
+        "remaining": 4998885
+      },
+      {
+        "value": 10,
+        "operation": "var eval",
+        "previous": 4998885,
+        "remaining": 4998875
+      },
+      {
+        "value": 38,
+        "operation": "substitution",
+        "previous": 4998875,
+        "remaining": 4998837
+      },
+      {
+        "value": 5,
+        "operation": "substitution",
+        "previous": 4998837,
+        "remaining": 4998832
+      },
+      {
+        "value": 11,
+        "operation": "receive eval",
+        "previous": 4998832,
+        "remaining": 4998821
+      },
+      {
+        "value": 22,
+        "operation": "substitution",
+        "previous": 4998821,
+        "remaining": 4998799
+      },
+      {
+        "value": 11,
+        "operation": "substitution",
+        "previous": 4998799,
+        "remaining": 4998788
+      },
+      {
+        "value": 11,
+        "operation": "substitution",
+        "previous": 4998788,
+        "remaining": 4998777
+      },
+      {
+        "value": 11,
+        "operation": "substitution",
+        "previous": 4998777,
+        "remaining": 4998766
+      },
+      {
+        "value": 11,
+        "operation": "substitution",
+        "previous": 4998766,
+        "remaining": 4998755
+      },
+      {
+        "value": 484,
+        "operation": "substitution",
+        "previous": 4998755,
+        "remaining": 4998271
+      },
+      {
+        "value": 43,
+        "operation": "produces storage",
+        "previous": 4998271,
+        "remaining": 4998228
+      },
+      {
+        "value": 64,
+        "operation": "event storage cost",
+        "previous": 4998228,
+        "remaining": 4998164
+      },
+      {
+        "value": 560,
+        "operation": "consume storage",
+        "previous": 4998164,
+        "remaining": 4997604
+      },
+      {
+        "value": -560,
+        "operation": "consume storage refund",
+        "previous": 4997604,
+        "remaining": 4998164
+      },
+      {
+        "value": -84,
+        "operation": "produces storage refund",
+        "previous": 4998164,
+        "remaining": 4998248
+      },
+      {
+        "value": 128,
+        "operation": "comm event storage cost",
+        "previous": 4998248,
+        "remaining": 4998120
+      },
+      {
+        "value": 12,
+        "operation": "match eval",
+        "previous": 4998120,
+        "remaining": 4998108
+      },
+      {
+        "value": 10,
+        "operation": "var eval",
+        "previous": 4998108,
+        "remaining": 4998098
+      },
+      {
+        "value": 7,
+        "operation": "substitution",
+        "previous": 4998098,
+        "remaining": 4998091
+      },
+      {
+        "value": 11,
+        "operation": "substitution",
+        "previous": 4998091,
+        "remaining": 4998080
+      },
+      {
+        "value": 7,
+        "operation": "substitution",
+        "previous": 4998080,
+        "remaining": 4998073
+      },
+      {
+        "value": 11,
+        "operation": "receive eval",
+        "previous": 4998073,
+        "remaining": 4998062
+      },
+      {
+        "value": 38,
+        "operation": "substitution",
+        "previous": 4998062,
+        "remaining": 4998024
+      },
+      {
+        "value": 11,
+        "operation": "substitution",
+        "previous": 4998024,
+        "remaining": 4998013
+      },
+      {
+        "value": 187,
+        "operation": "substitution",
+        "previous": 4998013,
+        "remaining": 4997826
+      },
+      {
+        "value": 240,
+        "operation": "consume storage",
+        "previous": 4997826,
+        "remaining": 4997586
+      },
+      {
+        "value": -240,
+        "operation": "consume storage refund",
+        "previous": 4997586,
+        "remaining": 4997826
+      },
+      {
+        "value": -43,
+        "operation": "produces storage refund",
+        "previous": 4997826,
+        "remaining": 4997869
+      },
+      {
+        "value": 64,
+        "operation": "event storage cost",
+        "previous": 4997869,
+        "remaining": 4997805
+      },
+      {
+        "value": 128,
+        "operation": "comm event storage cost",
+        "previous": 4997805,
+        "remaining": 4997677
+      },
+      {
+        "value": 12,
+        "operation": "match eval",
+        "previous": 4997677,
+        "remaining": 4997665
+      },
+      {
+        "value": 10,
+        "operation": "method call",
+        "previous": 4997665,
+        "remaining": 4997655
+      },
+      {
+        "value": 10,
+        "operation": "var eval",
+        "previous": 4997655,
+        "remaining": 4997645
+      },
+      {
+        "value": 0,
+        "operation": "(lookup * 0)",
+        "previous": 4997645,
+        "remaining": 4997645
+      },
+      {
+        "value": 0,
+        "operation": "substitution",
+        "previous": 4997645,
+        "remaining": 4997645
+      },
+      {
+        "value": 0,
+        "operation": "substitution",
+        "previous": 4997645,
+        "remaining": 4997645
+      },
+      {
+        "value": 11,
+        "operation": "send eval",
+        "previous": 4997645,
+        "remaining": 4997634
+      },
+      {
+        "value": 31,
+        "operation": "substitution",
+        "previous": 4997634,
+        "remaining": 4997603
+      },
+      {
+        "value": 8,
+        "operation": "substitution",
+        "previous": 4997603,
+        "remaining": 4997595
+      },
+      {
+        "value": 39,
+        "operation": "produces storage",
+        "previous": 4997595,
+        "remaining": 4997556
+      },
+      {
+        "value": 64,
+        "operation": "event storage cost",
+        "previous": 4997556,
+        "remaining": 4997492
+      },
+      {
+        "value": 43,
+        "operation": "produces storage",
+        "previous": 4997492,
+        "remaining": 4997449
+      },
+      {
+        "value": 64,
+        "operation": "event storage cost",
+        "previous": 4997449,
+        "remaining": 4997385
+      },
+      {
+        "value": 560,
+        "operation": "consume storage",
+        "previous": 4997385,
+        "remaining": 4996825
+      },
+      {
+        "value": -560,
+        "operation": "consume storage refund",
+        "previous": 4996825,
+        "remaining": 4997385
+      },
+      {
+        "value": -84,
+        "operation": "produces storage refund",
+        "previous": 4997385,
+        "remaining": 4997469
+      },
+      {
+        "value": 128,
+        "operation": "comm event storage cost",
+        "previous": 4997469,
+        "remaining": 4997341
+      },
+      {
+        "value": 12,
+        "operation": "match eval",
+        "previous": 4997341,
+        "remaining": 4997329
+      },
+      {
+        "value": 10,
+        "operation": "var eval",
+        "previous": 4997329,
+        "remaining": 4997319
+      },
+      {
+        "value": 7,
+        "operation": "substitution",
+        "previous": 4997319,
+        "remaining": 4997312
+      },
+      {
+        "value": 11,
+        "operation": "substitution",
+        "previous": 4997312,
+        "remaining": 4997301
+      },
+      {
+        "value": 7,
+        "operation": "substitution",
+        "previous": 4997301,
+        "remaining": 4997294
+      },
+      {
+        "value": 11,
+        "operation": "receive eval",
+        "previous": 4997294,
+        "remaining": 4997283
+      },
+      {
+        "value": 38,
+        "operation": "substitution",
+        "previous": 4997283,
+        "remaining": 4997245
+      },
+      {
+        "value": 11,
+        "operation": "substitution",
+        "previous": 4997245,
+        "remaining": 4997234
+      },
+      {
+        "value": 187,
+        "operation": "substitution",
+        "previous": 4997234,
+        "remaining": 4997047
+      },
+      {
+        "value": 240,
+        "operation": "consume storage",
+        "previous": 4997047,
+        "remaining": 4996807
+      },
+      {
+        "value": -240,
+        "operation": "consume storage refund",
+        "previous": 4996807,
+        "remaining": 4997047
+      },
+      {
+        "value": -43,
+        "operation": "produces storage refund",
+        "previous": 4997047,
+        "remaining": 4997090
+      },
+      {
+        "value": 64,
+        "operation": "event storage cost",
+        "previous": 4997090,
+        "remaining": 4997026
+      },
+      {
+        "value": 128,
+        "operation": "comm event storage cost",
+        "previous": 4997026,
+        "remaining": 4996898
+      },
+      {
+        "value": 12,
+        "operation": "match eval",
+        "previous": 4996898,
+        "remaining": 4996886
+      },
+      {
+        "value": 10,
+        "operation": "method call",
+        "previous": 4996886,
+        "remaining": 4996876
+      },
+      {
+        "value": 10,
+        "operation": "var eval",
+        "previous": 4996876,
+        "remaining": 4996866
+      },
+      {
+        "value": 0,
+        "operation": "(lookup * 0)",
+        "previous": 4996866,
+        "remaining": 4996866
+      },
+      {
+        "value": 0,
+        "operation": "substitution",
+        "previous": 4996866,
+        "remaining": 4996866
+      },
+      {
+        "value": 0,
+        "operation": "substitution",
+        "previous": 4996866,
+        "remaining": 4996866
+      },
+      {
+        "value": 11,
+        "operation": "send eval",
+        "previous": 4996866,
+        "remaining": 4996855
+      },
+      {
+        "value": 31,
+        "operation": "substitution",
+        "previous": 4996855,
+        "remaining": 4996824
+      },
+      {
+        "value": 8,
+        "operation": "substitution",
+        "previous": 4996824,
+        "remaining": 4996816
+      },
+      {
+        "value": 39,
+        "operation": "produces storage",
+        "previous": 4996816,
+        "remaining": 4996777
+      },
+      {
+        "value": 64,
+        "operation": "event storage cost",
+        "previous": 4996777,
+        "remaining": 4996713
+      },
+      {
+        "value": 43,
+        "operation": "produces storage",
+        "previous": 4996713,
+        "remaining": 4996670
+      },
+      {
+        "value": 64,
+        "operation": "event storage cost",
+        "previous": 4996670,
+        "remaining": 4996606
+      },
+      {
+        "value": 560,
+        "operation": "consume storage",
+        "previous": 4996606,
+        "remaining": 4996046
+      },
+      {
+        "value": -560,
+        "operation": "consume storage refund",
+        "previous": 4996046,
+        "remaining": 4996606
+      },
+      {
+        "value": -84,
+        "operation": "produces storage refund",
+        "previous": 4996606,
+        "remaining": 4996690
+      },
+      {
+        "value": 128,
+        "operation": "comm event storage cost",
+        "previous": 4996690,
+        "remaining": 4996562
+      },
+      {
+        "value": 12,
+        "operation": "match eval",
+        "previous": 4996562,
+        "remaining": 4996550
+      },
+      {
+        "value": 10,
+        "operation": "var eval",
+        "previous": 4996550,
+        "remaining": 4996540
+      },
+      {
+        "value": 7,
+        "operation": "substitution",
+        "previous": 4996540,
+        "remaining": 4996533
+      },
+      {
+        "value": 11,
+        "operation": "substitution",
+        "previous": 4996533,
+        "remaining": 4996522
+      },
+      {
+        "value": 7,
+        "operation": "substitution",
+        "previous": 4996522,
+        "remaining": 4996515
+      },
+      {
+        "value": 11,
+        "operation": "receive eval",
+        "previous": 4996515,
+        "remaining": 4996504
+      },
+      {
+        "value": 38,
+        "operation": "substitution",
+        "previous": 4996504,
+        "remaining": 4996466
+      },
+      {
+        "value": 11,
+        "operation": "substitution",
+        "previous": 4996466,
+        "remaining": 4996455
+      },
+      {
+        "value": 187,
+        "operation": "substitution",
+        "previous": 4996455,
+        "remaining": 4996268
+      },
+      {
+        "value": 240,
+        "operation": "consume storage",
+        "previous": 4996268,
+        "remaining": 4996028
+      },
+      {
+        "value": -240,
+        "operation": "consume storage refund",
+        "previous": 4996028,
+        "remaining": 4996268
+      },
+      {
+        "value": -43,
+        "operation": "produces storage refund",
+        "previous": 4996268,
+        "remaining": 4996311
+      },
+      {
+        "value": 64,
+        "operation": "event storage cost",
+        "previous": 4996311,
+        "remaining": 4996247
+      },
+      {
+        "value": 128,
+        "operation": "comm event storage cost",
+        "previous": 4996247,
+        "remaining": 4996119
+      },
+      {
+        "value": 12,
+        "operation": "match eval",
+        "previous": 4996119,
+        "remaining": 4996107
+      },
+      {
+        "value": 10,
+        "operation": "method call",
+        "previous": 4996107,
+        "remaining": 4996097
+      },
+      {
+        "value": 10,
+        "operation": "var eval",
+        "previous": 4996097,
+        "remaining": 4996087
+      },
+      {
+        "value": 0,
+        "operation": "(lookup * 0)",
+        "previous": 4996087,
+        "remaining": 4996087
+      },
+      {
+        "value": 0,
+        "operation": "substitution",
+        "previous": 4996087,
+        "remaining": 4996087
+      },
+      {
+        "value": 0,
+        "operation": "substitution",
+        "previous": 4996087,
+        "remaining": 4996087
+      },
+      {
+        "value": 11,
+        "operation": "send eval",
+        "previous": 4996087,
+        "remaining": 4996076
+      },
+      {
+        "value": 31,
+        "operation": "substitution",
+        "previous": 4996076,
+        "remaining": 4996045
+      },
+      {
+        "value": 8,
+        "operation": "substitution",
+        "previous": 4996045,
+        "remaining": 4996037
+      },
+      {
+        "value": 39,
+        "operation": "produces storage",
+        "previous": 4996037,
+        "remaining": 4995998
+      },
+      {
+        "value": 64,
+        "operation": "event storage cost",
+        "previous": 4995998,
+        "remaining": 4995934
+      },
+      {
+        "value": 43,
+        "operation": "produces storage",
+        "previous": 4995934,
+        "remaining": 4995891
+      },
+      {
+        "value": 64,
+        "operation": "event storage cost",
+        "previous": 4995891,
+        "remaining": 4995827
+      },
+      {
+        "value": 560,
+        "operation": "consume storage",
+        "previous": 4995827,
+        "remaining": 4995267
+      },
+      {
+        "value": -560,
+        "operation": "consume storage refund",
+        "previous": 4995267,
+        "remaining": 4995827
+      },
+      {
+        "value": -84,
+        "operation": "produces storage refund",
+        "previous": 4995827,
+        "remaining": 4995911
+      },
+      {
+        "value": 128,
+        "operation": "comm event storage cost",
+        "previous": 4995911,
+        "remaining": 4995783
+      },
+      {
+        "value": 12,
+        "operation": "match eval",
+        "previous": 4995783,
+        "remaining": 4995771
+      },
+      {
+        "value": 10,
+        "operation": "var eval",
+        "previous": 4995771,
+        "remaining": 4995761
+      },
+      {
+        "value": 7,
+        "operation": "substitution",
+        "previous": 4995761,
+        "remaining": 4995754
+      },
+      {
+        "value": 11,
+        "operation": "substitution",
+        "previous": 4995754,
+        "remaining": 4995743
+      },
+      {
+        "value": 7,
+        "operation": "substitution",
+        "previous": 4995743,
+        "remaining": 4995736
+      },
+      {
+        "value": 11,
+        "operation": "receive eval",
+        "previous": 4995736,
+        "remaining": 4995725
+      },
+      {
+        "value": 38,
+        "operation": "substitution",
+        "previous": 4995725,
+        "remaining": 4995687
+      },
+      {
+        "value": 11,
+        "operation": "substitution",
+        "previous": 4995687,
+        "remaining": 4995676
+      },
+      {
+        "value": 187,
+        "operation": "substitution",
+        "previous": 4995676,
+        "remaining": 4995489
+      },
+      {
+        "value": 240,
+        "operation": "consume storage",
+        "previous": 4995489,
+        "remaining": 4995249
+      },
+      {
+        "value": -240,
+        "operation": "consume storage refund",
+        "previous": 4995249,
+        "remaining": 4995489
+      },
+      {
+        "value": -43,
+        "operation": "produces storage refund",
+        "previous": 4995489,
+        "remaining": 4995532
+      },
+      {
+        "value": 64,
+        "operation": "event storage cost",
+        "previous": 4995532,
+        "remaining": 4995468
+      },
+      {
+        "value": 128,
+        "operation": "comm event storage cost",
+        "previous": 4995468,
+        "remaining": 4995340
+      },
+      {
+        "value": 12,
+        "operation": "match eval",
+        "previous": 4995340,
+        "remaining": 4995328
+      },
+      {
+        "value": 10,
+        "operation": "method call",
+        "previous": 4995328,
+        "remaining": 4995318
+      },
+      {
+        "value": 10,
+        "operation": "var eval",
+        "previous": 4995318,
+        "remaining": 4995308
+      },
+      {
+        "value": 0,
+        "operation": "(lookup * 0)",
+        "previous": 4995308,
+        "remaining": 4995308
+      },
+      {
+        "value": 0,
+        "operation": "substitution",
+        "previous": 4995308,
+        "remaining": 4995308
+      },
+      {
+        "value": 0,
+        "operation": "substitution",
+        "previous": 4995308,
+        "remaining": 4995308
+      },
+      {
+        "value": 11,
+        "operation": "send eval",
+        "previous": 4995308,
+        "remaining": 4995297
+      },
+      {
+        "value": 31,
+        "operation": "substitution",
+        "previous": 4995297,
+        "remaining": 4995266
+      },
+      {
+        "value": 8,
+        "operation": "substitution",
+        "previous": 4995266,
+        "remaining": 4995258
+      },
+      {
+        "value": 39,
+        "operation": "produces storage",
+        "previous": 4995258,
+        "remaining": 4995219
+      },
+      {
+        "value": 64,
+        "operation": "event storage cost",
+        "previous": 4995219,
+        "remaining": 4995155
+      },
+      {
+        "value": 43,
+        "operation": "produces storage",
+        "previous": 4995155,
+        "remaining": 4995112
+      },
+      {
+        "value": 64,
+        "operation": "event storage cost",
+        "previous": 4995112,
+        "remaining": 4995048
+      },
+      {
+        "value": 560,
+        "operation": "consume storage",
+        "previous": 4995048,
+        "remaining": 4994488
+      },
+      {
+        "value": 64,
+        "operation": "event storage cost",
+        "previous": 4994488,
+        "remaining": 4994424
+      }
+    ],
+    "replay": [
+      {
+        "value": 1092,
+        "operation": "parsing",
+        "previous": 5000000,
+        "remaining": 4998908
+      },
+      {
+        "value": 12,
+        "operation": "1 new bindings",
+        "previous": 4998908,
+        "remaining": 4998896
+      },
+      {
+        "value": 11,
+        "operation": "send eval",
+        "previous": 4998896,
+        "remaining": 4998885
+      },
+      {
+        "value": 10,
+        "operation": "var eval",
+        "previous": 4998885,
+        "remaining": 4998875
+      },
+      {
+        "value": 38,
+        "operation": "substitution",
+        "previous": 4998875,
+        "remaining": 4998837
+      },
+      {
+        "value": 5,
+        "operation": "substitution",
+        "previous": 4998837,
+        "remaining": 4998832
+      },
+      {
+        "value": 11,
+        "operation": "receive eval",
+        "previous": 4998832,
+        "remaining": 4998821
+      },
+      {
+        "value": 22,
+        "operation": "substitution",
+        "previous": 4998821,
+        "remaining": 4998799
+      },
+      {
+        "value": 11,
+        "operation": "substitution",
+        "previous": 4998799,
+        "remaining": 4998788
+      },
+      {
+        "value": 11,
+        "operation": "substitution",
+        "previous": 4998788,
+        "remaining": 4998777
+      },
+      {
+        "value": 11,
+        "operation": "substitution",
+        "previous": 4998777,
+        "remaining": 4998766
+      },
+      {
+        "value": 11,
+        "operation": "substitution",
+        "previous": 4998766,
+        "remaining": 4998755
+      },
+      {
+        "value": 484,
+        "operation": "substitution",
+        "previous": 4998755,
+        "remaining": 4998271
+      },
+      {
+        "value": 43,
+        "operation": "produces storage",
+        "previous": 4998271,
+        "remaining": 4998228
+      },
+      {
+        "value": 64,
+        "operation": "event storage cost",
+        "previous": 4998228,
+        "remaining": 4998164
+      },
+      {
+        "value": 560,
+        "operation": "consume storage",
+        "previous": 4998164,
+        "remaining": 4997604
+      },
+      {
+        "value": -560,
+        "operation": "consume storage refund",
+        "previous": 4997604,
+        "remaining": 4998164
+      },
+      {
+        "value": -84,
+        "operation": "produces storage refund",
+        "previous": 4998164,
+        "remaining": 4998248
+      },
+      {
+        "value": 128,
+        "operation": "comm event storage cost",
+        "previous": 4998248,
+        "remaining": 4998120
+      },
+      {
+        "value": 12,
+        "operation": "match eval",
+        "previous": 4998120,
+        "remaining": 4998108
+      },
+      {
+        "value": 10,
+        "operation": "var eval",
+        "previous": 4998108,
+        "remaining": 4998098
+      },
+      {
+        "value": 7,
+        "operation": "substitution",
+        "previous": 4998098,
+        "remaining": 4998091
+      },
+      {
+        "value": 11,
+        "operation": "substitution",
+        "previous": 4998091,
+        "remaining": 4998080
+      },
+      {
+        "value": 7,
+        "operation": "substitution",
+        "previous": 4998080,
+        "remaining": 4998073
+      },
+      {
+        "value": 11,
+        "operation": "receive eval",
+        "previous": 4998073,
+        "remaining": 4998062
+      },
+      {
+        "value": 38,
+        "operation": "substitution",
+        "previous": 4998062,
+        "remaining": 4998024
+      },
+      {
+        "value": 11,
+        "operation": "substitution",
+        "previous": 4998024,
+        "remaining": 4998013
+      },
+      {
+        "value": 187,
+        "operation": "substitution",
+        "previous": 4998013,
+        "remaining": 4997826
+      },
+      {
+        "value": 240,
+        "operation": "consume storage",
+        "previous": 4997826,
+        "remaining": 4997586
+      },
+      {
+        "value": 64,
+        "operation": "event storage cost",
+        "previous": 4997586,
+        "remaining": 4997522
+      },
+      {
+        "value": 560,
+        "operation": "consume storage",
+        "previous": 4997522,
+        "remaining": 4996962
+      },
+      {
+        "value": -560,
+        "operation": "consume storage refund",
+        "previous": 4996962,
+        "remaining": 4997522
+      },
+      {
+        "value": -84,
+        "operation": "produces storage refund",
+        "previous": 4997522,
+        "remaining": 4997606
+      },
+      {
+        "value": 128,
+        "operation": "comm event storage cost",
+        "previous": 4997606,
+        "remaining": 4997478
+      },
+      {
+        "value": 12,
+        "operation": "match eval",
+        "previous": 4997478,
+        "remaining": 4997466
+      },
+      {
+        "value": 10,
+        "operation": "var eval",
+        "previous": 4997466,
+        "remaining": 4997456
+      },
+      {
+        "value": 7,
+        "operation": "substitution",
+        "previous": 4997456,
+        "remaining": 4997449
+      },
+      {
+        "value": 11,
+        "operation": "substitution",
+        "previous": 4997449,
+        "remaining": 4997438
+      },
+      {
+        "value": 7,
+        "operation": "substitution",
+        "previous": 4997438,
+        "remaining": 4997431
+      },
+      {
+        "value": 11,
+        "operation": "receive eval",
+        "previous": 4997431,
+        "remaining": 4997420
+      },
+      {
+        "value": 38,
+        "operation": "substitution",
+        "previous": 4997420,
+        "remaining": 4997382
+      },
+      {
+        "value": 11,
+        "operation": "substitution",
+        "previous": 4997382,
+        "remaining": 4997371
+      },
+      {
+        "value": 187,
+        "operation": "substitution",
+        "previous": 4997371,
+        "remaining": 4997184
+      },
+      {
+        "value": 240,
+        "operation": "consume storage",
+        "previous": 4997184,
+        "remaining": 4996944
+      },
+      {
+        "value": 64,
+        "operation": "event storage cost",
+        "previous": 4996944,
+        "remaining": 4996880
+      },
+      {
+        "value": 560,
+        "operation": "consume storage",
+        "previous": 4996880,
+        "remaining": 4996320
+      },
+      {
+        "value": -560,
+        "operation": "consume storage refund",
+        "previous": 4996320,
+        "remaining": 4996880
+      },
+      {
+        "value": -84,
+        "operation": "produces storage refund",
+        "previous": 4996880,
+        "remaining": 4996964
+      },
+      {
+        "value": 128,
+        "operation": "comm event storage cost",
+        "previous": 4996964,
+        "remaining": 4996836
+      },
+      {
+        "value": 12,
+        "operation": "match eval",
+        "previous": 4996836,
+        "remaining": 4996824
+      },
+      {
+        "value": 10,
+        "operation": "var eval",
+        "previous": 4996824,
+        "remaining": 4996814
+      },
+      {
+        "value": 7,
+        "operation": "substitution",
+        "previous": 4996814,
+        "remaining": 4996807
+      },
+      {
+        "value": 11,
+        "operation": "substitution",
+        "previous": 4996807,
+        "remaining": 4996796
+      },
+      {
+        "value": 7,
+        "operation": "substitution",
+        "previous": 4996796,
+        "remaining": 4996789
+      },
+      {
+        "value": 11,
+        "operation": "receive eval",
+        "previous": 4996789,
+        "remaining": 4996778
+      },
+      {
+        "value": 38,
+        "operation": "substitution",
+        "previous": 4996778,
+        "remaining": 4996740
+      },
+      {
+        "value": 11,
+        "operation": "substitution",
+        "previous": 4996740,
+        "remaining": 4996729
+      },
+      {
+        "value": 187,
+        "operation": "substitution",
+        "previous": 4996729,
+        "remaining": 4996542
+      },
+      {
+        "value": 240,
+        "operation": "consume storage",
+        "previous": 4996542,
+        "remaining": 4996302
+      },
+      {
+        "value": 64,
+        "operation": "event storage cost",
+        "previous": 4996302,
+        "remaining": 4996238
+      },
+      {
+        "value": 560,
+        "operation": "consume storage",
+        "previous": 4996238,
+        "remaining": 4995678
+      },
+      {
+        "value": -560,
+        "operation": "consume storage refund",
+        "previous": 4995678,
+        "remaining": 4996238
+      },
+      {
+        "value": -84,
+        "operation": "produces storage refund",
+        "previous": 4996238,
+        "remaining": 4996322
+      },
+      {
+        "value": 128,
+        "operation": "comm event storage cost",
+        "previous": 4996322,
+        "remaining": 4996194
+      },
+      {
+        "value": 12,
+        "operation": "match eval",
+        "previous": 4996194,
+        "remaining": 4996182
+      },
+      {
+        "value": 10,
+        "operation": "var eval",
+        "previous": 4996182,
+        "remaining": 4996172
+      },
+      {
+        "value": 7,
+        "operation": "substitution",
+        "previous": 4996172,
+        "remaining": 4996165
+      },
+      {
+        "value": 11,
+        "operation": "substitution",
+        "previous": 4996165,
+        "remaining": 4996154
+      },
+      {
+        "value": 7,
+        "operation": "substitution",
+        "previous": 4996154,
+        "remaining": 4996147
+      },
+      {
+        "value": 11,
+        "operation": "receive eval",
+        "previous": 4996147,
+        "remaining": 4996136
+      },
+      {
+        "value": 38,
+        "operation": "substitution",
+        "previous": 4996136,
+        "remaining": 4996098
+      },
+      {
+        "value": 11,
+        "operation": "substitution",
+        "previous": 4996098,
+        "remaining": 4996087
+      },
+      {
+        "value": 187,
+        "operation": "substitution",
+        "previous": 4996087,
+        "remaining": 4995900
+      },
+      {
+        "value": 240,
+        "operation": "consume storage",
+        "previous": 4995900,
+        "remaining": 4995660
+      },
+      {
+        "value": -240,
+        "operation": "consume storage refund",
+        "previous": 4995660,
+        "remaining": 4995900
+      },
+      {
+        "value": -43,
+        "operation": "produces storage refund",
+        "previous": 4995900,
+        "remaining": 4995943
+      },
+      {
+        "value": 64,
+        "operation": "event storage cost",
+        "previous": 4995943,
+        "remaining": 4995879
+      },
+      {
+        "value": 128,
+        "operation": "comm event storage cost",
+        "previous": 4995879,
+        "remaining": 4995751
+      },
+      {
+        "value": 12,
+        "operation": "match eval",
+        "previous": 4995751,
+        "remaining": 4995739
+      },
+      {
+        "value": 10,
+        "operation": "method call",
+        "previous": 4995739,
+        "remaining": 4995729
+      },
+      {
+        "value": 10,
+        "operation": "var eval",
+        "previous": 4995729,
+        "remaining": 4995719
+      },
+      {
+        "value": 0,
+        "operation": "(lookup * 0)",
+        "previous": 4995719,
+        "remaining": 4995719
+      },
+      {
+        "value": 0,
+        "operation": "substitution",
+        "previous": 4995719,
+        "remaining": 4995719
+      },
+      {
+        "value": 0,
+        "operation": "substitution",
+        "previous": 4995719,
+        "remaining": 4995719
+      },
+      {
+        "value": 11,
+        "operation": "send eval",
+        "previous": 4995719,
+        "remaining": 4995708
+      },
+      {
+        "value": 31,
+        "operation": "substitution",
+        "previous": 4995708,
+        "remaining": 4995677
+      },
+      {
+        "value": 8,
+        "operation": "substitution",
+        "previous": 4995677,
+        "remaining": 4995669
+      },
+      {
+        "value": 39,
+        "operation": "produces storage",
+        "previous": 4995669,
+        "remaining": 4995630
+      },
+      {
+        "value": 64,
+        "operation": "event storage cost",
+        "previous": 4995630,
+        "remaining": 4995566
+      },
+      {
+        "value": 43,
+        "operation": "produces storage",
+        "previous": 4995566,
+        "remaining": 4995523
+      },
+      {
+        "value": -240,
+        "operation": "consume storage refund",
+        "previous": 4995523,
+        "remaining": 4995763
+      },
+      {
+        "value": -43,
+        "operation": "produces storage refund",
+        "previous": 4995763,
+        "remaining": 4995806
+      },
+      {
+        "value": 64,
+        "operation": "event storage cost",
+        "previous": 4995806,
+        "remaining": 4995742
+      },
+      {
+        "value": 128,
+        "operation": "comm event storage cost",
+        "previous": 4995742,
+        "remaining": 4995614
+      },
+      {
+        "value": 12,
+        "operation": "match eval",
+        "previous": 4995614,
+        "remaining": 4995602
+      },
+      {
+        "value": 10,
+        "operation": "method call",
+        "previous": 4995602,
+        "remaining": 4995592
+      },
+      {
+        "value": 10,
+        "operation": "var eval",
+        "previous": 4995592,
+        "remaining": 4995582
+      },
+      {
+        "value": 0,
+        "operation": "(lookup * 0)",
+        "previous": 4995582,
+        "remaining": 4995582
+      },
+      {
+        "value": 0,
+        "operation": "substitution",
+        "previous": 4995582,
+        "remaining": 4995582
+      },
+      {
+        "value": 0,
+        "operation": "substitution",
+        "previous": 4995582,
+        "remaining": 4995582
+      },
+      {
+        "value": 11,
+        "operation": "send eval",
+        "previous": 4995582,
+        "remaining": 4995571
+      },
+      {
+        "value": 31,
+        "operation": "substitution",
+        "previous": 4995571,
+        "remaining": 4995540
+      },
+      {
+        "value": 8,
+        "operation": "substitution",
+        "previous": 4995540,
+        "remaining": 4995532
+      },
+      {
+        "value": 39,
+        "operation": "produces storage",
+        "previous": 4995532,
+        "remaining": 4995493
+      },
+      {
+        "value": 64,
+        "operation": "event storage cost",
+        "previous": 4995493,
+        "remaining": 4995429
+      },
+      {
+        "value": 43,
+        "operation": "produces storage",
+        "previous": 4995429,
+        "remaining": 4995386
+      },
+      {
+        "value": 64,
+        "operation": "event storage cost",
+        "previous": 4995386,
+        "remaining": 4995322
+      },
+      {
+        "value": 560,
+        "operation": "consume storage",
+        "previous": 4995322,
+        "remaining": 4994762
+      },
+      {
+        "value": 64,
+        "operation": "event storage cost",
+        "previous": 4994762,
+        "remaining": 4994698
+      }
+    ]
+  }
+}

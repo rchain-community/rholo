@@ -1,0 +1,248 @@
+ Downloading crates ...
+  Downloaded libm v0.2.16
+   Compiling syn v2.0.119
+   Compiling num-traits v0.2.19
+   Compiling crypto-bigint v0.7.6
+   Compiling primefield v0.14.0
+   Compiling wnaf v0.14.1
+   Compiling rfc6979 v0.6.0
+   Compiling serde_core v1.0.229
+   Compiling tokio v1.54.1
+   Compiling der_derive v0.8.0
+   Compiling der v0.8.2
+   Compiling spki v0.8.0
+   Compiling sec1 v0.8.1
+   Compiling pkcs5 v0.8.1
+   Compiling curve25519-dalek-derive v0.1.1
+   Compiling pkcs8 v0.11.0
+   Compiling curve25519-dalek v5.0.0
+   Compiling elliptic-curve v0.14.1
+   Compiling ecdsa v0.17.0
+   Compiling primeorder v0.14.0
+   Compiling curve25519-dalek v4.1.3
+   Compiling smallvec v1.15.2
+   Compiling parking_lot_core v0.9.12
+   Compiling x509-cert v0.3.0
+   Compiling serde v1.0.229
+   Compiling rchain-shared v0.1.0 (/home/runner/work/rchain-rust/rchain-rust/shared)
+   Compiling ed25519-dalek v3.0.0
+   Compiling crypto_box v0.9.1
+   Compiling k256 v0.14.0
+   Compiling p256 v0.14.0
+   Compiling x25519-dalek v3.0.0
+   Compiling dashmap v6.2.1
+   Compiling proptest v1.12.0
+   Compiling rchain-crypto v0.1.0 (/home/runner/work/rchain-rust/rchain-rust/crypto)
+   Compiling rchain-rspace v0.1.0 (/home/runner/work/rchain-rust/rchain-rust/rspace)
+    Finished `test` profile [unoptimized] target(s) in 19.00s
+     Running unittests src/lib.rs (target/debug/deps/rchain_rspace-1de28e44fa578e93)
+
+running 193 tests
+test concurrent::channel_queue::tests::claims_on_shared_channel_are_mutually_exclusive ... ok
+test concurrent::channel_queue::tests::enqueue_window_sets_skew_and_write_versions ... ok
+test concurrent::channel_queue::tests::entries_process_in_path_order ... ok
+test concurrent::channel_queue::tests::unwritten_channel_acquires ... ok
+test concurrent::channel_queue::tests::reset_skew_clears_the_signal ... ok
+test concurrent::channel_queue::tests::phase_two_rewait_runs_despite_earlier_pending_claim ... ok
+test concurrent::multi_lock::tests::acquire_serializes_conflicting_keys ... ok
+test concurrent::channel_queue::tests::phase_two_rewait_skips_own_trigger_write ... ok
+test concurrent::channel_queue::tests::validation_accepts_earlier_write ... ok
+test concurrent::multi_lock::tests::acquire_runs_thunk ... ok
+test concurrent::two_step_lock::tests::clean_up_releases_both_phases ... ok
+test concurrent::multi_lock::tests::the_lock_map_holds_one_entry_per_key_and_clean_up_empties_it ... ok
+test concurrent::two_step_lock::tests::a_phase_two_error_skips_the_thunk_and_releases_phase_a ... ok
+test concurrent::channel_queue::tests::validation_fails_on_later_write_and_does_not_retry ... ok
+test concurrent::channel_queue::tests::validation_off_accepts_later_write ... ok
+test concurrent::two_step_lock::tests::the_thunk_runs_under_both_phases_and_its_output_comes_back ... ok
+test errors::tests::every_variant_renders_and_the_carrying_variants_keep_their_detail ... ok
+test concurrent::two_step_lock::tests::phase_two_runs_with_phase_a_already_held ... ok
+test errors::tests::it_is_an_error_value_that_compares_structurally ... ok
+test hashing::stable_hash_provider::differential::every_golden_row_is_consumed ... ok
+test hashing::stable_hash_provider::differential::differential_join_hash ... ok
+test hashing::stable_hash_provider::tests::hash_seq_sorts_channel_hashes ... ok
+test hashing::stable_hash_provider::tests::join_hash_is_order_independent ... ok
+test hashing::stable_hash_provider::differential::differential_consume_hash ... ok
+test history::codecs::tests::decode_rejects_a_wrong_length ... ok
+test history::codecs::tests::a_hash_round_trips ... ok
+test hashing::stable_hash_provider::tests::produce_hash_depends_on_channel_datum_persist ... ok
+test hashing::stable_hash_provider::differential::differential_hash_channel ... ok
+test history::cold_store::tests::persisted_data_round_trips ... ok
+test hashing::stable_hash_provider::differential::differential_produce_hash ... ok
+test history::export::tests::export_empty_root ... ok
+test concurrent::two_step_lock::tests::different_keys_do_not_block_each_other ... ok
+test history::history_action::tests::key_reports_the_segment_for_both_variants ... ok
+test history::history_action::tests::trim_drops_the_first_byte_of_the_key ... ok
+test history::export::tests::export_walks_into_a_pointer_node ... ok
+test factory::tests::creates_reporting_rspace_from_in_memory_store ... ok
+test history::export::tests::export_single_leaf ... ok
+test history::history_action::tests::trimming_an_empty_key_panics - should panic ... ok
+test history::instances::radix_history::tests::committing_no_actions_leaves_the_root_where_it_was ... ok
+test history::instances::radix_history::tests::the_duplicate_check_is_by_key_not_by_action ... ok
+test history::history_repository::tests::reset_to_an_unknown_root_is_an_error ... ok
+test history::instances::radix_history::tests::a_new_history_is_empty_and_reads_absent_keys_as_none ... ok
+test history::history_repository::tests::a_volatile_reset_still_validates_and_still_moves_the_view ... ok
+test history::instances::radix_history::tests::a_delete_removes_the_key_at_the_new_root_only ... ok
+test history::instances::radix_history::tests::two_actions_on_one_key_are_refused - should panic ... ok
+test history::history_repository::tests::two_repositories_over_the_same_stores_agree_on_the_root ... ok
+test history::instances::rspace_history_reader_impl::tests::a_malformed_binary_continuation_leaf_panics_today - should panic ... ok
+test history::instances::radix_history::tests::reset_returns_to_an_earlier_root ... ok
+test history::instances::radix_history::tests::the_same_actions_from_the_same_root_give_the_same_root ... ok
+test history::instances::rspace_history_reader_impl::tests::a_native_leaf_round_trips_under_its_own_prefix ... ok
+test history::instances::rspace_history_reader_impl::tests::the_leaf_prefixes_are_the_documented_constants ... ok
+test history::key_segment::tests::a_segment_one_byte_over_the_invariant_is_refused_at_every_constructor ... ok
+test history::instances::rspace_history_reader_impl::tests::a_malformed_binary_datum_leaf_panics_today - should panic ... ok
+test history::key_segment::tests::common_prefix_splits_into_prefix_and_remainders ... ok
+test history::instances::rspace_history_reader_impl::tests::absent_keys_read_as_empty ... ok
+test history::key_segment::tests::head_on_an_empty_segment_refuses_by_name - should panic ... ok
+test history::key_segment::tests::head_option_and_head_agree ... ok
+test history::key_segment::tests::try_from_rejects_oversized_segment ... ok
+test concurrent::multi_lock::tests::concurrent_misses_on_one_key_still_share_one_mutex ... ok
+test history::instances::rspace_history_reader_impl::tests::a_leaf_of_the_wrong_kind_is_an_error_not_an_empty_result ... ok
+test history::instances::rspace_history_reader_impl::tests::the_base_reader_hashes_the_channel_for_its_caller ... ok
+test history::radix_tree::tests::empty_node_encoding_is_empty ... ok
+test history::instances::rspace_history_reader_impl::tests::the_binary_reader_reads_the_same_trie_as_the_typed_one ... ok
+test history::radix_tree::tests::empty_root_is_content_addressed_and_stable ... ok
+test history::root_repository::tests::an_unknown_root_is_an_error_and_does_not_move_the_current_root ... ok
+test history::radix_tree::tests::a_store_error_is_not_a_missing_node ... ok
+test history::radix_tree::tests::a_store_error_is_not_an_empty_root ... ok
+test history::root_repository::tests::an_empty_store_yields_the_empty_root_and_records_it ... ok
+test history::radix_tree::tests::node_encoding_round_trips ... ok
+test history::instances::rspace_history_reader_impl::tests::each_leaf_kind_round_trips_through_its_own_prefix ... ok
+test history::root_repository::tests::validate_known_root_refuses_without_publishing ... ok
+test history::roots_store::tests::validate_and_set_refuses_an_unknown_root ... ok
+test history::roots_store::tests::current_root_is_none_before_anything_is_recorded ... ok
+test history::roots_store::tests::a_truncated_current_root_is_refused_rather_than_panicking ... ok
+test internal::tests::a_binding_is_a_multiset_entry_not_a_set_member ... ok
+test history::roots_store::tests::a_deferred_commit_records_the_root_without_moving_current ... ok
+test internal::tests::a_datum_derives_its_produce_source_from_its_value ... ok
+test history::radix_tree::tests::insert_read_update_delete_round_trip ... ok
+test internal::tests::a_row_starts_empty ... ok
+test hot_store::tests::a_second_different_install_on_a_channel_is_refused ... ok
+test history::roots_store::tests::a_recorded_root_round_trips_and_is_then_acceptable ... ok
+test merger::event_log_index::tests::apply_classifies_produce_consume_and_comm ... ok
+test internal::tests::a_waiting_continuation_derives_its_consume_source ... ok
+test merger::event_log_index::tests::combining_refuses_a_diff_that_leaves_i64 ... ok
+test internal::tests::the_candidates_carry_their_parts ... ok
+test merger::channel_change::tests::combine_is_associative ... ok
+test merger::event_log_merging_logic::tests::a_consume_created_by_the_source_and_produced_by_the_target_is_a_dependency ... ok
+test merger::event_log_merging_logic::tests::a_shared_destroyed_consume_conflicts_unless_mergeable_on_both_sides ... ok
+test merger::event_log_merging_logic::tests::consumes_created_and_not_destroyed_keeps_the_persistent_ones ... ok
+test merger::event_log_merging_logic::tests::combining_peek_copies_drops_what_either_log_created ... ok
+test merger::channel_change::tests::empty_is_identity ... ok
+test merger::event_log_merging_logic::tests::a_shared_destroyed_produce_conflicts_unless_it_is_mergeable_on_both_sides ... ok
+test merger::event_log_merging_logic::tests::depends_is_directional_and_ignores_mergeable_events ... ok
+test merger::event_log_merging_logic::tests::produces_created_and_not_destroyed_keeps_the_persistent_ones ... ok
+test hot_store::tests::striped_store_equals_unstriped ... ok
+test merger::event_log_merging_logic::tests::persistent_and_disjoint_events_do_not_conflict ... ok
+test merger::state_change::diff_tests::a_reader_error_propagates ... ok
+test hot_store::tests::snapshot_roundtrips_through_from_state ... ok
+test merger::event_log_merging_logic::tests::produces_created_unions_the_sources_minus_the_peek_copies ... ok
+test merger::event_log_merging_logic::tests::the_reported_conflicts_are_channel_hashes_and_are_symmetric ... ok
+test merger::state_change::diff_tests::a_consume_and_replace_diffs_its_channel_once ... ok
+test merger::state_change::diff_tests::an_unchanged_produce_is_a_logic_error ... ok
+test merger::state_change::diff_tests::a_removed_datum_is_reported_as_removed ... ok
+test merger::state_change::diff_tests::combine_has_an_identity_and_a_right_biased_join_map ... ok
+test merger::state_change_merger::tests::a_channel_change_produces_a_remove_or_an_update_action ... ok
+test merger::state_change::tests::combine_has_an_identity_and_agrees_on_sorted_multisets ... ok
+test merger::state_change::diff_tests::two_continuations_on_one_channel_set_are_diffed_once ... ok
+test merger::state_change_merger::tests::join_actions_report_their_channels ... ok
+test merger::state_change_merger::tests::an_empty_channel_change_is_reported_as_an_error ... ok
+test merger::state_change_merger::tests::net_datum_changes_preserve_multiset_cardinality ... ok
+test merger::state_change::diff_tests::an_added_datum_is_reported_as_added ... ok
+test merger::state_change_merger::tests::the_merge_entry_point_builds_actions_from_the_base_state ... ok
+test merger::state_change_merger::tests::the_merge_entry_point_reports_what_it_cannot_merge ... ok
+test merger::state_change::diff_tests::a_consume_without_a_join_record_is_refused ... ok
+test merger::state_change_merger::tests::fully_consumed_causal_seed_has_no_net_trie_action ... ok
+test native_store::tests::a_slot_is_the_prefix_and_key_whatever_the_variant ... ok
+test merger::tests::seq_diff_removes_the_first_occurrence_and_preserves_order ... ok
+test native_store::tests::a_drained_write_names_the_deploy_that_made_it ... ok
+test merger::state_change_merger::tests::a_seed_then_consumed_linear_cell_has_only_the_winner_after_merge ... ok
+test native_store::tests::a_genesis_write_is_named_and_does_not_travel_in_a_sidecar ... ok
+test native_store::tests::a_write_outside_any_window_is_not_attributed_to_a_block ... ok
+test native_store::tests::drain_changes_produces_put_actions ... ok
+test native_store::tests::put_then_get_round_trips_without_reader ... ok
+test native_store::tests::delete_records_tombstone_and_blocks_reader ... ok
+test native_store::tests::snapshot_and_revert_restore_overlay ... ok
+test native_store::tests::two_deploys_writing_one_slot_keep_their_own_writes ... ok
+test concurrent::channel_queue::tests::later_path_inserts_before_running_head ... ok
+test concurrent::channel_queue::tests::phase_two_rewait_parks_on_blocked_join_then_continues ... ok
+test hot_store::tests::striped_concurrent_stress ... ok
+test property_tests::law9_channel_change_is_monoid ... ok
+test replay_rspace::tests::a_rig_whose_comm_never_happens_is_reported ... ok
+test replay_rspace::tests::a_rigged_replay_matches_its_recorded_trace ... ok
+test replay_rspace::tests::reset_releases_the_replay_spaces_own_channel_locks ... ok
+test replay_trace_census::tests::the_trace_census_counts_each_shape ... ok
+test reporting_rspace::tests::get_report_drains_the_history ... ok
+test reporting_rspace::tests::recording_is_soft_until_collected_and_an_empty_collect_adds_no_batch ... ok
+test reporting_rspace::tests::the_native_store_is_shared_with_the_wrapped_space ... ok
+test reporting_rspace::tests::the_recorders_keep_the_event_kinds_apart_and_in_order ... ok
+test reporting_rspace::tests::the_space_reads_are_the_wrapped_space_reads ... ok
+test reporting_transformer::tests::a_comm_reports_all_of_its_produces_in_order ... ok
+test reporting_transformer::tests::lists_are_bracketed_and_semicolon_joined_including_when_empty ... ok
+test reporting_transformer::tests::transform_event_dispatches_each_variant_to_its_own_serializer ... ok
+test property_tests::law9_disjoint_state_changes_commute ... ok
+test rspace::tests::persistent_continuation_keeps_join_records_across_produces ... ok
+test rspace::tests::checkpoint_reset_returns_persisted_data ... ok
+test rspace::tests::soft_checkpoint_revert_rolls_back_produces ... ok
+test scheduled_space::tests::a_commit_whose_candidate_vanished_stores_instead_of_delivering ... ok
+test rspace::tests::reset_releases_the_channel_locks ... ok
+test scheduled_space::tests::a_produce_with_no_match_stores_inline_and_defers_nothing ... ok
+test scheduled_space::tests::a_produce_that_matches_returns_the_join_set_and_defers_the_commit ... ok
+test scheduled_space::tests::a_scheduled_consume_rejects_an_empty_or_mismatched_source_set ... ok
+test scheduled_space::tests::a_scheduled_consume_commits_its_full_source_set ... ok
+test serializers::scodec_serialize::differential::differential_binary_variants_sort ... ok
+test serializers::scodec_serialize::differential::differential_continuations_round_trip_and_match_scala ... ok
+test serializers::scodec_serialize::differential::differential_datums_round_trip_and_match_scala ... ok
+test serializers::scodec_serialize::differential::differential_joins ... ok
+test serializers::scodec_serialize::differential::differential_seq_byte_vectors ... ok
+test scheduled_space::tests::the_deferred_commit_delivers_the_match ... ok
+test serializers::scodec_serialize::differential::every_golden_row_is_consumed ... ok
+test space_matcher::tests::find_matching_data_candidate_finds_first_match ... ok
+test space_matcher::tests::find_matching_data_candidate_none_when_no_match ... ok
+test state::exporters::tests::a_store_error_is_not_an_empty_history ... ok
+test state::exporters::tests::get_history_and_data_splits_leafs_and_history ... ok
+test state::exporters::tests::write_to_disk_refuses_a_chunk_whose_hash_does_not_match_its_bytes ... ok
+test state::instances::tests::a_populated_store_export_import_round_trips ... ok
+test serializers::scodec_serialize::differential::differential_size_head_and_bool ... ok
+test state::instances::tests::a_store_error_is_not_an_empty_traversal ... ok
+test state::instances::tests::an_import_that_cannot_write_is_not_a_successful_import ... ok
+test state::instances::tests::exporter_reads_root_and_items ... ok
+test state::instances::tests::state_manager_empty_when_no_root ... ok
+test state::tests::a_128_byte_resume_prefix_is_refused ... ok
+test state::instances::tests::importer_sets_root ... ok
+test state::tests::traverse_history_emits_leaf_and_last_node ... ok
+test state::tests::validate_state_items_accepts_valid_round_trip ... ok
+test state::tests::validate_state_items_rejects_corrupted_data ... ok
+test trace::event::tests::comm_sorts_produces ... ok
+test trace::event::tests::produce_equality_is_by_hash ... ok
+test property_tests::law9_state_change_combine_is_associative ... ok
+test trace::tuplespace_event::tests::a_consume_becomes_a_receive_and_a_multi_channel_one_yields_nothing ... ok
+test trace::tuplespace_event::tests::a_produce_becomes_a_send_with_the_right_cardinality ... ok
+test trace::tuplespace_event::tests::conflicts_covers_the_same_polarity_and_opposite_polarity_cases ... ok
+test trace::tuplespace_event::tests::a_comm_with_one_produce_is_reported_and_a_multi_produce_one_is_not ... ok
+test trace::tuplespace_event::tests::the_incoming_side_depends_on_who_initiated ... ok
+test util::tests::equal_length_compares_unsigned ... ok
+test trace::tuplespace_event::tests::unsatisfied_distinguishes_linear_peek_and_non_linear ... ok
+test util::tests::shorter_comes_first ... ok
+test property_tests::law7_join_hash_commutes ... ok
+test property_tests::law8_comm_sorts_produces ... ok
+test property_tests::law23_read_state_determines_outcome ... ok
+test property_tests::law24_record_layer_and_validation ... ok
+test property_tests::law20_per_channel_path_order ... ok
+test property_tests::law10_merkle_root_is_insertion_order_independent ... ok
+test property_tests::law11_a_replayed_script_matches_its_recording ... ok
+
+test result: ok. 193 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.95s
+
+     Running tests/wasm_roundtrip.rs (target/debug/deps/wasm_roundtrip-9193f88e0d9ecb6b)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests rchain_rspace
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

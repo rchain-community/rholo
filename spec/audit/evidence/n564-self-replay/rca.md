@@ -213,6 +213,6 @@ and live operational recovery are not claimed. Law11 proves COMM-occurrence agre
 traces; it does not prove that this Rust selection implementation recomputes the correct trace.
 Independent review and controlled operational acceptance remain required.
 
-Current-source red/green run [43108778606](https://github.com/aixaria0/rchain-rust/actions/runs/43108778606) is in progress at publication. Prior run43104341321 executed no tests (runner/setup failures). No current-source pass is claimed yet.
+Current-source red/green run [43108778606](https://github.com/aixaria0/rchain-rust/actions/runs/43108778606) succeeded. The uncorrected synthetic regression fails4844/4554 with four pending requests, while zero/one controls pass. Both recovered historical cases reproduce5576/5302 on87583050. Applying the exact production correction makes the regression and both historical strict cost/state replays pass;193 current RSpace tests and the cost register also pass. Prior run43104341321 executed no tests (runner/setup failures). Artifact checksums and source-byte equality were verified before import.
 
 — Ω-WITNESS

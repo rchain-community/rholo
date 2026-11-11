@@ -1600,6 +1600,7 @@ pub const OPENAPI_JSON: &str = r##"{
           "adminHttp": { "type": "boolean", "description": "The admin HTTP surface is published" },
           "consecutiveSelfValidationFailures": { "type": "integer", "format": "int64", "description": "Self-validation failures the proposer has recorded in a row; cleared by a successful propose" },
           "selfValidationRefusal": { "$ref": "#/components/schemas/SelfValidationRefusalDto" },
+          "poolQuarantined": { "type": "integer", "format": "int64", "description": "Pooled deploy ids this proposer is holding out of selection after repeated self-replay refusals (#564). Proposer-local liveness policy, not pool capacity: the deploys stay in the pool and remain valid for every other node" },
           "autoproposeTimerHalted": { "type": "boolean", "description": "The autopropose timer has stopped. Two things restart it: the process (the halt is durable, re-seeded at boot), and POST /api/v1/autopropose/resume on the admin listener, which clears the record and wakes the parked timer in-process. Not the same as block production having stopped: the tap and POST /api/propose keep running" },
           "autoproposeTimerHaltEpisodes": { "type": "integer", "format": "int64", "description": "How many times this shard's autopropose timer has stopped. Counting transitions, so a second note of the same halt does not move it; seeded from the durable record at boot, so it is the shard's count and not this process's (W-N10-01)" },
           "autoproposeHalt": { "type": "object", "description": "The autopropose halt on record: when it happened and whether the record is trustworthy. A null `at` with `durable: true` means no halt is on record; `durable: false` means the record could not be read or written, so the node cannot vouch for it — 'unknown' and 'never halted' are the two readings this field exists to keep apart (W-N10-01, F-U10-02)", "properties": { "at": { "type": "integer", "format": "int64", "nullable": true, "description": "When the shard last halted, in milliseconds since the unix epoch; null is no halt on record, unless durable is false" }, "durable": { "type": "boolean", "description": "Whether this reading reflects the store: false means the halt record could not be read or written, so the node cannot vouch for `at`" } } },
@@ -1669,6 +1670,7 @@ pub const OPENAPI_JSON: &str = r##"{
         "properties": {
           "consecutiveSelfValidationFailures": { "type": "integer", "format": "int64" },
           "selfValidationRefusal": { "$ref": "#/components/schemas/SelfValidationRefusalDto" },
+          "poolQuarantined": { "type": "integer", "format": "int64" },
           "autoproposeTimerHalted": { "type": "boolean" },
           "autoproposeTimerHaltEpisodes": { "type": "integer", "format": "int64" },
           "autoproposeHalt": { "$ref": "#/components/schemas/HaltStatusDto" },
@@ -1678,12 +1680,20 @@ pub const OPENAPI_JSON: &str = r##"{
       },
       "SelfValidationRefusalDto": {
         "type": "object",
-        "description": "The last counted self-validation refusal (#485): the proposer built a block and refused it. Null when none stands",
+        "description": "The last self-validation refusal (#485, #564): the proposer built a block and refused it. A self-replay refusal carries the variant's cost pair, the refused deploy ids and the bounded-retry state. Null when none stands",
         "properties": {
-          "code": { "type": "string", "description": "A closed kebab-case code from BlockStatus::code(), or internal-error" },
+          "code": { "type": "string", "description": "A closed kebab-case code from BlockStatus::code(), internal-error, or one of the replay codes (replay-cost-mismatch, replay-status-mismatch, unused-comm-event, system-deploy-error-mismatch)" },
           "blockNumber": { "type": "integer", "format": "int64" },
           "seqNum": { "type": "integer", "format": "int64" },
-          "atUnixMs": { "type": "integer", "format": "int64" }
+          "atUnixMs": { "type": "integer", "format": "int64" },
+          "initialCost": { "type": "integer", "format": "int64", "nullable": true, "description": "ReplayCostMismatch's play cost; null for every other refusal" },
+          "replayCost": { "type": "integer", "format": "int64", "nullable": true, "description": "ReplayCostMismatch's replay cost; null for every other refusal" },
+          "deployIds": { "type": "array", "items": { "type": "string" }, "description": "Refused deploy ids, base16, capped; deployCount is the true count" },
+          "deployCount": { "type": "integer", "format": "int64" },
+          "attempts": { "type": "integer", "format": "int64", "description": "Run length for this exact (deploy set, code) pair; a counted refusal is 1" },
+          "excluded": { "type": "boolean", "description": "Whether this refusal's deploy set is now held out of the proposer's selection" },
+          "stateHashMatched": { "type": "boolean", "nullable": true, "description": "The shadow replay's verdict on the declared post-state; null when it did not reach the checkpoint. Separates a state-correct cost refusal from a divergence (#564)" },
+          "replayedStateHash": { "type": "string", "nullable": true, "description": "The shadow replay's computed post-state hash, when it reached the checkpoint" }
         }
       },
       "FinalityHealthDto": {
@@ -1887,12 +1897,16 @@ pub const OPENAPI_JSON: &str = r##"{
         "type": "object",
         "properties": {
           "deployId": { "type": "string" },
+          "signature": { "type": "string", "description": "The same bytes as deployId, named as the signature a recovery tool reconstructs the signed deploy from" },
+          "sigAlgorithm": { "type": "string" },
+          "attachments": { "type": "array", "items": { "type": "string" }, "description": "Hex-encoded attachments, as the pool stores them" },
           "timestamp": { "type": "integer", "format": "int64" },
           "deployer": { "type": "string" },
           "term": { "type": "string" },
           "phloPrice": { "type": "integer", "format": "int64" },
           "phloLimit": { "type": "integer", "format": "int64" },
-          "validAfterBlockNumber": { "type": "integer", "format": "int64" }
+          "validAfterBlockNumber": { "type": "integer", "format": "int64" },
+          "shardId": { "type": "string" }
         }
       },
       "PooledDeploys": {
@@ -2985,6 +2999,7 @@ mod tests {
             admin_http: true,
             consecutive_self_validation_failures: 0,
             self_validation_refusal: None,
+            pool_quarantined: 0,
             autopropose_timer_halted: false,
             autopropose_timer_halt_episodes: 0,
             autopropose_halt: HaltStatusDto {
@@ -3844,6 +3859,14 @@ mod tests {
                         block_number: 3122,
                         seq_num: 3122,
                         at_unix_ms: 1_790_000_000_000,
+                        initial_cost: None,
+                        replay_cost: None,
+                        deploy_ids: Vec::new(),
+                        deploy_count: 0,
+                        attempts: 1,
+                        excluded: false,
+                        state_hash_matched: None,
+                        replayed_state_hash: None,
                     },
                 ),
                 ..Default::default()
@@ -4349,12 +4372,16 @@ mod tests {
             pooled_deploys: PooledDeploys {
                 deploys: vec![PooledDeploy {
                     deploy_id: "deadbeef".to_string(),
+                    signature: "deadbeef".to_string(),
+                    sig_algorithm: "secp256k1".to_string(),
+                    attachments: Vec::new(),
                     timestamp: 1724500000000,
                     deployer: "00".to_string(),
                     term: "Nil".to_string(),
                     phlo_price: 1,
                     phlo_limit: 100,
                     valid_after_block_number: -1,
+                    shard_id: "root".to_string(),
                 }],
             },
             deploy_result: None,

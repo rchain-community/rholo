@@ -2,6 +2,7 @@
 
 use rchain_shared::lock::Unpoison;
 use std::collections::{BTreeMap, BTreeSet};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
 use rchain_crypto::hash::blake2b256_hash::Blake2b256Hash;
@@ -543,6 +544,28 @@ impl RhoRuntime {
 
 /// The replay runtime (port of `ReplayRhoRuntime`). Wraps a `ReplayRSpace` so that `inj`/`evaluate`
 /// re-execute against the recorded COMM trace, and exposes `rig`/`check_replay_data` (Law 11).
+/// **Whether a replay treats a recorded-cost mismatch as a failure** (#564).
+///
+/// Production is [`ReplayCostCheck::Enforce`]: the recorded cost is consensus data and the oracle
+/// refuses a mismatch. [`ReplayCostCheck::Ignore`] is the diagnostic shadow: it lets the replay reach
+/// the checkpoint so the caller can learn whether the declared post-state hash matched, which the
+/// enforcing path never computes. The mismatches it saw are kept on the runtime.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ReplayCostCheck {
+    Enforce,
+    Ignore,
+}
+
+/// One cost mismatch the diagnostic shadow let through.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct IgnoredCostMismatch {
+    pub deploy_id: Vec<u8>,
+    pub recorded: i64,
+    pub replayed: i64,
+    /// The replay-side breakdown for this deploy, if the census was on.
+    pub replay_census: Option<crate::accounting::CostCensusSnapshot>,
+}
+
 pub struct ReplayRhoRuntime {
     reducer: Arc<RhoReducer>,
     space: RhoReplaySpace,
@@ -550,6 +573,9 @@ pub struct ReplayRhoRuntime {
     block_data: Arc<Mutex<BlockData>>,
     _history: RhoHistoryRepository,
     proc_defs: Arc<Vec<(Par, i32, bool, i64)>>,
+    /// `true` = `Ignore`. The enforcing path is the default and the only one a block is accepted on.
+    ignore_cost_mismatch: AtomicBool,
+    ignored_cost_mismatch: Mutex<Option<IgnoredCostMismatch>>,
 }
 
 impl ReplayRhoRuntime {
@@ -577,7 +603,37 @@ impl ReplayRhoRuntime {
             block_data: core.block_data,
             _history: history,
             proc_defs: Arc::new(core.proc_defs),
+            ignore_cost_mismatch: AtomicBool::new(false),
+            ignored_cost_mismatch: Mutex::new(None),
         })
+    }
+
+    /// Set the diagnostic shadow mode. Production never calls this with `Ignore`; the self-built
+    /// validation path uses it for one bounded replay after a cost refusal.
+    pub fn set_replay_cost_check(&self, check: ReplayCostCheck) {
+        self.ignore_cost_mismatch
+            .store(check == ReplayCostCheck::Ignore, Ordering::Relaxed);
+    }
+
+    pub fn replay_cost_check(&self) -> ReplayCostCheck {
+        if self.ignore_cost_mismatch.load(Ordering::Relaxed) {
+            ReplayCostCheck::Ignore
+        } else {
+            ReplayCostCheck::Enforce
+        }
+    }
+
+    /// Record a mismatch the shadow let through. The first one wins: a shadow replay is for one
+    /// diagnosis, not a list.
+    pub fn note_ignored_cost_mismatch(&self, mismatch: IgnoredCostMismatch) {
+        let mut slot = self.ignored_cost_mismatch.lock().unpoison();
+        if slot.is_none() {
+            *slot = Some(mismatch);
+        }
+    }
+
+    pub fn take_ignored_cost_mismatch(&self) -> Option<IgnoredCostMismatch> {
+        self.ignored_cost_mismatch.lock().unpoison().take()
     }
 
     /// Set the per-block data exposed to the `rho:block:data` contract (port of `setBlockData`).

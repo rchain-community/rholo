@@ -6,12 +6,15 @@
 //! wired into the reducer. The cats-mtl `_cost[F]` monad stack is modeled as the synchronous
 //! [`CostAccounting`] state cell.
 
-use std::sync::atomic::{AtomicI64, Ordering};
+use std::collections::BTreeMap;
+use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU64, Ordering};
+use std::sync::{Mutex, OnceLock};
 
 use num_bigint::BigInt;
 
 use rchain_models::runtime::{BindPattern, ListParWithRandom, TaggedContinuation};
 use rchain_models::sorted::SortedProc;
+use rchain_shared::lock::Unpoison;
 use rchain_shared::serialize::Serialize;
 
 use crate::errors::RholangError;
@@ -570,6 +573,140 @@ where
     }
 }
 
+/// **A diagnostic breakdown of the charges a runtime made** (#564).
+///
+/// `CostAccounting::total` is deliberately O(1) and category-free: the recorded per-deploy cost is a
+/// single number, and the operation label on a `Cost` is discarded at the charge site. That is the
+/// right shape for consensus, and the wrong shape for a diagnosis: a `ReplayCostMismatch` says the
+/// totals disagree and nothing about which charge moved. This snapshot is the diagnostic half, enabled
+/// only by `RCHAIN_COST_CENSUS=1` (or a test) and **never consulted by the charge arithmetic**.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct CostCensusSnapshot {
+    /// Cumulative `total_charged()` at the sample. A per-deploy delta is `later.total - earlier.total`.
+    pub total: i64,
+    pub charges: u64,
+    pub negative_charges: u64,
+    pub categories: BTreeMap<&'static str, i64>,
+    /// The most frequent named operations, capped at `MAX_CENSUS_OPERATIONS`. `operation_overflow`
+    /// counts names beyond the cap, so a truncated map is visible rather than implied.
+    pub operations: BTreeMap<String, i64>,
+    pub operation_overflow: u64,
+}
+
+const MAX_CENSUS_OPERATIONS: usize = 64;
+
+impl CostCensusSnapshot {
+    /// The charges between two cumulative samples. Keys present on only one side are carried as-is;
+    /// a zero difference is dropped so a delta names what moved.
+    pub fn delta(&self, later: &Self) -> Self {
+        let mut categories = BTreeMap::new();
+        for (k, v) in later.categories.iter() {
+            let d = *v - self.categories.get(k).copied().unwrap_or(0);
+            if d != 0 {
+                categories.insert(*k, d);
+            }
+        }
+        for (k, v) in self.categories.iter() {
+            if !later.categories.contains_key(k) && *v != 0 {
+                categories.insert(*k, -*v);
+            }
+        }
+        let mut operations = BTreeMap::new();
+        for (k, v) in later.operations.iter() {
+            let d = *v - self.operations.get(k).copied().unwrap_or(0);
+            if d != 0 {
+                operations.insert(k.clone(), d);
+            }
+        }
+        for (k, v) in self.operations.iter() {
+            if !later.operations.contains_key(k) && *v != 0 {
+                operations.insert(k.clone(), -*v);
+            }
+        }
+        Self {
+            total: later.total - self.total,
+            charges: later.charges.saturating_sub(self.charges),
+            negative_charges: later.negative_charges.saturating_sub(self.negative_charges),
+            categories,
+            operations,
+            operation_overflow: later
+                .operation_overflow
+                .saturating_sub(self.operation_overflow),
+        }
+    }
+}
+
+/// The process-wide switch. The census is a diagnostic; it is off unless asked for.
+static COST_CENSUS_ENABLED: AtomicBool = AtomicBool::new(false);
+static COST_CENSUS_INIT: OnceLock<()> = OnceLock::new();
+
+fn cost_census_enabled() -> bool {
+    COST_CENSUS_INIT.get_or_init(|| {
+        let on = std::env::var("RCHAIN_COST_CENSUS")
+            .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+            .unwrap_or(false);
+        COST_CENSUS_ENABLED.store(on, Ordering::Relaxed);
+    });
+    COST_CENSUS_ENABLED.load(Ordering::Relaxed)
+}
+
+/// Turn the diagnostic census on or off. Tests use this; the node uses `RCHAIN_COST_CENSUS`.
+pub fn set_cost_census_enabled(on: bool) {
+    COST_CENSUS_INIT.get_or_init(|| ());
+    COST_CENSUS_ENABLED.store(on, Ordering::Relaxed);
+}
+
+/// Whether the diagnostic census is recording. Exposed so a hot caller can skip the sample.
+pub fn cost_census_is_enabled() -> bool {
+    cost_census_enabled()
+}
+
+/// The category a named charge belongs to. The labels are stable, so a delta can be compared across
+/// runs; an unknown label is counted as `other` and its full name is kept in `operations`.
+fn cost_category(operation: &str) -> &'static str {
+    if operation.contains("pars") {
+        "parse"
+    } else if operation.contains("refund") {
+        "refund"
+    } else if operation.contains("comm event") {
+        "comm-event"
+    } else if operation.contains("event") {
+        "event"
+    } else if operation.contains("storage")
+        || operation.contains("produce")
+        || operation.contains("consume")
+    {
+        "storage"
+    } else if operation.contains("eval") || operation.contains("method") || operation.contains("op")
+    {
+        "eval"
+    } else if operation.contains("native") {
+        "native"
+    } else {
+        "other"
+    }
+}
+
+#[derive(Default)]
+struct CostCensusState {
+    categories: BTreeMap<&'static str, i64>,
+    operations: BTreeMap<String, i64>,
+    operation_overflow: u64,
+}
+
+impl CostCensusState {
+    fn record(&mut self, operation: &str, amount: i64) {
+        *self.categories.entry(cost_category(operation)).or_insert(0) += amount;
+        if let Some(v) = self.operations.get_mut(operation) {
+            *v += amount;
+        } else if self.operations.len() < MAX_CENSUS_OPERATIONS {
+            self.operations.insert(operation.to_string(), amount);
+        } else {
+            self.operation_overflow = self.operation_overflow.saturating_add(1);
+        }
+    }
+}
+
 /// The synchronous cost-accounting state (models the `_cost[F]` monad stack).
 #[derive(Default)]
 pub struct CostAccounting {
@@ -578,6 +715,11 @@ pub struct CostAccounting {
     /// `Cost`s, so a long-running node does not accumulate an unbounded `Vec` (each entry carried a
     /// heap `String`) and `total_charged` stays O(1).
     total: AtomicI64,
+    /// Diagnostic-only; see [`CostCensusSnapshot`]. The charge path reads the global switch first, so
+    /// a node with the census off pays one relaxed load and no lock.
+    census: Mutex<CostCensusState>,
+    charges: AtomicU64,
+    negative_charges: AtomicU64,
 }
 
 impl CostAccounting {
@@ -589,6 +731,9 @@ impl CostAccounting {
         CostAccounting {
             value: AtomicI64::new(init.value),
             total: AtomicI64::new(0),
+            census: Mutex::new(CostCensusState::default()),
+            charges: AtomicU64::new(0),
+            negative_charges: AtomicU64::new(0),
         }
     }
 
@@ -599,6 +744,20 @@ impl CostAccounting {
     /// Total phlo charged so far (the sum of every `charge`d amount, i.e. consumed phlo).
     pub fn total_charged(&self) -> i64 {
         self.total.load(Ordering::SeqCst)
+    }
+
+    /// The diagnostic breakdown as of now. A per-deploy delta is
+    /// `after.census_snapshot().delta(&before)`; see [`CostCensusSnapshot::delta`].
+    pub fn census_snapshot(&self) -> CostCensusSnapshot {
+        let state = self.census.lock().unpoison();
+        CostCensusSnapshot {
+            total: self.total_charged(),
+            charges: self.charges.load(Ordering::Relaxed),
+            negative_charges: self.negative_charges.load(Ordering::Relaxed),
+            categories: state.categories.clone(),
+            operations: state.operations.clone(),
+            operation_overflow: state.operation_overflow,
+        }
     }
 
     /// Set the current cost balance (port of `_cost.set`).
@@ -628,6 +787,17 @@ impl CostAccounting {
             }) {
             Ok(prev) => {
                 self.total.fetch_add(amount_value, Ordering::SeqCst);
+                // The diagnostic only: the charge arithmetic above is the consensus path and does not
+                // read any of this. Recording here means every charge, including a negative refund,
+                // is seen at one choke point without a call-site change.
+                if cost_census_enabled() {
+                    self.charges.fetch_add(1, Ordering::Relaxed);
+                    if amount_value < 0 {
+                        self.negative_charges.fetch_add(1, Ordering::Relaxed);
+                    }
+                    let mut census = self.census.lock().unpoison();
+                    census.record(&amount.operation, amount_value);
+                }
                 if prev - amount_value < 0 {
                     Err(RholangError::OutOfPhlogistonsError)
                 } else {
@@ -642,6 +812,9 @@ impl CostAccounting {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The census switch is process-wide; the two census tests must not race each other.
+    static CENSUS_TEST_LOCK: Mutex<()> = Mutex::new(());
 
     #[test]
     fn cost_arithmetic() {
@@ -740,5 +913,60 @@ mod tests {
         assert_eq!(Costs::gov_tally_ranked_cost(0, 0).value, 0);
         assert_eq!(Costs::gov_tally_approval_cost(0).value, 0);
         assert_eq!(Costs::gov_tally_approval_cost(1_000).value, 1_000);
+    }
+
+    /// **The census is diagnostic only** (#564): it must not move the balance or the total, and it
+    /// must record the positive charges and the negative refunds at the same choke point.
+    #[test]
+    fn the_census_records_each_charge_without_moving_the_total() {
+        let _guard = CENSUS_TEST_LOCK.lock().unpoison();
+        let off = CostAccounting::from_initial(Cost::new(10_000, "test"));
+        set_cost_census_enabled(false);
+        off.charge(Cost::new(40, "parsing")).unwrap();
+        off.charge(Cost::new(7, "send eval")).unwrap();
+        off.charge(Cost::new(-5, "consume storage refund")).unwrap();
+        let off_snapshot = off.census_snapshot();
+        assert!(off_snapshot.categories.is_empty(), "the census is off");
+
+        let on = CostAccounting::from_initial(Cost::new(10_000, "test"));
+        set_cost_census_enabled(true);
+        on.charge(Cost::new(40, "parsing")).unwrap();
+        on.charge(Cost::new(7, "send eval")).unwrap();
+        on.charge(Cost::new(-5, "consume storage refund")).unwrap();
+        let on_snapshot = on.census_snapshot();
+        set_cost_census_enabled(false);
+
+        assert_eq!(on.get().value, off.get().value, "the balance is unchanged");
+        assert_eq!(
+            on.total_charged(),
+            off.total_charged(),
+            "the total is unchanged"
+        );
+        assert_eq!(on.total_charged(), 42);
+        assert_eq!(on_snapshot.charges, 3);
+        assert_eq!(on_snapshot.negative_charges, 1);
+        assert_eq!(on_snapshot.categories.get("parse"), Some(&40));
+        assert_eq!(on_snapshot.categories.get("eval"), Some(&7));
+        assert_eq!(on_snapshot.categories.get("refund"), Some(&-5));
+        assert_eq!(on_snapshot.operations.get("parsing"), Some(&40));
+    }
+
+    /// A per-deploy delta names what moved, and drops the keys that did not.
+    #[test]
+    fn the_census_delta_names_only_the_charges_that_moved() {
+        let _guard = CENSUS_TEST_LOCK.lock().unpoison();
+        set_cost_census_enabled(true);
+        let a = CostAccounting::from_initial(Cost::new(10_000, "test"));
+        let before = a.census_snapshot();
+        a.charge(Cost::new(11, "send eval")).unwrap();
+        a.charge(Cost::new(4, "storage produce")).unwrap();
+        let after = a.census_snapshot();
+        set_cost_census_enabled(false);
+
+        let delta = before.delta(&after);
+        assert_eq!(delta.total, 15);
+        assert_eq!(delta.categories.get("eval"), Some(&11));
+        assert_eq!(delta.categories.get("storage"), Some(&4));
+        assert!(!delta.categories.contains_key("parse"));
     }
 }

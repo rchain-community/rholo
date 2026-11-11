@@ -27,6 +27,7 @@ pub mod native_store;
 mod property_tests;
 pub mod read_path_census;
 pub mod replay_rspace;
+pub mod replay_trace_census;
 pub mod reporting_rspace;
 pub mod reporting_transformer;
 pub mod rspace;

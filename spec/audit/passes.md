@@ -12182,3 +12182,86 @@ finalized ranges were (27,36] and (44,52]; both cross an epoch-length-10 boundar
 local-devnet witness for that pin, before the later settled-ledger guard; it does not close the
 mainnet release gates or certify later source changes. The record retains the source, binary,
 artifact digest/expiry and raw partition-result digest.
+
+## 153. The self-replay refusal: provenance, bound and surface (C357, #564)
+
+The 2026-11-08 testnet incident: validator A built block #1115, its own replay returned
+`ReplayCostMismatch initial_cost=5576 replay_cost=5302`, and `interpreter_util::handle_errors`
+collapsed that into `Ok(None)` → `InvalidStateHash` → `FailureCause::Divergence`. The proposer's C270
+divergence arm deliberately neither counts, surfaces nor bounds a divergence, so the same deploy set
+rebuilt the identical block for ~45 hours and finality froze. The HAZOP comment on #564 separated the
+trigger (RC1, still open) from the classification, retention and amplification faults.
+
+**What this pass changed.** `handle_errors` now returns a `ReplayVerdict` that keeps the variant.
+`validate_with_origin` is the same validation with a provenance parameter: a peer's `Failed` replay
+keeps the C173 `InvalidStateHash`/`Divergence` reading, while a `SelfBuilt` block's failure becomes
+`ValidateError::SelfReplayFailed`, carrying the payload to the proposer. The proposer's new arm never
+reads that as divergence; after `SELF_REPLAY_EXCLUSION_AFTER` (3) identical refusals it
+holds the pooled deploy set out of selection, logs the exclusion and re-derives. A block with no
+pooled deploy to hold out — attestation-only or dummy-only — stays on the counted/fail-loudly path.
+The operator surface carries the variant, the cost pair, the refused ids (capped at 16), the attempt
+count and `poolQuarantined`; the public `/health` summary keeps only the closed code, block, sequence
+and time. The exclusion is node-local operating policy, not a consensus rule: another validator may
+include the deploy, and the deploy remains in the pool.
+
+**The law.** `spec/Rchain/Casper/Provenance.lean` (Law 92) states the decision table and proves both
+halves: `an_inbound_replay_failure_is_divergence` and
+`a_self_replay_failure_is_not_divergence`, with non-vacuity. The Rust witness is
+`a_self_built_replay_failure_is_classified_as_a_local_fault`.
+
+**The falsifier.** `play_and_replay_agree_per_deploy_for_same_key_multi_transfer` builds a
+three-deploy block from one key — two transfers and one failed deploy whose recorded trace contains a
+COMM event — and runs it under both the sequential and the batched play policies. It passes: play and
+replay agree per deploy and the two play paths record identical costs. That is a **negative** for the
+incident's shape in this fixture, not a fix for RC1; the trigger remains open and the replay-trace and
+ordering candidates are still unexcluded.
+
+**What remains owed.** A devnet arm that forces three identical self-replay refusals and observes the
+exclusion and the subsequent proposal without the set; durable persistence of the refusal and the
+exclusion across restart; and the `recover-pool` tool/runbook action. None of them is claimed by this
+pass.
+
+## 154. The self-replay cost refusal: adversarial audit, representability RCA, HAZOP (C357–C359, #564)
+
+The first unit (pass §153) fixed the consequence and added a synthetic test. This pass is the
+adversarial audit and the condition analysis the incident asked for, plus the code that makes two of
+the conditions unrepresentable and the evidence a refusal must carry.
+
+**P0 — cost before state.** `replay_deploy_eval` returns `ReplayCostMismatch` before
+`handle_errors` compares the declared post-state, and the trace check runs after that early return; the
+order is the same in the incident binary `0a1e02362`. The refund and executor payment use the recorded
+cost, not the replayed evaluation cost, and the evaluation cost is not an RSpace leaf, so a cost-only
+difference can coexist with a correct state. The enforcing rule is unchanged (the port follows the
+Scala oracle); the evidence is new: a diagnostic cost census at `CostAccounting::charge`, a
+play-side per-deploy table keyed by block identity, a replay-side delta, a trace census, and a bounded
+shadow replay on a self-built cost refusal that records `state_hash_matched`, the replayed hash and the
+category/trace deltas. Law 93 states the independence; the protocol decision on accepting a
+state-correct/cost-mismatched block is recorded in
+`spec/audit/evidence/n564-self-replay/cost-criticality.md`, not encoded.
+
+**P0′ — play modes could record a non-canonical cost.** `RelaxedValidated` accepted a run without
+comparing per-deploy cost and returned the relaxed results; batching with `_VERIFY=0` skipped the only
+cost comparison. Both are now unrepresentable: the relaxed oracle requires per-deploy cost and status
+equality (falling back to its results), and an enabled batch always verifies. The node warns when an
+operator asks for the unsafe combination.
+
+**The audit's other findings.** The tracker's exclusion was unbounded and never pruned (now capped and
+pruned against the pool); the selection association rested on queue discipline (now keyed by height,
+sender and pre-state); `/health`'s 4-field refusal object could drift from the 10-field DTO (the
+operator detail is the only full shape, and the public projection is now a contract); the proposer
+tests used fake validate closures (the real replay path now has a cost-only tamper and a shadow test);
+the synthetic determinism test is negative evidence for its own shape, not the RCA.
+
+**The HAZOP.** U22 in `docs/src/spec/failure-hazop.md` dispositions all eleven guide words; the
+companion study is `spec/audit/evidence/n564-self-replay/hazop.md`, and the evidence pack is
+`spec/audit/evidence/n564-self-replay/` (`audit.md`, `rca.md`, `condition-inventory.tsv`,
+`cost-criticality.md`, `matrix.tsv`). `tools/check-hazop-worksheet.sh --gate` is green; the debt is 31
+falsifiers and 44 node-words, and U22's owed rows name the fault halt, the durable record, the trace
+mask and the peer residual.
+
+**What this pass does not establish.** The incident's store, terms and refused body are unavailable, so
+#1115 is not reconstructible and the 274's cause is not established. The leading hypothesis is the
+trace/refund mask on a state-neutral deploy; the matrix on `0a1e02362` and `dev` is the measurement.
+The `recover-pool` tool and the signed pool fields (`signature`, `sigAlgorithm`, attachments, shard)
+are the operational fallback; the durable refusal record and the local fault halt remain owed (C359,
+F-U22-08/09/10).

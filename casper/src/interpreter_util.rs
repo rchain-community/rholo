@@ -18,7 +18,7 @@ use rchain_models::block_metadata::{BlockMetadata, FailureCause, SlashSeverity};
 use rchain_models::casper::protocol::casper_message::{BlockMessage, SignedDeployData};
 use rchain_models::validator::Validator;
 use rchain_rholang::errors::RholangError;
-use rchain_rholang::runtime::ReplayRhoRuntime;
+use rchain_rholang::runtime::{ReplayCostCheck, ReplayRhoRuntime};
 use rchain_rholang::system_processes::BlockData;
 use rchain_shared::base16;
 use rchain_shared::log::{Log, LogSource};
@@ -28,7 +28,9 @@ use crate::block_random_seed::BlockRandomSeed;
 use crate::block_status::BlockStatus;
 use crate::merging::{BlockIndex, ParentsMergedState};
 use crate::multi_parent_casper::get_pre_state_for_parents;
-use crate::rholang::{ReplayFailure, SystemDeployRuntimeResult, UserDeployRuntimeResult};
+use crate::rholang::{
+    CostMismatchDetail, ReplayFailure, SystemDeployRuntimeResult, UserDeployRuntimeResult,
+};
 use crate::runtime_manager::RuntimeManager;
 use crate::system_deploy::SystemDeploy;
 
@@ -83,23 +85,62 @@ pub async fn replay_block(
     Ok(state_hash)
 }
 
-/// Map a replay result into an `Option` of the matching state hash (port of `handleErrors`).
+/// **Where the block being validated came from** (#564).
+///
+/// The two paths run the same validation, but a replay failure does not mean the same thing on each.
+/// A peer's block may be valid under a view this node does not hold, so a replay disagreement is a
+/// `FailureCause::Divergence` and is not attributable. A block this node *built* has no peer view to
+/// disagree with: its play and replay are two executions of this node's own state, so a disagreement
+/// is a local fault and must not be read as divergence.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ValidationOrigin {
+    /// A block received from a peer (or taken from the store for revalidation).
+    Peer,
+    /// The block the proposer just built and is validating before broadcast.
+    SelfBuilt,
+}
+
+/// **What the replay comparison found** (#564): the three outcomes `handle_errors` used to collapse
+/// into `Option`.
+///
+/// `Matched` and `PostStateMismatch` are the two hash-comparison answers. `Failed` is a replay that
+/// returned a `ReplayFailure` other than an internal error — the variant with its payload, before the
+/// old `Err(_) => Ok(None)` arm turned it into the same `InvalidStateHash` a plain post-state
+/// disagreement produces. The validation caller decides what a failure means from the block's
+/// provenance; this type only refuses to throw the distinction away.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ReplayVerdict {
+    /// The replay reproduced the declared post-state.
+    Matched(Blake2b256Hash),
+    /// The replay ran but computed a different post-state.
+    PostStateMismatch,
+    /// The replay refused: status, cost, COMM-event or system-deploy mismatch.
+    Failed(ReplayFailure),
+}
+
+/// Map a replay result into a [`ReplayVerdict`] (port of `handleErrors`, with the variant kept).
+///
+/// **The old shape was the incident's first hop** (#564): every non-`InternalError` variant became
+/// `Ok(None)`, which the validator read as `InvalidStateHash` and therefore as `Divergence` — a
+/// peer-view disagreement. A block this node built has no peer view to disagree with, so the
+/// conversion is deleted rather than narrowed: `Failed` carries the variant and its payload to the
+/// caller that knows where the block came from.
 pub fn handle_errors(
     ts_hash: &Blake2b256Hash,
     result: Result<Blake2b256Hash, ReplayFailure>,
-) -> Result<Option<Blake2b256Hash>, String> {
+) -> Result<ReplayVerdict, String> {
     match result {
         Ok(computed) => {
             if *ts_hash == computed {
-                Ok(Some(computed))
+                Ok(ReplayVerdict::Matched(computed))
             } else {
-                Ok(None)
+                Ok(ReplayVerdict::PostStateMismatch)
             }
         }
         Err(ReplayFailure::InternalError(cause)) => Err(format!(
             "Internal errors encountered while processing deploy: {cause}"
         )),
-        Err(_) => Ok(None),
+        Err(failure) => Ok(ReplayVerdict::Failed(failure)),
     }
 }
 
@@ -854,42 +895,21 @@ fn describe_rejected_deploy_mismatch(
     )
 }
 
-/// What a failed replay failed **on**, before `handle_errors` collapses it (#139, #140).
+/// What a failed replay failed **on** (#139, #140, #564).
 ///
-/// **Why the variant is worth a line of its own.** `handle_errors` keeps only two outcomes out of a
-/// [`ReplayFailure`]: `InternalError` becomes an `Err` — the node's own fault, so no block is recorded
-/// failed — and **every other variant becomes `Ok(None)`**, which is the same `InvalidStateHash` a plain
-/// post-state mismatch produces. So "the replay disagreed about the post-state" and "the replay failed a
-/// status, cost or comm check" reach an operator as one status, and the variant with its payload is what
-/// separates them. It is read here, before that collapse.
+/// **Why the variant is worth a line of its own.** The verdict type now carries the variant to the
+/// caller, but the operator's first contact with a refusal is still this log line, and "the replay
+/// disagreed about the post-state" and "the replay failed a status, cost or comm check" are different
+/// diagnoses. The variant with its payload is what separates them.
 ///
 /// The payloads are included rather than elided: a cost pair and a pair of booleans *are* the diagnosis,
 /// and the error strings are already in this process's memory at this point. They can be peer-sized,
-/// which is the same exposure `handle_errors` already has when it formats an `InternalError`'s cause into
-/// an error.
+/// which is the same exposure `handle_errors` has when it formats an `InternalError`'s cause into an
+/// error.
 fn describe_replay_failure(failure: &ReplayFailure) -> String {
-    match failure {
-        ReplayFailure::InternalError(cause) => format!("kind=InternalError cause={cause}"),
-        ReplayFailure::ReplayStatusMismatch {
-            initial_failed,
-            replay_failed,
-        } => format!(
-            "kind=ReplayStatusMismatch initial_failed={initial_failed} replay_failed={replay_failed}"
-        ),
-        ReplayFailure::UnusedCommEvent(cause) => format!("kind=UnusedCommEvent cause={cause}"),
-        ReplayFailure::ReplayCostMismatch {
-            initial_cost,
-            replay_cost,
-        } => format!(
-            "kind=ReplayCostMismatch initial_cost={initial_cost} replay_cost={replay_cost}"
-        ),
-        ReplayFailure::SystemDeployErrorMismatch {
-            play_error,
-            replay_error,
-        } => format!(
-            "kind=SystemDeployErrorMismatch play_error={play_error} replay_error={replay_error}"
-        ),
-    }
+    // One implementation, on the type that owns the variants: the proposer logs the same line when
+    // a self-built block is refused, and two matches would be two chances to disagree.
+    failure.describe()
 }
 
 fn describe_no_advance(reason: &NoAdvance<Validator>) -> String {
@@ -927,13 +947,15 @@ fn describe_no_advance(reason: &NoAdvance<Validator>) -> String {
 }
 
 /// Validate a block by recomputing its pre-state and replaying its deploys (port of
-/// `validateBlockCheckpoint`). Returns the block metadata plus a `bool` (valid) / `BlockStatus`
-/// (rejectable) outcome.
+/// `validateBlockCheckpoint`). Returns the block metadata plus a [`ReplayVerdict`] (what the replay
+/// found) / `BlockStatus` (a pre-replay refusal) outcome.
+#[allow(clippy::too_many_arguments)]
 pub async fn validate_block_checkpoint<F, Fut>(
     runtime: &RuntimeManager,
     dag: &dyn BlockDagStorage,
     block_store: &BlockStore,
     block: &BlockMessage,
+    origin: ValidationOrigin,
     block_index: &F,
     log: &Arc<dyn Log>,
     // **The shard's health cells** (W-N10-02, W-N10-03). The two observations below used to write
@@ -941,7 +963,7 @@ pub async fn validate_block_checkpoint<F, Fut>(
     // restart zeroed counters the shard's own history had moved. Threaded, not registered — see
     // [`ShardHealth`] for why.
     health: &ShardHealth,
-) -> Result<(BlockMetadata, Result<bool, BlockStatus>), String>
+) -> Result<(BlockMetadata, Result<ReplayVerdict, BlockStatus>), String>
 where
     F: Fn(BlockHash) -> Fut,
     Fut: std::future::Future<Output = Result<Arc<BlockIndex>, String>>,
@@ -1077,7 +1099,9 @@ where
     // produced a different state — from a *post*-state one, where the merge agreed and the replay then
     // diverged. Those point at different causes, and naming which one fired is the first thing #139's
     // close condition asks for.
-    let result: Result<bool, BlockStatus> = if incoming_pre_state_hash != pre_state.pre_state_hash {
+    let result: Result<ReplayVerdict, BlockStatus> = if incoming_pre_state_hash
+        != pre_state.pre_state_hash
+    {
         log.warn(
             source,
             &describe_state_mismatch(
@@ -1111,7 +1135,7 @@ where
         let forked = runtime
             .fork_replay_runtime(pre_state.pre_state_hash)
             .await?;
-        let replay_result = replay_block(
+        let mut replay_result = replay_block(
             runtime,
             &forked,
             block,
@@ -1120,20 +1144,92 @@ where
             &rand,
         )
         .await;
+        // **The bounded shadow replay** (#564). The production replay refuses on the cost field before
+        // it compares the declared post-state, so it never says whether the state matched. On a
+        // self-built cost refusal only, run one fresh replay with the cost check ignored, reach the
+        // checkpoint if the trace permits, and attach both verdicts to the failure. This is diagnostic:
+        // the block is still refused and never broadcast.
+        if origin == ValidationOrigin::SelfBuilt {
+            let cost_mismatch = match &replay_result {
+                Err(ReplayFailure::ReplayCostMismatch {
+                    initial_cost,
+                    replay_cost,
+                }) => Some((*initial_cost, *replay_cost)),
+                _ => None,
+            };
+            if let Some((initial_cost, replay_cost)) = cost_mismatch {
+                let shadow = runtime
+                    .fork_replay_runtime(pre_state.pre_state_hash)
+                    .await?;
+                shadow.set_replay_cost_check(ReplayCostCheck::Ignore);
+                let trace_before = rchain_rspace::replay_trace_census::snapshot();
+                let shadow_result = replay_block(
+                    runtime,
+                    &shadow,
+                    block,
+                    &pre_state.fringe_state,
+                    &pre_state.participation,
+                    &rand,
+                )
+                .await;
+                let ignored = shadow.take_ignored_cost_mismatch();
+                let (state_hash_matched, replayed_state_hash) = match &shadow_result {
+                    Ok(hash) => (Some(*hash == post_state_hash), Some(hash.to_hex())),
+                    Err(_) => (None, None),
+                };
+                let play = ignored.as_ref().and_then(|mismatch| {
+                    crate::play_cost_census::lookup(
+                        &BlockData::from_block(block),
+                        &mismatch.deploy_id,
+                    )
+                });
+                let replay = ignored
+                    .as_ref()
+                    .and_then(|mismatch| mismatch.replay_census.clone());
+                let trace =
+                    Some(trace_before.delta(&rchain_rspace::replay_trace_census::snapshot()));
+                log.warn(
+                    source,
+                    &format!(
+                        "shadow replay on self-built block #{}: state_hash_matched={:?} \
+                         replayed_state_hash={:?} cost_delta={} (declared post-state {})",
+                        block.block_number,
+                        state_hash_matched,
+                        replayed_state_hash,
+                        replay_cost - initial_cost,
+                        post_state_hash.to_hex(),
+                    ),
+                );
+                replay_result = Err(ReplayFailure::replay_cost_mismatch_with_detail(
+                    initial_cost,
+                    replay_cost,
+                    CostMismatchDetail {
+                        play,
+                        replay,
+                        state_hash_matched,
+                        replayed_state_hash,
+                        trace,
+                    },
+                ));
+            }
+        }
         // Read the recomputed hash *before* `handle_errors` consumes the result, so the disagreement
         // can be reported with both sides (#139).
         let recomputed = replay_result.as_ref().ok().cloned();
-        // **A replay that failed and a replay that disagreed are different faults**, and `handle_errors`
-        // collapses them: every variant but `InternalError` becomes `Ok(None)`, which is the same
-        // `InvalidStateHash` a plain post-state mismatch produces. The variant and its payload are read
-        // here, before that collapse (Aria's #140; the hash-side arms of that PR are already covered by
-        // the disagreement lines above and below).
+        // **A replay that failed and a replay that disagreed are different faults** (#564), and this
+        // is where the variant is still in hand. The line names the block's origin because the same
+        // failure means different things on the two paths: a peer's block may be valid under a view
+        // this node does not hold, while a self-built block has no other view to differ from.
         if let Err(failure) = &replay_result {
             log.warn(
                 source,
                 &format!(
-                    "replay failed on block #{} {} by {} — {} (declared post-state {} pre_state={} \
+                    "replay failed on {} block #{} {} by {} — {} (declared post-state {} pre_state={} \
                      fringe_state={} prev_fringe_lookup={}) {}",
+                    match origin {
+                        ValidationOrigin::Peer => "inbound",
+                        ValidationOrigin::SelfBuilt => "self-built",
+                    },
                     block.block_number,
                     block.block_hash.to_hex(),
                     short_id(&block.sender),
@@ -1146,8 +1242,8 @@ where
                 ),
             );
         }
-        let handled = handle_errors(&post_state_hash, replay_result)?;
-        if handled.is_none() {
+        let verdict = handle_errors(&post_state_hash, replay_result)?;
+        if verdict == ReplayVerdict::PostStateMismatch {
             log.warn(
                 source,
                 &describe_state_mismatch(
@@ -1159,24 +1255,33 @@ where
                 ),
             );
         }
-        Ok(handled.is_some())
+        Ok(verdict)
     };
 
-    let validation_failed = match &result {
-        Err(_) => true,
-        Ok(valid) => !*valid,
+    // **A self-built replay failure is the one refusal this function does not classify** (#564).
+    // Every other arm is a disagreement between the block and *this node's* state — a pre-state hash
+    // it did not derive, a rejected-deploy set from its own merge, a post-state it recomputed — so
+    // the cause is `Divergence` (AUDIT C173). A `ReplayFailure` on a block this node built is this
+    // node's own play/replay disagreement; there is no peer view for it to differ from, so the caller
+    // classifies it as a local fault and never as `Divergence`. The metadata is not stored on that
+    // path (`validate_checks` returns `SelfReplayFailed` before writing it), and leaving the cause
+    // unset keeps a future caller from reading the old classification back.
+    let failure_cause = match &result {
+        Err(_) | Ok(ReplayVerdict::PostStateMismatch) => Some(FailureCause::Divergence),
+        Ok(ReplayVerdict::Failed(_)) if origin == ValidationOrigin::Peer => {
+            Some(FailureCause::Divergence)
+        }
+        Ok(ReplayVerdict::Failed(_)) => None,
+        Ok(ReplayVerdict::Matched(_)) => None,
     };
+    let validation_failed = failure_cause.is_some();
     let bmd = BlockMetadata {
         validated: true,
         validation_failed,
-        // **The cause is not `mark_failed`'s to decide here.** Everything this function can refuse for
-        // is a disagreement between the block and *this node's* state or replay — a pre-state hash it
-        // did not derive, a rejected-deploy set from its own merge, a post-state it recomputed — so
-        // the cause is `Divergence` and the failure is not the block's own fault (AUDIT C173). The
-        // attribution is left unset (`mark_failed` sets both `slashable` and the cause from the
+        // The attribution is left unset (`mark_failed` sets both `slashable` and the cause from the
         // status; setting it here as well is what once made the flag survive a disagreement it did
         // not describe).
-        failure_cause: validation_failed.then_some(FailureCause::Divergence),
+        failure_cause,
         slash_severity: SlashSeverity::Unspecified,
         slashable: false,
         fringe: pre_state.fringe,
@@ -1421,20 +1526,26 @@ mod tests {
         assert!(line.contains("close_block=yes"), "{line}");
 
         // A replay that never produced a value is still a readable line rather than a panic or a
-        // missing field — `handle_errors` returns `Ok(None)` for a soft failure as well as for a
-        // mismatch.
+        // missing field — the verdict keeps the failure rather than turning it into a hash
+        // mismatch, and this line must still say the replay did not reach a state.
         let none = describe_state_mismatch(&block, &pre_state, "post-state", &hash(0x22), None);
         assert!(none.contains("did not reach a state"), "{none}");
     }
 
     #[test]
     fn handle_errors_accepts_matching_hash() {
-        assert_eq!(handle_errors(&hash(1), Ok(hash(1))).unwrap(), Some(hash(1)));
+        assert_eq!(
+            handle_errors(&hash(1), Ok(hash(1))).unwrap(),
+            ReplayVerdict::Matched(hash(1))
+        );
     }
 
     #[test]
     fn handle_errors_rejects_mismatching_hash() {
-        assert_eq!(handle_errors(&hash(1), Ok(hash(2))).unwrap(), None);
+        assert_eq!(
+            handle_errors(&hash(1), Ok(hash(2))).unwrap(),
+            ReplayVerdict::PostStateMismatch
+        );
     }
 
     #[test]
@@ -1459,12 +1570,27 @@ mod tests {
     }
 
     #[test]
-    fn handle_errors_soft_fails_on_replay_status_mismatch() {
+    fn handle_errors_keeps_the_replay_failure_instead_of_collapsing_it() {
+        // The incident's first hop (#564): this used to be `None`, the same reading a plain
+        // post-state mismatch produces. The variant and its payload now reach the caller that knows
+        // where the block came from.
         let r = handle_errors(
             &hash(1),
             Err(ReplayFailure::replay_status_mismatch(true, false)),
         );
-        assert_eq!(r.unwrap(), None);
+        assert_eq!(
+            r.unwrap(),
+            ReplayVerdict::Failed(ReplayFailure::replay_status_mismatch(true, false))
+        );
+
+        let cost = handle_errors(
+            &hash(1),
+            Err(ReplayFailure::replay_cost_mismatch(5576, 5302)),
+        );
+        assert_eq!(
+            cost.unwrap(),
+            ReplayVerdict::Failed(ReplayFailure::replay_cost_mismatch(5576, 5302))
+        );
     }
 
     /// **The arm that used to leave no trace** (#140). A `rejected_deploys` disagreement has to name both
@@ -1514,9 +1640,9 @@ mod tests {
         );
     }
 
-    /// **Read before `handle_errors` collapses it** (#140). Four of the five variants become `Ok(None)` —
-    /// the same status a plain post-state mismatch produces — so the variant is the only thing that
-    /// separates "the replay disagreed" from "the replay failed a status, cost or comm check".
+    /// **The line is the human-readable half of the variant** (#140, #564). The verdict now keeps the
+    /// variant for the caller; this line still has to name it and its payload for the log, because a
+    /// `ReplayCostMismatch` that reads only "replay failed" cannot be diagnosed.
     #[test]
     fn the_replay_failure_line_names_every_variant_and_its_payload() {
         let cases = [

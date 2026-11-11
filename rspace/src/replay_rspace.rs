@@ -165,15 +165,17 @@ where
 
     /// Whether a datum participates in `comm` (port of `ReplayRSpace.matches`).
     fn matches(&self, comm: &Comm, datum: &Datum<A>) -> bool {
-        if !comm.produces.contains(&datum.source) {
-            return false;
-        }
-        if datum.persist {
-            return true;
-        }
-        let expected = comm.times_repeated.get(&datum.source).copied().unwrap_or(0);
-        let actual = self.space.produce_counter_value(&datum.source);
-        actual == expected
+        let matched = if !comm.produces.contains(&datum.source) {
+            false
+        } else if datum.persist {
+            true
+        } else {
+            let expected = comm.times_repeated.get(&datum.source).copied().unwrap_or(0);
+            let actual = self.space.produce_counter_value(&datum.source);
+            actual == expected
+        };
+        crate::replay_trace_census::note_match(matched);
+        matched
     }
 
     async fn run_matcher_consume(
@@ -607,6 +609,11 @@ where
     K: Clone + Serialize<K> + Send + Sync + 'static,
 {
     async fn rig(&self, log: Log) {
+        let comms = log
+            .iter()
+            .filter(|event| matches!(event, Event::Comm(_)))
+            .count();
+        crate::replay_trace_census::note_rigged(comms);
         *crate::lock::wlock(&self.replay_data) = Self::build_replay_data(&log);
     }
 
@@ -624,6 +631,7 @@ where
         if data.is_empty() {
             Ok(())
         } else {
+            crate::replay_trace_census::note_leftover(data.len());
             Err(ReplayException(format!(
                 "Unused COMM event: replayData multimap has {} elements left",
                 data.len()

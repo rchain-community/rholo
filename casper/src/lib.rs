@@ -23,6 +23,7 @@ pub mod genesis;
 pub mod interpreter_util;
 pub mod merging;
 pub mod multi_parent_casper;
+pub mod play_cost_census;
 pub mod pool;
 pub mod proto_util;
 pub mod protocol;

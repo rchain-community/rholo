@@ -102,20 +102,19 @@ on the rows that are not reads.
 
 ## Check-off
 
-**Findings  TODO 0 · IN PROGRESS 4 · DONE 387** &nbsp;&nbsp;·&nbsp;&nbsp; **Coverage  all 89 T1 modules read**
+**Findings  TODO 1 · IN PROGRESS 6 · DONE 388** &nbsp;&nbsp;·&nbsp;&nbsp; **Coverage  all 89 T1 modules read**
 
-**Laws  185 of 391 findings name one** (ceiling 206; 206 done row(s) unclassified)
+**Laws  189 of 395 findings name one** (ceiling 206; 206 done row(s) unclassified)
 
-**Both halves are closed.** A `done` row is settled -- fixed, assessed faithful, a
-deliberate deviation, or refuted -- and names what holds it where there is evidence to
-name. What that does *not* mean is stated under each half below.
+Closed when both halves are zero. A **done** row is settled -- fixed, assessed faithful, a
+deliberate deviation, or refuted -- and names what holds it. A **todo** row names what would
+close it.
 
-### Findings — closed
+### TODO — findings (1)
 
-All 391 are settled: **327 name the evidence that holds them** and **64 do not** — the
-second number is the honest residual, and a column rather than an implication. A `done`
-row says the fix is in the tree or that the decision was taken; it does not say either is
-right. Read a row that matters at the § its account cites.
+| id | what | what closes it | account |
+|---|---|---|---|
+| `C359` | **A self-replay refusal, its exclusion and the refused block body die with the process.** The tracker is an in-process cell; `put_block` runs only after validation succeeds, so a refused self-built block leaves no body on any node; the incident's #1115 is therefore not reconstructible. `owed:` a durable `SelfReplayRecord` reserved key (refusal, exclusion, refused body or its hash+length), seeded at boot before the proposer starts, with an admin resume; the cap and pool pruning are already in. TC357/casper/src/blocks/proposer/proposer.rs::excluded_is_pruned_against_the_pool_and_capped | durable record and boot seed; admin resume; the refused-body test | §154 |
 
 ### T1 coverage — closed
 
@@ -124,7 +123,7 @@ verdict of `cleared`, 24 produced a finding, and 4 are `exempt` with a reason cl
 The twenty reads of the 2026-09-27 coverage pass are in the pass record, and two of them found
 defects this register had not recorded (C164, C165).
 
-### IN PROGRESS (4)
+### IN PROGRESS (6)
 
 | id | what | what closes it | account |
 |---|---|---|---|
@@ -132,8 +131,10 @@ defects this register had not recorded (C164, C165).
 | `C339` | The transfer path formerly retained the bootstrap fringe-state claims without recomputing their merges. RecoveryReplay now validates downloaded history in a staging DAG using the existing validator, compares supplied per-block claims and the Law 85 target root, probes active bonds, and publishes only locally derived metadata. A persistent pending marker prevents an interrupted publication from bypassing LFS on restart; checkpoint write/read-back/delete failures cannot signal completion. Store format 2 prevents a v1 reader ignoring that marker. No target-finality proof or retroactive certification of legacy populated stores is claimed. | Closes after the new exact-source replay and transport/restart controls pass and the mature-chain replay cost/compatibility is measured. Prior f3eef292 live positives do not certify the added replay path. Quorum finality remains the separately named Law 83 assumption. | §141 |
 | `C343` | **A stored block can have no acceptance disposition and a proposer can run a private chain.** The live build stored block bodies through height 250 on B/C/D while its DAG stayed at height 5, and A reached 267 against finality 3. The RCA found the processor's no-insert arms, the partial-insert short-circuit, the missing failed-parent release and the absent finality gate; dev #494 closed the receiver begin-lease leak. This pass adds Law 88a/88b, a per-shard phase, the start-up audit before Running, and the keys-only legacy body scan with its durable marker; the remaining evidence is the live status/operator and block-6 logs. | U19/U20 disposition ledger, boot/periodic audit, validation watchdog, failed-parent release and halt falsifiers; operator status/operator on B/C/D | §145 |
 | `C344` | **A stuck validator is not priced, and the first liveness response could take a bond through no fault.** A validator absent from the advancing finality set keeps its bond, counts in the denominator and (with absence-slack 0) is paid; RCHIP #55 adds an automatic bond-preserving jail and a >2/3 active-stake vote that alone may slash and permanently eject. The mechanism is default-off, genesis-armed, and its live testnet arm (jail, vote-slash, partition negative, restart/expiry) is owed; H-RS-17 and HAZOP U21 record the residuals, including the boundary-CloseBlock skip.  | owed: live testnet jail/vote-slash and partition arms; a validity rule requiring CloseBlock at a boundary | §147 |
+| `C357` | **A deterministic self-replay refusal rebuilt the same block without bound** (#564). The proposer divergence arm is deliberately uncounted (C270), and `handle_errors` collapsed every non-internal `ReplayFailure` into `InvalidStateHash` -> `Divergence`, so a self-built block's own play/replay disagreement had no action, no surface and no bound; validator A repeated the identical block for ~45 hours and finality froze. The fix is two-part - provenance decides the cause (Law 92: a self-built replay failure is a local fault, never divergence) and after three identical refusals the pooled deploy set is held out of selection, loudly, while remaining valid for every other node. Exclusions are proposer-local, capped and pruned against the pool; they are process-local until the durable record lands, and the deploy expires with the pool at height + 50. | owed: a devnet arm that forces three identical self-replay refusals and observes the exclusion and the subsequent proposal without the set; durable persistence across restart (C359); the RC1 trigger remains open (Aria). | §153 |
+| `C358` | **A self-replay cost refusal is decided before the declared post-state is compared, so a state-correct block can be refused on an accounting field and the operator is never told which case it was.** `replay_deploy_eval` returns `ReplayCostMismatch` before `handle_errors` compares the hash, and the trace check runs after the early return; the refund and executor payment use the recorded cost, not the replayed evaluation cost, and the evaluation cost is not an RSpace leaf, so a cost-only difference can coexist with a correct state. Law 93 states the independence. The shadow replay now reports `state_hash_matched`, the replayed hash, the category delta and the trace census; the enforcing rule is unchanged because the port follows the Scala oracle. `owed:` the protocol decision on whether a state-correct/cost-mismatched block should be accepted (hard fork), and the trace-mask test. casper/src/interpreter_util.rs::a_cost_only_tamper_is_refused_before_the_state_hash_is_compared/casper/tests/determinism.rs::a_cost_only_tamper_is_refused_before_the_state_hash_is_compared | the protocol decision and the trace-mask arm; the incident body and state are unavailable | §154 |
 
-### DONE (387)
+### DONE (388)
 
 | id | what | evidence | account |
 |---|---|---|---|
@@ -438,6 +439,7 @@ defects this register had not recorded (C164, C165).
 | `C354` | The two `rho:gov:tally` modes charge `(ballots + weights)^2` and do not count the ranked or approved option lists at all, while the work is linear in them and round-multiplied by the longest ballot | rholang/src/system_processes.rs::a_tally_charges_the_option_lists_it_scans/rholang/src/accounting.rs::the_tally_charges_are_the_models | §150 |
 | `C355` | The v3 to v4 ledger move discards fault history and retry budgets by adopting old bodies as fresh Pending rows | casper/src/block_disposition.rs::v3_to_v4_preserves_fault_history_instead_of_adopting_it_as_pending/casper/src/block_disposition.rs::v3_copy_error_leaves_no_completion_and_restarts_from_its_durable_prefix/casper/src/block_disposition.rs::v3_copy_preserves_varied_disposition_payloads/casper/src/block_disposition.rs::v3_copy_never_revives_a_durable_accepted_or_refused_verdict/spec/audit/evidence/c355-v3-disposition-negative.txt | §151 |
 | `C356` | Acceptance can bless a different block or a loopback peer, lose duplicate kept effects, or misclassify incomplete recovery evidence | tests/test_n420_root_capture.py/tests/test_evidence_locality.py/tests/test_recovery_harness_controls.py/tests/test_recount_artifact.py/casper/src/merging.rs::coverage_preserves_duplicate_occurrences_within_and_across_kept_chains/casper/src/block_disposition.rs::stored_pending_and_faulted_bodies_are_owned_without_a_dag_entry | §152 |
+| `C360` | **Batched play with verification disabled produced a state hash a Sequential replay rejected on the incident binary.** The batched path forks deploys and merges them, and the only comparison against the sequential oracle sat behind RNODE_CROSS_DEPLOY_BATCH_VERIFY. With verification off, four same-key transfers recorded costs [986,984,984,984] and replayed to a different post-state (matrix M08; M07 with verification on matched). The play mode changed the state, not just the accounting. Fixed by `canonical_batch_policy`: an enabled batch always verifies; the node warns when the unsafe flag is requested. | casper/src/runtime_manager.rs::a_batch_policy_without_verification_is_not_representable | §154 |
 | `F1` | The interpreter core is a mechanical Scala port. `rholang/src/reduce.rs` (1773 lines) | — | §9 |
 | `F2` | The blessed genesis contracts re-implement a HashMap trie in interpreted rholang | — | §9 |
 | `F3` | Silent partiality hides the failure. `compute_bonds` (`casper/src/runtime_manager.rs:503-509`) | — | §9 |

@@ -109,33 +109,114 @@ pub struct HaltStatus {
 /// than the code does; this one says which trigger stopped, and the counter is reported beside it
 /// because that is what an operator needs to tell "quiet" from "broken" (#148's probe needs exactly
 /// that witness — the API could not tell the three causes apart).
-/// **The last counted self-validation refusal** (#485): the proposer built a block and then refused
-/// it. The code is [`crate::block_status::BlockStatus::code`] or `internal-error` - a closed
-/// vocabulary, not the prose message, because a machine reads it.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+/// **The last self-validation refusal** (#485, #564): the proposer built a block and then refused it.
+/// The code is [`crate::block_status::BlockStatus::code`], `internal-error`, or one of the replay
+/// codes — a closed vocabulary, not the prose message, because a machine reads it.
+///
+/// **The detail fields are the incident's missing evidence** (#564). The old record carried only the
+/// code and the block; a self-replay refusal needs the variant's payload (the cost pair), the deploy
+/// ids that could not be rebuilt, how many attempts the identical set has taken, and whether the set
+/// is now held out of selection. Every field is always present (null/empty/0) so a consumer sees one
+/// stable shape. The closed codes are the only thing exposed on the public `/health` summary; the
+/// detail stays on the operator surface.
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SelfValidationRefusal {
     pub code: &'static str,
     pub block_number: i64,
     pub seq_num: i64,
     pub at_unix_ms: i64,
+    /// `ReplayCostMismatch`'s two costs; `None` for every other refusal.
+    pub initial_cost: Option<i64>,
+    pub replay_cost: Option<i64>,
+    /// Refused deploy ids, base16, capped at the surface's display limit. `deploy_count` is the true
+    /// count, so a truncation is visible rather than implied.
+    pub deploy_ids: Vec<String>,
+    pub deploy_count: usize,
+    /// Run length for this exact `(deploy set, code)` pair. A counted refusal is `1`.
+    pub attempts: u64,
+    /// Whether this refusal's deploy set is now held out of the proposer's selection.
+    pub excluded: bool,
+    /// **The shadow replay's state verdict** (#564): `Some(true/false)` when the diagnostic second
+    /// pass reached the checkpoint, `None` when it did not. The enforcing path decides the cost
+    /// before the state, so without this the operator cannot tell a state-correct refusal from a
+    /// divergence.
+    pub state_hash_matched: Option<bool>,
+    pub replayed_state_hash: Option<String>,
+}
+
+impl SelfValidationRefusal {
+    /// A counted refusal with no replay detail — the shape the generic `ValidationFailed` and
+    /// `Internal` arms record.
+    pub fn counted(code: &'static str, block_number: i64, seq_num: i64) -> Self {
+        Self {
+            code,
+            block_number,
+            seq_num,
+            at_unix_ms: now_ms(),
+            initial_cost: None,
+            replay_cost: None,
+            deploy_ids: Vec::new(),
+            deploy_count: 0,
+            attempts: 1,
+            excluded: false,
+            state_hash_matched: None,
+            replayed_state_hash: None,
+        }
+    }
 }
 
 /// The shared cell behind [`SelfValidationRefusal`]: the proposer writes, the snapshot reads, and a
-/// successful propose or the operator's resume clears it.
+/// successful propose or the operator's resume clears it. The quarantine count lives beside the
+/// record because both are written by the same arm and read by the same surface.
 #[derive(Clone, Debug, Default)]
 pub struct SelfValidationRefusalSink {
     cell: Arc<Mutex<Option<SelfValidationRefusal>>>,
+    quarantined: Arc<AtomicU64>,
 }
 
 impl SelfValidationRefusalSink {
     /// Record one counted refusal. Called on the same paths that bump the consecutive counter.
     pub fn note(&self, code: &'static str, block_number: i64, seq_num: i64) {
-        *self.cell.lock().unpoison() = Some(SelfValidationRefusal {
+        self.note_record(SelfValidationRefusal::counted(code, block_number, seq_num));
+    }
+
+    /// Record a self-replay refusal with the variant's payload and the bounded-retry state (#564).
+    #[allow(clippy::too_many_arguments)]
+    pub fn note_self_replay(
+        &self,
+        code: &'static str,
+        block_number: i64,
+        seq_num: i64,
+        cost_pair: Option<(i64, i64)>,
+        deploy_ids: Vec<String>,
+        deploy_count: usize,
+        attempts: u64,
+        excluded: bool,
+        state_hash_matched: Option<bool>,
+        replayed_state_hash: Option<String>,
+    ) {
+        let (initial_cost, replay_cost) = match cost_pair {
+            Some((initial, replay)) => (Some(initial), Some(replay)),
+            None => (None, None),
+        };
+        self.note_record(SelfValidationRefusal {
             code,
             block_number,
             seq_num,
             at_unix_ms: now_ms(),
+            initial_cost,
+            replay_cost,
+            deploy_ids,
+            deploy_count,
+            attempts,
+            excluded,
+            state_hash_matched,
+            replayed_state_hash,
         });
+    }
+
+    fn note_record(&self, record: SelfValidationRefusal) {
+        *self.cell.lock().unpoison() = Some(record);
     }
 
     /// Clear the record. Called by the successful propose that clears the counter, and by
@@ -144,9 +225,19 @@ impl SelfValidationRefusalSink {
         *self.cell.lock().unpoison() = None;
     }
 
-    /// The current record, or `None` when no counted refusal stands.
+    /// The current record, or `None` when no refusal stands.
     pub fn snapshot(&self) -> Option<SelfValidationRefusal> {
-        *self.cell.lock().unpoison()
+        self.cell.lock().unpoison().clone()
+    }
+
+    /// Publish how many deploy ids are currently held out of selection.
+    pub fn set_quarantined(&self, count: u64) {
+        self.quarantined.store(count, Ordering::Relaxed);
+    }
+
+    /// The number of deploy ids currently held out of selection.
+    pub fn quarantined(&self) -> u64 {
+        self.quarantined.load(Ordering::Relaxed)
     }
 }
 
@@ -156,8 +247,13 @@ pub struct ProposerHealth {
     /// "consecutive" is the whole quantity, since one success in between is a node that recovered.
     pub consecutive_self_validation_failures: u64,
     /// **Why the last counted failure happened** (#485): the closed reason code and the refused
-    /// block. `None` after a successful propose or an operator resume. Process-local.
+    /// block, with the replay detail when the refusal was a self-replay failure (#564). `None` after
+    /// a successful propose or an operator resume. Process-local.
     pub self_validation_refusal: Option<SelfValidationRefusal>,
+    /// **Pooled deploy ids held out of selection after repeated self-replay refusals** (#564). A
+    /// proposer-local liveness bound, not a pool capacity figure: the deploys stay in the pool and
+    /// remain valid for every other node. Zero on a healthy proposer.
+    pub pool_quarantined: u64,
     /// The shard's autopropose timer has stopped. The value is sticky — a later success does **not**
     /// clear it — and two things restart it: the process (the halt is durable, re-seeded at boot) and
     /// the operator's `POST /api/v1/autopropose/resume`. Not the same as production having stopped:
@@ -367,6 +463,7 @@ impl ProposeHealth {
         ProposerHealth {
             consecutive_self_validation_failures: self.failures.load(Ordering::Relaxed),
             self_validation_refusal: self.self_validation_refusal.snapshot(),
+            pool_quarantined: self.self_validation_refusal.quarantined(),
             autopropose_timer_halted: self.timer_halted.load(Ordering::Relaxed),
             autopropose_halt: HaltStatus {
                 at: self.halt_record.lock().unpoison().as_ref().map(|r| r.at_ms),
@@ -861,6 +958,56 @@ mod tests {
             health.snapshot().self_validation_refusal.is_none(),
             "the success path's clear reaches the same cell"
         );
+    }
+
+    /// #564: a self-replay refusal carries the variant's payload and the bounded-retry state; a
+    /// counted refusal keeps the old shape with explicit empty values, so the wire shape is stable.
+    #[test]
+    fn a_self_replay_refusal_carries_the_cost_pair_ids_and_attempts() {
+        let health = ProposeHealth::new();
+        let sink = health.self_validation_refusal();
+
+        sink.note_self_replay(
+            "replay-cost-mismatch",
+            1115,
+            4,
+            Some((5576, 5302)),
+            vec!["aa".to_string()],
+            3,
+            5,
+            true,
+            Some(true),
+            Some("deadbeef".to_string()),
+        );
+        sink.set_quarantined(5);
+        let snap = health.snapshot();
+        let refusal = snap
+            .self_validation_refusal
+            .expect("the self-replay refusal is recorded");
+        assert_eq!(refusal.code, "replay-cost-mismatch");
+        assert_eq!(refusal.initial_cost, Some(5576));
+        assert_eq!(refusal.replay_cost, Some(5302));
+        assert_eq!(refusal.deploy_ids, vec!["aa".to_string()]);
+        assert_eq!(refusal.deploy_count, 3);
+        assert_eq!(refusal.attempts, 5);
+        assert!(refusal.excluded);
+        assert_eq!(refusal.state_hash_matched, Some(true));
+        assert_eq!(refusal.replayed_state_hash.as_deref(), Some("deadbeef"));
+        assert_eq!(snap.pool_quarantined, 5);
+
+        sink.note("justification-regression", 3122, 3122);
+        let counted = health
+            .snapshot()
+            .self_validation_refusal
+            .expect("the counted refusal is recorded");
+        assert_eq!(counted.initial_cost, None);
+        assert_eq!(counted.replay_cost, None);
+        assert!(counted.deploy_ids.is_empty());
+        assert_eq!(counted.deploy_count, 0);
+        assert_eq!(counted.attempts, 1);
+        assert!(!counted.excluded);
+        assert_eq!(counted.state_hash_matched, None);
+        assert_eq!(counted.replayed_state_hash, None);
     }
 
     /// **The count is of halts, not of calls** (W-N10-01).

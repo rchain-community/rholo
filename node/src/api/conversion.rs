@@ -42,6 +42,14 @@ fn to_self_validation_refusal_dto(
         block_number: r.block_number,
         seq_num: r.seq_num,
         at_unix_ms: r.at_unix_ms,
+        initial_cost: r.initial_cost,
+        replay_cost: r.replay_cost,
+        deploy_ids: r.deploy_ids,
+        deploy_count: r.deploy_count,
+        attempts: r.attempts,
+        excluded: r.excluded,
+        state_hash_matched: r.state_hash_matched,
+        replayed_state_hash: r.replayed_state_hash,
     })
 }
 
@@ -53,8 +61,9 @@ fn to_shard_health_dto(entry: &ShardHealthEntry) -> ShardHealthDto {
                 .proposer
                 .consecutive_self_validation_failures,
             self_validation_refusal: to_self_validation_refusal_dto(
-                entry.proposer.self_validation_refusal,
+                entry.proposer.self_validation_refusal.clone(),
             ),
+            pool_quarantined: entry.proposer.pool_quarantined,
             autopropose_timer_halted: entry.proposer.autopropose_timer_halted,
             autopropose_timer_halt_episodes: entry.proposer.autopropose_halt.episodes,
             autopropose_halt: HaltStatusDto {
@@ -144,7 +153,10 @@ pub fn to_operator_status(
         core,
         admin_http: caps.admin_http,
         consecutive_self_validation_failures: health.consecutive_self_validation_failures,
-        self_validation_refusal: to_self_validation_refusal_dto(health.self_validation_refusal),
+        self_validation_refusal: to_self_validation_refusal_dto(
+            health.self_validation_refusal.clone(),
+        ),
+        pool_quarantined: health.pool_quarantined,
         autopropose_timer_halted: health.autopropose_timer_halted,
         // The durable count, which is what the key always claimed to be (W-N10-01): it was an
         // in-memory count when this line was written, and a restart reset it.
@@ -269,12 +281,21 @@ pub fn to_node_capabilities(
 pub fn to_pooled_deploy(signed: &SignedDeployData) -> PooledDeploy {
     PooledDeploy {
         deploy_id: base16::encode(&signed.sig),
+        signature: base16::encode(&signed.sig),
+        sig_algorithm: signed.sig_algorithm.clone(),
+        attachments: signed
+            .data
+            .attachments
+            .iter()
+            .map(|a| base16::encode(a))
+            .collect(),
         timestamp: signed.data.timestamp,
         deployer: base16::encode(&signed.deployer),
         term: signed.data.term.clone(),
         phlo_price: signed.data.phlo_price,
         phlo_limit: signed.data.phlo_limit,
         valid_after_block_number: signed.data.valid_after_block_number,
+        shard_id: signed.data.shard_id.clone(),
     }
 }
 
@@ -490,7 +511,16 @@ mod tests {
                 block_number: 3122,
                 seq_num: 3122,
                 at_unix_ms: 1_700_000_000_000,
+                initial_cost: None,
+                replay_cost: None,
+                deploy_ids: Vec::new(),
+                deploy_count: 0,
+                attempts: 1,
+                excluded: false,
+                state_hash_matched: None,
+                replayed_state_hash: None,
             }),
+            pool_quarantined: 0,
             autopropose_timer_halted: true,
             autopropose_halt: HaltStatus {
                 at: Some(1_700_000_000_000),
@@ -1152,5 +1182,34 @@ mod to_signed_deploy_tests {
             .err()
             .unwrap();
         assert_eq!(err.to_string(), "Signature algorithm not supported.");
+    }
+
+    /// **The pool DTO must carry everything `recover-pool` needs to reconstruct the signed deploy**
+    /// (#564). The old shape dropped `sigAlgorithm`, the attachments and the shard, so a tool could
+    /// not rebuild the bytes the client signed.
+    #[test]
+    fn a_pooled_deploy_carries_the_signed_fields_a_repost_needs() {
+        let signed = SignedDeployData {
+            data: DeployData {
+                attachments: vec![vec![0xaa, 0xbb]],
+                term: "Nil".to_string(),
+                timestamp: 7,
+                phlo_price: 1,
+                phlo_limit: 100,
+                valid_after_block_number: 3,
+                shard_id: "root".to_string(),
+            },
+            deployer: vec![0x11; 65],
+            sig: vec![0x22; 65],
+            sig_algorithm: "secp256k1".to_string(),
+        };
+        let dto = to_pooled_deploy(&signed);
+        assert_eq!(dto.deploy_id, base16::encode(&signed.sig));
+        assert_eq!(dto.signature, base16::encode(&signed.sig));
+        assert_eq!(dto.sig_algorithm, "secp256k1");
+        assert_eq!(dto.attachments, vec!["aabb".to_string()]);
+        assert_eq!(dto.shard_id, "root");
+        assert_eq!(dto.term, "Nil");
+        assert_eq!(dto.valid_after_block_number, 3);
     }
 }

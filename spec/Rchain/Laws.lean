@@ -5163,7 +5163,79 @@ def lawsC : List Law := [
       stops. The ranked worst case is `longest × entries`: every round scans every entry, and a round \
       may eliminate only one option, so `longest` bounds the rounds. The floor is the approval side. \
       Consensus-visible (#51 category A)." },
-
+  { number := 92, layer := "Casper",
+    statement := "**A replay failure's cause depends on the block's provenance.** An inbound block's \
+      replay disagreement may be a view difference, so it is `Divergence` and C173's restoring rule \
+      stays keyed on it. A block this node *built* has no peer view to differ from — its play and \
+      replay are two executions of this node's own state — so the same failure is a local fault and \
+      is never `Divergence`. The decision table is `Rchain.provenanceCause` over \
+      `ProvenanceOrigin` and `ProvenanceRefusal`; the \
+      Rust's `ValidationOrigin` and `ValidateError::SelfReplayFailed` are that table's \
+      implementation. The 2026-11-08 incident (#564) is the negative case: a self-built block's \
+      `ReplayCostMismatch` was collapsed into `InvalidStateHash` → `Divergence`, so the proposer's \
+      C270 arm neither counted, surfaced nor bounded it and rebuilt the identical block until \
+      finality froze.",
+    status := .provedModel,
+    declarations := [`Rchain.ProvenanceOrigin, `Rchain.ProvenanceRefusal, `Rchain.ProvenanceCause,
+      `Rchain.provenanceCause,
+      `Rchain.an_inbound_replay_failure_is_divergence,
+      `Rchain.a_self_replay_failure_is_not_divergence,
+      `Rchain.the_two_origins_disagree_about_the_same_failure,
+      `Rchain.a_self_replay_failure_is_a_local_fault],
+    axioms := [],
+    rust := ["casper/src/interpreter_util.rs", "casper/src/multi_parent_casper.rs",
+      "casper/src/blocks/proposer/proposer.rs"],
+    rustWitness := ["casper/src/multi_parent_casper.rs:a_self_built_replay_failure_is_classified_as_a_local_fault"],
+    witness := [`Rchain.an_inbound_replay_failure_is_divergence,
+      `Rchain.a_self_replay_failure_is_not_divergence,
+      `Rchain.the_two_origins_disagree_about_the_same_failure],
+    falsifiable := "**Delete the origin arm and map every `ReplayVerdict::Failed` to \
+      `InvalidStateHash`** — `a_self_replay_failure_is_not_divergence` cannot be proved (`decide` \
+      fails on the resulting equality), and the Rust witness reddens because the self-built case \
+      returns the divergence status again. The live negative case is the incident: the same replay \
+      refusal reached the proposer as `Divergence` and the loop was unbounded for 45 hours. The \
+      inbound half is falsified by the existing restoring-rule tests, which require a peer replay \
+      refusal to remain `Divergence` so C173's inverse can fire.",
+    note := "**What this law does not claim.** It does not say the replay was wrong, which half \
+      (play or replay) diverged, or that a deploy set is invalid — that is RC1, and the falsifier in \
+      `casper/tests/determinism.rs` is the open measurement. It also does not make the bounded-retry \
+      policy a consensus rule: holding a deploy set out of selection is proposer-local operating \
+      policy (C357), another validator may include the same deploy, and the quarantine is invisible \
+      to block validity. The Rust witness is the classification test, not the live arm." },
+  { number := 93, layer := "Casper",
+    statement := "**A cost verdict is not a state verdict.** A replay's evidence has two independent \
+      components: what it learned about the declared post-state (`matched`, `mismatched`, or \
+      `notComputed` when the enforcing path stopped at the cost check) and whether the recorded cost \
+      matched. A cost mismatch does not imply a state mismatch; a state-correct block can carry a cost \
+      mismatch. The enforcing path's `ReplayCostMismatch` is an accounting verdict taken before the \
+      checkpoint, so it is not evidence that the state failed. The Rust shadow replay computes the \
+      missing verdict on a bounded second pass and the operator record carries both. The incident \
+      (#564) is the live case: a cost-only refusal was read as a divergence and the state was never \
+      compared.",
+    status := .provedModel,
+    declarations := [`Rchain.StateVerdict, `Rchain.ReplayEvidence, `Rchain.StateCorrect,
+      `Rchain.cost_mismatch_does_not_imply_state_mismatch,
+      `Rchain.every_cost_verdict_admits_a_state_correct_replay,
+      `Rchain.not_computed_is_not_a_mismatch],
+    axioms := [],
+    rust := ["casper/src/runtime_replay.rs", "casper/src/interpreter_util.rs",
+      "casper/src/rholang.rs"],
+    rustWitness := ["casper/tests/determinism.rs:a_cost_only_tamper_is_refused_before_the_state_hash_is_compared"],
+    witness := [`Rchain.cost_mismatch_does_not_imply_state_mismatch,
+      `Rchain.every_cost_verdict_admits_a_state_correct_replay,
+      `Rchain.not_computed_is_not_a_mismatch],
+    falsifiable := "**Make the state verdict a function of the cost verdict** — e.g. return \
+      `StateVerdict.mismatched` whenever the cost mismatches. Then \
+      `cost_mismatch_does_not_imply_state_mismatch` is false by construction (`decide` fails), and the \
+      Rust witness reddens because the shadow can no longer report `state_hash_matched = true` for a \
+      cost-only difference. The incident is the negative case: the enforcing path returned the cost \
+      mismatch and never compared `8ae7d4de…`.",
+    note := "**What this law does not decide.** It does not say whether a state-correct block with a \
+      cost mismatch should be accepted; that is a protocol decision (the Scala oracle refuses it), \
+      recorded in `spec/audit/evidence/n564-self-replay/cost-criticality.md`. It also does not say the \
+      incident's block was state-correct: the refused body, the terms and A's store are unavailable, so \
+      the shadow's verdict is a future-occurrence instrument, not a retroactive one. The Rust witness \
+      is the cost-only tamper plus the shadow, which proves the mechanism, not the incident's state." },
 ]
 
 def laws : List Law := lawsA ++ lawsB ++ lawsC

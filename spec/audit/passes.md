@@ -12307,3 +12307,45 @@ tests.
 **Owed.** The automatic post-catch-up resume (the reset currently halts and the operator resume is
 explicit), the devnet drill's three arms, and the refused-body surface test. The boot test for the
 `ResetRequested`/`Halted` stage and the `AttestOnly` pace-rule test have landed.
+
+## 156. The self-replay recovery follow-on: the exit from the reset, the bound the record claimed, and the live arms (C357, C359, C361, C364, C365, #564)
+
+The §155 recovery was safe but incomplete: a node-level fault reset to its finalised anchor and then
+waited for an operator POST, the refused body was durable but not on the surface, and — the finding
+that made the first two urgent — the record's `reset_attempted` was written and **never read**, so
+the "one reset per finalised anchor" bound the HAZOP claimed had no enforcer. With the resume made
+automatic, that would have been a reset loop on a deterministic fault.
+
+**The exit from the reset.** The catch-up walk is the only thing that knows the node is past the
+anchor it rewound to. When it is, `resume_self_replay_after_catchup` moves the record to `Recovered`
+store-first and clears the self-replay latch with the same notify the operator route uses. It
+requires a completed (`Rewound`) marker, a `ResetRequested`/`Halted` record that names a reset, and
+anchor equality, so a divergence-budget reset cannot clear a self-replay fault and a disabled reset
+(none of whose requests produce a marker) cannot resume anything. The resume is narrow: unlike
+`clear_halt` it keeps the refusal cell and does not clear an independent timer halt. The operator
+POST remains the fallback for a recurrence, a missing anchor, or a disabled reset.
+
+**The bound, enforced.** The refusal arm now carries a prior `reset_attempted`/`reset_anchor` across
+the fresh `Refused` record it writes; the reset closure refuses a second reset at the same finalised
+anchor and writes a durable `Halted` before the caller's, so a crash in that window cannot leave the
+non-latching `Refused` stage as the last word. Law 94 models the new step (`resumeAfterCatchup`,
+admitted only from `resetRequested`) and its two theorems; the register note now says the operator
+resume is the fallback, not the model's only way back.
+
+**The surface.** `refusedBodyAvailable`/`refusedBodyLen` and `resetAttempted`/`resetAnchor` are on
+the operator refusal object, seeded from the durable record at boot; `/health` keeps its four-field
+summary and a test pins that the new fields stay off it. An over-cap body reads as unavailable with
+its true length rather than as no body.
+
+**The live arms.** A devnet-only `--self-replay-injection` (refused without `--dev-mode`,
+`SelfBuilt`-only, armed only once a finalised anchor exists, with a spent `:N` budget) drives
+`tools/self-replay-drill.sh`: arm 1 refuses a deploy-bearing block and recovers by attestation; arm 2
+refuses both builds, resets (rewound 9 blocks at height 1), catches up and resumes **without a
+POST**; arm 3 disables the reset, halts, holds finality frozen for 20 seconds and resumes on the
+operator route. The packed, digest-verified record is
+`spec/audit/evidence/n564-self-replay-recovery-drill-20261111/drill-readout.md`; each arm's surface
+snapshot carries the 786-byte refused body and the reset anchor.
+
+**RC-B remains open.** The injected refusal has the incident's shape (`ReplayCostMismatch`), not its
+cause. The 274-phlo trigger is Aria's, and the one measurement that moves it is validator A's
+runtime environment.

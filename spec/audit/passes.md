@@ -12182,3 +12182,41 @@ finalized ranges were (27,36] and (44,52]; both cross an epoch-length-10 boundar
 local-devnet witness for that pin, before the later settled-ledger guard; it does not close the
 mainnet release gates or certify later source changes. The record retains the source, binary,
 artifact digest/expiry and raw partition-result digest.
+
+## 153. The self-replay refusal: provenance, bound and surface (C357, #564)
+
+The 2026-11-08 testnet incident: validator A built block #1115, its own replay returned
+`ReplayCostMismatch initial_cost=5576 replay_cost=5302`, and `interpreter_util::handle_errors`
+collapsed that into `Ok(None)` → `InvalidStateHash` → `FailureCause::Divergence`. The proposer's C270
+divergence arm deliberately neither counts, surfaces nor bounds a divergence, so the same deploy set
+rebuilt the identical block for ~45 hours and finality froze. The HAZOP comment on #564 separated the
+trigger (RC1, still open) from the classification, retention and amplification faults.
+
+**What this pass changed.** `handle_errors` now returns a `ReplayVerdict` that keeps the variant.
+`validate_with_origin` is the same validation with a provenance parameter: a peer's `Failed` replay
+keeps the C173 `InvalidStateHash`/`Divergence` reading, while a `SelfBuilt` block's failure becomes
+`ValidateError::SelfReplayFailed`, carrying the payload to the proposer. The proposer's new arm never
+reads that as divergence; after `SELF_REPLAY_EXCLUSION_AFTER` (3) identical refusals it
+holds the pooled deploy set out of selection, logs the exclusion and re-derives. A block with no
+pooled deploy to hold out — attestation-only or dummy-only — stays on the counted/fail-loudly path.
+The operator surface carries the variant, the cost pair, the refused ids (capped at 16), the attempt
+count and `poolQuarantined`; the public `/health` summary keeps only the closed code, block, sequence
+and time. The exclusion is node-local operating policy, not a consensus rule: another validator may
+include the deploy, and the deploy remains in the pool.
+
+**The law.** `spec/Rchain/Casper/Provenance.lean` (Law 92) states the decision table and proves both
+halves: `an_inbound_replay_failure_is_divergence` and
+`a_self_replay_failure_is_not_divergence`, with non-vacuity. The Rust witness is
+`a_self_built_replay_failure_is_classified_as_a_local_fault`.
+
+**The falsifier.** `play_and_replay_agree_per_deploy_for_same_key_multi_transfer` builds a
+three-deploy block from one key — two transfers and one failed deploy whose recorded trace contains a
+COMM event — and runs it under both the sequential and the batched play policies. It passes: play and
+replay agree per deploy and the two play paths record identical costs. That is a **negative** for the
+incident's shape in this fixture, not a fix for RC1; the trigger remains open and the replay-trace and
+ordering candidates are still unexcluded.
+
+**What remains owed.** A devnet arm that forces three identical self-replay refusals and observes the
+exclusion and the subsequent proposal without the set; durable persistence of the refusal and the
+exclusion across restart; and the `recover-pool` tool/runbook action. None of them is claimed by this
+pass.

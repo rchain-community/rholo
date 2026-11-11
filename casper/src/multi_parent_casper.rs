@@ -20,11 +20,14 @@ use rchain_shared::log::{Log, LogSource};
 use rchain_shared::refined::BlockHeight;
 
 use crate::block_status::BlockStatus;
-use crate::interpreter_util::{validate_block_checkpoint, ResetRequest, ShardHealth};
+use crate::interpreter_util::{
+    validate_block_checkpoint, ReplayVerdict, ResetRequest, ShardHealth, ValidationOrigin,
+};
 use crate::merging::{
     BlockIndex, DeployChainIndex, MergeOutcome, MergeReport, MergeScope, ParentsMergedState,
     RejectionsMap,
 };
+use crate::rholang::ReplayFailure;
 use crate::runtime_manager::RuntimeManager;
 
 /// A deploy-parsing error (port of `ParsingError`).
@@ -44,7 +47,38 @@ pub enum ValidateError {
     /// the proposer treats it as "not due" rather than counting it toward the halt (§48). Only the
     /// proposer's self-insert produces this; `validate` itself never returns it.
     SelfEquivocation,
+    /// **A block this node built failed its own replay** (#564). The variant and payload are kept
+    /// rather than collapsed into `InvalidStateHash`, because a post-state disagreement and a status,
+    /// cost or COMM-event failure are different faults. Only [`ValidationOrigin::SelfBuilt`] produces
+    /// this; the peer path still classifies the same failure as `Divergence` and never constructs it.
+    SelfReplayFailed(ReplayFailure),
     Internal(String),
+}
+
+/// What a replay verdict means for the block, after provenance is taken into account (#564).
+///
+/// A pure decision table, extracted so the provenance rule has a Rust witness a unit test can drive
+/// without a runtime: `Peer` keeps the C173 reading (a failure is the same `InvalidStateHash` a
+/// post-state mismatch produces), `SelfBuilt` returns the variant for the proposer's self-replay arm.
+#[derive(Debug)]
+enum Refusal {
+    /// The replay matched; there is nothing to refuse.
+    None,
+    /// The block is refused as `InvalidStateHash` — a post-state mismatch, or a peer's replay failure.
+    InvalidState,
+    /// A self-built block's replay failure, with its variant intact.
+    SelfReplay(ReplayFailure),
+}
+
+fn refusal_for(origin: ValidationOrigin, verdict: ReplayVerdict) -> Refusal {
+    match verdict {
+        ReplayVerdict::Matched(_) => Refusal::None,
+        ReplayVerdict::PostStateMismatch => Refusal::InvalidState,
+        ReplayVerdict::Failed(failure) => match origin {
+            ValidationOrigin::Peer => Refusal::InvalidState,
+            ValidationOrigin::SelfBuilt => Refusal::SelfReplay(failure),
+        },
+    }
 }
 
 /// The size of the deploy safety range (port of `deployLifespan`).
@@ -889,6 +923,7 @@ where
             block_index,
             log,
             health,
+            ValidationOrigin::Peer,
         )
         .await;
         // **A fault is not a verdict** (C253's E3/E5). `Internal` says *this node* could not run the
@@ -1014,6 +1049,13 @@ fn revalidated_record(
              produces"
                 .to_string(),
         ),
+        // Revalidation is always a peer-origin check, so `validate_checks` cannot produce this. If it
+        // did, it would be a fault in this node's wiring, not a verdict about the block (#564).
+        Err(ValidateError::SelfReplayFailed(failure)) => Revalidation::Fault(format!(
+            "a re-validation reported a self-replay failure, which only the proposer's own \
+             self-validation produces: {}",
+            failure.describe()
+        )),
     }
 }
 
@@ -1398,6 +1440,7 @@ async fn restore_divergent_justifications<F, Fut>(
             block_index,
             log,
             health,
+            ValidationOrigin::Peer,
         )
         .await;
         let (record, restored) = match revalidated_record(&stored, outcome) {
@@ -1489,6 +1532,46 @@ where
     F: Fn(BlockHash) -> Fut,
     Fut: std::future::Future<Output = Result<Arc<BlockIndex>, String>>,
 {
+    validate_with_origin(
+        dag,
+        block_store,
+        runtime,
+        block,
+        shard_id,
+        min_phlo_price,
+        max_number_of_parents,
+        block_index,
+        log,
+        health,
+        ValidationOrigin::Peer,
+    )
+    .await
+}
+
+/// **The same validation, told where the block came from** (#564).
+///
+/// The checks are identical; only the meaning of a replay failure changes. A peer's replay
+/// disagreement is a view divergence (the block may be valid elsewhere); a block this node built has
+/// no other view to differ from, so the same failure is a local fault. The proposer is the only
+/// `SelfBuilt` caller; every inbound and revalidation path stays on [`validate`].
+#[allow(clippy::too_many_arguments)]
+pub async fn validate_with_origin<F, Fut>(
+    dag: &dyn BlockDagStorage,
+    block_store: &BlockStore,
+    runtime: &RuntimeManager,
+    block: &BlockMessage,
+    shard_id: &str,
+    min_phlo_price: i64,
+    max_number_of_parents: i32,
+    block_index: &F,
+    log: &Arc<dyn Log>,
+    health: &ShardHealth,
+    origin: ValidationOrigin,
+) -> Result<BlockMetadata, ValidateError>
+where
+    F: Fn(BlockHash) -> Fut,
+    Fut: std::future::Future<Output = Result<Arc<BlockIndex>, String>>,
+{
     restore_divergent_justifications(
         dag,
         block_store,
@@ -1514,6 +1597,7 @@ where
         block_index,
         log,
         health,
+        origin,
     )
     .await
 }
@@ -1602,6 +1686,7 @@ async fn validate_checks<F, Fut>(
     block_index: &F,
     log: &Arc<dyn Log>,
     health: &ShardHealth,
+    origin: ValidationOrigin,
 ) -> Result<BlockMetadata, ValidateError>
 where
     F: Fn(BlockHash) -> Fut,
@@ -1642,27 +1727,40 @@ where
     }
 
     // Replay validation.
-    let (block_metadata, validated) =
-        validate_block_checkpoint(runtime, dag, block_store, block, block_index, log, health)
-            .await
-            .map_err(|e| ValidateError::Internal(format!("validateBlockCheckpoint failed: {e}")))?;
-    match validated {
+    let (block_metadata, validated) = validate_block_checkpoint(
+        runtime,
+        dag,
+        block_store,
+        block,
+        origin,
+        block_index,
+        log,
+        health,
+    )
+    .await
+    .map_err(|e| ValidateError::Internal(format!("validateBlockCheckpoint failed: {e}")))?;
+    let verdict = match validated {
         Err(status) => {
             return Err(ValidateError::ValidationFailed(
                 mark_failed(&block_metadata, status),
                 status,
             ))
         }
-        Ok(true) => {}
-        // `Ok(false)` is now **only** the post-state predicate: the pre-state mismatch has its own
-        // status (#139), so this arm and `Err(status)` above are no longer two spellings of one
-        // failure.
-        Ok(false) => {
+        Ok(verdict) => verdict,
+    };
+    // **Where provenance decides the meaning of a replay failure** (#564). An inbound block's replay
+    // disagreement is a view divergence and keeps the C173 classification; the proposer's own block
+    // has no peer view to differ from, so the same failure is returned with its variant for the
+    // proposer's self-replay arm — never as `InvalidStateHash`/`Divergence`.
+    match refusal_for(origin, verdict) {
+        Refusal::None => {}
+        Refusal::InvalidState => {
             return Err(ValidateError::ValidationFailed(
                 mark_failed(&block_metadata, BlockStatus::InvalidStateHash),
                 BlockStatus::InvalidStateHash,
             ))
         }
+        Refusal::SelfReplay(failure) => return Err(ValidateError::SelfReplayFailed(failure)),
     }
 
     // Bonds cache.
@@ -1752,6 +1850,50 @@ fn mark_failed(meta: &BlockMetadata, status: BlockStatus) -> BlockMetadata {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// **Law 92's Rust witness** (#564): the provenance rule is a decision table, and the same replay
+    /// failure is a local fault for this node's own block and an `InvalidStateHash` for a peer's.
+    ///
+    /// Delete the `SelfBuilt` arm of [`refusal_for`] and this test reddens: the incident's shape —
+    /// `ReplayCostMismatch` reaching the proposer as `InvalidStateHash`/`Divergence` — is what the
+    /// assertion rules out.
+    #[test]
+    fn a_self_built_replay_failure_is_classified_as_a_local_fault() {
+        let failure = ReplayFailure::replay_cost_mismatch(5576, 5302);
+
+        match refusal_for(
+            ValidationOrigin::SelfBuilt,
+            ReplayVerdict::Failed(failure.clone()),
+        ) {
+            Refusal::SelfReplay(got) => assert_eq!(got, failure),
+            other => panic!("a self-built replay failure must keep its variant, got {other:?}"),
+        }
+
+        assert!(
+            matches!(
+                refusal_for(
+                    ValidationOrigin::Peer,
+                    ReplayVerdict::Failed(failure.clone())
+                ),
+                Refusal::InvalidState
+            ),
+            "an inbound block's replay failure must stay the C173 divergence reading"
+        );
+
+        // A post-state *mismatch* is not a replay failure: both origins classify it as the hash
+        // disagreement it is. The law changes only the meaning of `Failed`.
+        assert!(matches!(
+            refusal_for(
+                ValidationOrigin::SelfBuilt,
+                ReplayVerdict::PostStateMismatch
+            ),
+            Refusal::InvalidState
+        ));
+        assert!(matches!(
+            refusal_for(ValidationOrigin::Peer, ReplayVerdict::PostStateMismatch),
+            Refusal::InvalidState
+        ));
+    }
 
     /// A `BlockDagStorage` that is **never reached**: the term-size bound is the first statement of
     /// [`deploy`], so a term it refuses never gets as far as the parser or the pool. Every method
@@ -2159,6 +2301,9 @@ mod tests {
             ValidateError::Internal(_) => panic!("a validation failure must not read as internal"),
             ValidateError::SelfEquivocation => {
                 panic!("a validation failure must not read as a self-equivocation")
+            }
+            ValidateError::SelfReplayFailed(_) => {
+                panic!("a validation failure must not read as a self-replay failure")
             }
         }
 

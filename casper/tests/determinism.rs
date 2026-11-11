@@ -10,6 +10,7 @@ use common::fringe_state;
 use std::collections::BTreeMap;
 
 use rchain_casper::genesis::contracts::Vault;
+use rchain_casper::interpreter_util::ReplayVerdict;
 use rchain_crypto::hash::blake2b512_random::Blake2b512Random;
 use rchain_crypto::public_key::PublicKey;
 use rchain_models::casper::protocol::casper_message::{
@@ -551,6 +552,153 @@ async fn play_and_replay_agree_for_failed_user_deploy_with_recorded_error() {
     );
 }
 
+/// **The #564 falsifier: a multi-deploy block from one key, including a failed deploy that records a
+/// COMM event.** Play and replay must agree per deploy, under both the sequential and the batched
+/// play paths.
+///
+/// The incident's first observable was `ReplayCostMismatch initial_cost=5576 replay_cost=5302` on a
+/// block this node built. The checks in this file each covered one deploy; no test built a block with
+/// several deploys from the same deployer, and none exercised a *failed* deploy whose recorded trace
+/// contains a COMM event — the shape in which `check_replay_data_with_fix` deliberately swallows an
+/// unused-COMM error (RCHAIN-3505). Batching is the surviving in-binary candidate for a play/replay
+/// asymmetry, so the same fixture runs with it on and with it off.
+///
+/// `replay_compute_state` returning `Ok` *is* the per-deploy cost assertion: `replay_deploy_eval`
+/// compares `ProcessedDeploy.cost.cost` with the replayed cost for every deploy and returns
+/// `ReplayCostMismatch` on the first difference. The cross-policy cost comparison below is the
+/// additional check that the two play paths agree with each other, not just with replay.
+async fn play_and_replay_multi_deploy(
+    batch: rchain_casper::runtime_manager::BatchPolicy,
+) -> (Vec<u64>, Vec<bool>) {
+    let mut rm = common::build_runtime_manager().await;
+    rm.set_batch_policy(batch);
+    let rand = Blake2b512Random::from_init(&[0u8; 32]);
+
+    let (_pre, post, _) = rm
+        .compute_genesis(
+            &[],
+            &rand,
+            BlockData::empty(),
+            &PosGenesis::default(),
+            &[seeded_vault()],
+        )
+        .await
+        .expect("compute_genesis");
+
+    let target_a = RevAddress::from_public_key(&PublicKey::new(vec![1u8; 65]))
+        .expect("target A")
+        .to_base58();
+    let target_b = RevAddress::from_public_key(&PublicKey::new(vec![2u8; 65]))
+        .expect("target B")
+        .to_base58();
+
+    // Two transfers from the same deployer key, then a deploy that COMMs once and then fails. The
+    // failed deploy's recorded trace still holds the COMM event, which is the RCHAIN-3505 shape.
+    let transfer_a = format!(
+        r#"new revVault(`rho:rchain:revVault`), deployerId(`rho:rchain:deployerId`), r in {{ revVault!("transfer", *deployerId, "{target_a}", 30000000, *r) | for (_ <- r) {{ Nil }} }}"#
+    );
+    let transfer_b = format!(
+        r#"new revVault(`rho:rchain:revVault`), deployerId(`rho:rchain:deployerId`), r in {{ revVault!("transfer", *deployerId, "{target_b}", 20000000, *r) | for (_ <- r) {{ Nil }} }}"#
+    );
+    // The error is in the receive's continuation, so the COMM is necessarily consumed first and the
+    // failed deploy's recorded trace contains it.
+    let fails_after_a_comm =
+        r#"new c, return in { c!(42) | for (@x <- c) { return!(1 + "not-a-number") } }"#;
+
+    let deploys = [
+        deploy(&transfer_a),
+        deploy(&transfer_b),
+        deploy(fails_after_a_comm),
+    ];
+    let (post_state, user_results, sys_results) = rm
+        .compute_state(
+            &post,
+            &deploys,
+            &[],
+            &rand,
+            BlockData::empty(),
+            &fringe_state(1),
+        )
+        .await
+        .expect("play compute_state");
+
+    assert!(user_results[0].eval_result.succeeded(), "transfer A plays");
+    assert!(user_results[1].eval_result.succeeded(), "transfer B plays");
+    assert!(
+        user_results[2].deploy.is_failed,
+        "the third deploy must fail after its COMM event"
+    );
+    assert!(
+        !user_results[2].deploy.deploy_log.is_empty(),
+        "the failed deploy must still record its trace, or the COMM-event path is not exercised"
+    );
+
+    let costs: Vec<u64> = user_results.iter().map(|r| r.deploy.cost.cost).collect();
+    let failed: Vec<bool> = user_results.iter().map(|r| r.deploy.is_failed).collect();
+    let processed: Vec<ProcessedDeploy> = user_results.into_iter().map(|r| r.deploy).collect();
+    let processed_sys: Vec<ProcessedSystemDeploy> =
+        sys_results.into_iter().map(|r| r.deploy).collect();
+
+    let (replay_state, _) = rm
+        .replay_compute_state(
+            &post,
+            &processed,
+            &processed_sys,
+            &rand,
+            BlockData::empty(),
+            &fringe_state(1),
+            &BTreeMap::new(),
+            true,
+            &PosGenesis::default(),
+            &[],
+        )
+        .await
+        .unwrap_or_else(|failure| {
+            panic!(
+                "replay refused the block with {failure:?}; costs recorded by play were {costs:?}"
+            )
+        });
+
+    assert_eq!(
+        post_state, replay_state,
+        "play and replay must agree on the multi-deploy post-state"
+    );
+    (costs, failed)
+}
+
+#[tokio::test]
+async fn play_and_replay_agree_per_deploy_for_same_key_multi_transfer() {
+    use rchain_casper::runtime_manager::BatchPolicy;
+
+    let (sequential_costs, sequential_failed) =
+        play_and_replay_multi_deploy(BatchPolicy::default()).await;
+    assert_eq!(
+        sequential_failed,
+        vec![false, false, true],
+        "the fixture must contain the failed deploy, not just the transfers"
+    );
+
+    let (batched_costs, batched_failed) = play_and_replay_multi_deploy(BatchPolicy {
+        enabled: true,
+        verify: true,
+        max_batch: 2,
+    })
+    .await;
+
+    assert_eq!(
+        batched_failed, sequential_failed,
+        "batching changes execution, never a deploy's status"
+    );
+    assert_eq!(
+        batched_costs, sequential_costs,
+        "the batched play path must record the same per-deploy costs as the sequential oracle"
+    );
+    assert!(
+        sequential_costs.iter().all(|c| *c > 0),
+        "every deploy must have been charged, including the failed one: {sequential_costs:?}"
+    );
+}
+
 #[tokio::test]
 async fn play_and_replay_agree_for_escrow_round_trip_deploy() {
     let rm = common::build_runtime_manager().await;
@@ -709,7 +857,7 @@ async fn a_tampered_deploy_replays_to_a_rejected_state_hash() {
     assert_eq!(
         rchain_casper::interpreter_util::handle_errors(&post_state, Ok(clean_hash))
             .expect("no internal error"),
-        Some(clean_hash),
+        ReplayVerdict::Matched(clean_hash),
         "the clean replay is accepted"
     );
 
@@ -743,7 +891,7 @@ async fn a_tampered_deploy_replays_to_a_rejected_state_hash() {
     assert_eq!(
         rchain_casper::interpreter_util::handle_errors(&post_state, Ok(tampered_hash))
             .expect("no internal error"),
-        None,
+        ReplayVerdict::PostStateMismatch,
         "the validating comparison must reject a state that does not match the block's claim"
     );
 
@@ -1038,8 +1186,8 @@ async fn a_block_replayed_against_a_different_fringe_reaches_a_different_post_st
             Ok(different_fringe),
         )
         .expect("handle_errors runs"),
-        None,
-        "the divergence above is exactly what `handle_errors` reports as `Ok(None)`"
+        ReplayVerdict::PostStateMismatch,
+        "the divergence above is exactly what `handle_errors` reports as a post-state mismatch"
     );
 }
 

@@ -520,6 +520,24 @@ pub async fn apply<F, Fut>(
                     .await;
                     continue;
                 }
+                // Only the proposer's `SelfBuilt` path constructs this (#564). A received block
+                // reaching it is a wiring fault, not a verdict about the block, so it is recorded as
+                // terminal and named rather than folded into a retryable internal failure.
+                Err(ValidateError::SelfReplayFailed(failure)) => {
+                    record_terminal_fault(
+                        &disposition,
+                        &block,
+                        "self-replay-failure",
+                        &format!(
+                            "a received block was validated as self-built; this is a wiring fault: {}",
+                            failure.describe()
+                        ),
+                        &log,
+                        source,
+                    )
+                    .await;
+                    continue;
+                }
                 Err(ValidateError::Internal(e)) => {
                     // An `Internal` failure is retryable by the disposition ledger's schedule, not
                     // droppable. **A `missing justification` should not arrive here** — the

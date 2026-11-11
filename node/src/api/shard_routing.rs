@@ -507,6 +507,7 @@ mod tests {
                     }
                 },
                 autopropose_tap_suppressed: 0,
+                pool_quarantined: 0,
                 consecutive_self_validation_failures: if primary { 7 } else { 0 },
                 autopropose_timer_halted: !primary,
                 stale_snapshot_self_equivocations: if primary { 5 } else { 0 },

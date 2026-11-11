@@ -57,6 +57,62 @@ pub enum ReplayFailure {
 }
 
 impl ReplayFailure {
+    /// **A closed, machine-readable name for the failure** (#564).
+    ///
+    /// The health surfaces already carry a closed kebab-case vocabulary for a self-validation
+    /// refusal (`BlockStatus::code()` plus `internal-error`). A replay failure that reaches a
+    /// self-built block is a different class of refusal, so it gets its own codes from the same
+    /// vocabulary rather than being reported as the `InvalidStateHash` it used to collapse into.
+    pub fn code(&self) -> &'static str {
+        match self {
+            ReplayFailure::InternalError(_) => "internal-error",
+            ReplayFailure::ReplayStatusMismatch { .. } => "replay-status-mismatch",
+            ReplayFailure::UnusedCommEvent(_) => "unused-comm-event",
+            ReplayFailure::ReplayCostMismatch { .. } => "replay-cost-mismatch",
+            ReplayFailure::SystemDeployErrorMismatch { .. } => "system-deploy-error-mismatch",
+        }
+    }
+
+    /// The two costs a `ReplayCostMismatch` disagrees about, for the surfaces that carry the pair.
+    /// `None` for every other variant: a status, trace or system-deploy mismatch has no cost pair,
+    /// and inventing zeros would make "no pair" and "0 vs 0" the same reading.
+    pub fn cost_pair(&self) -> Option<(i64, i64)> {
+        match self {
+            ReplayFailure::ReplayCostMismatch {
+                initial_cost,
+                replay_cost,
+            } => Some((*initial_cost, *replay_cost)),
+            _ => None,
+        }
+    }
+
+    /// The diagnostic line the log and the operator surface share. One implementation, so the two
+    /// cannot disagree about which variant fired or what its payload was.
+    pub fn describe(&self) -> String {
+        match self {
+            ReplayFailure::InternalError(cause) => format!("kind=InternalError cause={cause}"),
+            ReplayFailure::ReplayStatusMismatch {
+                initial_failed,
+                replay_failed,
+            } => format!(
+                "kind=ReplayStatusMismatch initial_failed={initial_failed} replay_failed={replay_failed}"
+            ),
+            ReplayFailure::UnusedCommEvent(cause) => format!("kind=UnusedCommEvent cause={cause}"),
+            ReplayFailure::ReplayCostMismatch {
+                initial_cost,
+                replay_cost,
+            } => format!(
+                "kind=ReplayCostMismatch initial_cost={initial_cost} replay_cost={replay_cost}"
+            ),
+            ReplayFailure::SystemDeployErrorMismatch {
+                play_error,
+                replay_error,
+            } => format!(
+                "kind=SystemDeployErrorMismatch play_error={play_error} replay_error={replay_error}"
+            ),
+        }
+    }
+
     pub fn internal_error(msg: impl Into<String>) -> ReplayFailure {
         ReplayFailure::InternalError(msg.into())
     }

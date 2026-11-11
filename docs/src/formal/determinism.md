@@ -93,6 +93,15 @@ binds `rho:rchain:deployerId` (the transfer idiom), replays it, and asserts
 `play_post_state == replay_post_state` — plus a cost/refund check for a non-trivial-cost deploy. Any
 future S1–S4 drift fails that test.
 
+**The #564 arm.** `play_and_replay_agree_per_deploy_for_same_key_multi_transfer` builds a
+three-deploy block from one deployer key — two vault transfers and a **failed** deploy whose recorded
+trace contains a COMM event — and runs it under both the sequential and the batched play policies.
+`replay_compute_state` returning `Ok` is the per-deploy cost assertion: the replay compares
+`ProcessedDeploy.cost.cost` with the replayed cost for every deploy, so a single mismatch is a
+`ReplayCostMismatch`. The test also compares the costs the two play paths record. It passes, which is
+a **negative** for the 2026-11-08 shape in this fixture, not a closure of RC1; the incident's trigger
+remains open, and the result is recorded on #564.
+
 ## What determinism does *not* require
 
 Determinism is about the **state hash**, not about the recorded cost field or diagnostic output. Two

@@ -85,7 +85,7 @@ shard's reading must say which.
 | `orphanDetections` | ingestion | integer | C | P | ≤5 s | monotone; the history beside the current count |
 | `proposalHalted` | consensus | bool | L | S | ≤1 s | set when the proposer is isolated; cleared by restart or operator resume |
 | `proposalHaltReason` | consensus | string? | G | S | at read | a closed code from the proposer's isolation reason |
-| `selfValidationRefusal` | consensus | object? | G | S | at read | the proposer's current **counted** self-validation refusal: `{code, blockNumber, seqNum, atUnixMs}` or null. `code` is a closed kebab-case vocabulary from `BlockStatus::code()` plus `internal-error`; cleared by the successful propose that clears `consecutiveSelfValidationFailures` and by `POST /api/v1/autopropose/resume`; a divergence refusal and a stale-snapshot self-equivocation are **not** recorded; **not** derived from logs; **not** a readiness term |
+| `selfValidationRefusal` | consensus | object? | G | S | at read | the proposer's current **counted** self-validation refusal: `{code, blockNumber, seqNum, atUnixMs}` or null. `code` is a closed kebab-case vocabulary from `BlockStatus::code()`, `internal-error`, or a replay code (`replay-cost-mismatch`, `replay-status-mismatch`, `unused-comm-event`, `system-deploy-error-mismatch`); cleared by the successful propose that clears `consecutiveSelfValidationFailures` and by `POST /api/v1/autopropose/resume`; a divergence refusal and a stale-snapshot self-equivocation are **not** recorded. **The public summary deliberately omits the replay detail** (cost pair, deploy ids, attempts, exclusion) — that is operator-only, because the route is unauthenticated. Not derived from logs; not a readiness term |
 | `finalityStalled` | finality | bool | L | S | ≤1 s | sustained refusals, not one partial layer; the field to alarm on |
 | `finalityStallEpisodes` | finality | integer | C | S | at read | durable, monotone; the durability qualifier `finalityCountersDurable` is **operator-only**, so a peer reading this field cannot verify it (§5) |
 | `lastBlockAgeMs` | progress | integer? | G | S | at read | milliseconds since a **new highest** height was accepted; **null until the first observation, never 0**; a same-height sibling does not reset it |
@@ -123,6 +123,16 @@ It is **not** a superset of `/health`. The two surfaces overlap in three groups,
 `selfValidationRefusal` is also on both: flat on the operator surface (the primary's) and inside
 `shards` (every member's), beside the operator-only `consecutiveSelfValidationFailures` it explains
 (#485).
+
+**The operator object is the detailed one** (#564). On `/api/v1/status/operator` — and only there —
+the refusal object also carries `initialCost` and `replayCost` (the `ReplayCostMismatch` pair, null
+for every other code), `deployIds` (base16, capped at 16; `deployCount` is the true count),
+`attempts` (the run length for this exact deploy set and code) and `excluded` (whether the set is now
+held out of the proposer's selection). `poolQuarantined` beside it is the number of pooled deploy ids
+currently held out. **These are proposer-local operating facts, not consensus state**: the deploys stay
+in the pool, another validator may include them, and they expire with the pool at height + 50. The
+public `/health` object keeps the four-field summary above; deploy ids and costs are not published on
+an unauthenticated listener.
 
 The health-only fields are `diagVersion`, `bootId`, `ok`, `ready`, `readyReasons`, `phase`,
 `nodePhase`, `shardPhases`, `height`, `maxObservedHeight`, `finalizedHeight`, `finalizedHeightError`,
@@ -187,8 +197,11 @@ silent classes in §1 still have no firing test. It does not make an alarm corre
 `finalizedLag` is a difference of **block heights** (`maxObservedHeight − finalizedHeight`, both
 block numbers), not a maturity measure and not a rate; it reads `0` when the fence is at or ahead of
 the observed tip. `selfValidationRefusal` is **process-local**: it is cleared with the counter and is
-absent after a restart until the next counted refusal, so it names the last refusal this process saw,
-not the shard's history and not a root-cause diagnosis. The deploy-side contract is the other half:
+absent after a restart until the next refusal, so it names the last refusal this process saw, not the
+shard's history and not a root-cause diagnosis. `poolQuarantined` and the selection exclusion are
+process-local for the same reason: a restart re-derives and re-records a persistent refusal within
+three attempts, so the reading does not survive the restart even though the fault does. The deploy-side
+contract is the other half:
 `acceptsDeploys` is local pool capacity, never a finality signal, and the four deploy states are in
 [Finality is not admission](../node/admission.md#finality-is-not-admission).
 

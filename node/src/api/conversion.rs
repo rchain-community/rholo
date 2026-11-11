@@ -42,6 +42,12 @@ fn to_self_validation_refusal_dto(
         block_number: r.block_number,
         seq_num: r.seq_num,
         at_unix_ms: r.at_unix_ms,
+        initial_cost: r.initial_cost,
+        replay_cost: r.replay_cost,
+        deploy_ids: r.deploy_ids,
+        deploy_count: r.deploy_count,
+        attempts: r.attempts,
+        excluded: r.excluded,
     })
 }
 
@@ -53,8 +59,9 @@ fn to_shard_health_dto(entry: &ShardHealthEntry) -> ShardHealthDto {
                 .proposer
                 .consecutive_self_validation_failures,
             self_validation_refusal: to_self_validation_refusal_dto(
-                entry.proposer.self_validation_refusal,
+                entry.proposer.self_validation_refusal.clone(),
             ),
+            pool_quarantined: entry.proposer.pool_quarantined,
             autopropose_timer_halted: entry.proposer.autopropose_timer_halted,
             autopropose_timer_halt_episodes: entry.proposer.autopropose_halt.episodes,
             autopropose_halt: HaltStatusDto {
@@ -144,7 +151,10 @@ pub fn to_operator_status(
         core,
         admin_http: caps.admin_http,
         consecutive_self_validation_failures: health.consecutive_self_validation_failures,
-        self_validation_refusal: to_self_validation_refusal_dto(health.self_validation_refusal),
+        self_validation_refusal: to_self_validation_refusal_dto(
+            health.self_validation_refusal.clone(),
+        ),
+        pool_quarantined: health.pool_quarantined,
         autopropose_timer_halted: health.autopropose_timer_halted,
         // The durable count, which is what the key always claimed to be (W-N10-01): it was an
         // in-memory count when this line was written, and a restart reset it.
@@ -490,7 +500,14 @@ mod tests {
                 block_number: 3122,
                 seq_num: 3122,
                 at_unix_ms: 1_700_000_000_000,
+                initial_cost: None,
+                replay_cost: None,
+                deploy_ids: Vec::new(),
+                deploy_count: 0,
+                attempts: 1,
+                excluded: false,
             }),
+            pool_quarantined: 0,
             autopropose_timer_halted: true,
             autopropose_halt: HaltStatus {
                 at: Some(1_700_000_000_000),

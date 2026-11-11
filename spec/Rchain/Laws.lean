@@ -5163,7 +5163,45 @@ def lawsC : List Law := [
       stops. The ranked worst case is `longest × entries`: every round scans every entry, and a round \
       may eliminate only one option, so `longest` bounds the rounds. The floor is the approval side. \
       Consensus-visible (#51 category A)." },
-
+  { number := 92, layer := "Casper",
+    statement := "**A replay failure's cause depends on the block's provenance.** An inbound block's \
+      replay disagreement may be a view difference, so it is `Divergence` and C173's restoring rule \
+      stays keyed on it. A block this node *built* has no peer view to differ from — its play and \
+      replay are two executions of this node's own state — so the same failure is a local fault and \
+      is never `Divergence`. The decision table is `Rchain.provenanceCause` over \
+      `ProvenanceOrigin` and `ProvenanceRefusal`; the \
+      Rust's `ValidationOrigin` and `ValidateError::SelfReplayFailed` are that table's \
+      implementation. The 2026-11-08 incident (#564) is the negative case: a self-built block's \
+      `ReplayCostMismatch` was collapsed into `InvalidStateHash` → `Divergence`, so the proposer's \
+      C270 arm neither counted, surfaced nor bounded it and rebuilt the identical block until \
+      finality froze.",
+    status := .provedModel,
+    declarations := [`Rchain.ProvenanceOrigin, `Rchain.ProvenanceRefusal, `Rchain.ProvenanceCause,
+      `Rchain.provenanceCause,
+      `Rchain.an_inbound_replay_failure_is_divergence,
+      `Rchain.a_self_replay_failure_is_not_divergence,
+      `Rchain.the_two_origins_disagree_about_the_same_failure,
+      `Rchain.a_self_replay_failure_is_a_local_fault],
+    axioms := [],
+    rust := ["casper/src/interpreter_util.rs", "casper/src/multi_parent_casper.rs",
+      "casper/src/blocks/proposer/proposer.rs"],
+    rustWitness := ["casper/src/multi_parent_casper.rs:a_self_built_replay_failure_is_classified_as_a_local_fault"],
+    witness := [`Rchain.an_inbound_replay_failure_is_divergence,
+      `Rchain.a_self_replay_failure_is_not_divergence,
+      `Rchain.the_two_origins_disagree_about_the_same_failure],
+    falsifiable := "**Delete the origin arm and map every `ReplayVerdict::Failed` to \
+      `InvalidStateHash`** — `a_self_replay_failure_is_not_divergence` cannot be proved (`decide` \
+      fails on the resulting equality), and the Rust witness reddens because the self-built case \
+      returns the divergence status again. The live negative case is the incident: the same replay \
+      refusal reached the proposer as `Divergence` and the loop was unbounded for 45 hours. The \
+      inbound half is falsified by the existing restoring-rule tests, which require a peer replay \
+      refusal to remain `Divergence` so C173's inverse can fire.",
+    note := "**What this law does not claim.** It does not say the replay was wrong, which half \
+      (play or replay) diverged, or that a deploy set is invalid — that is RC1, and the falsifier in \
+      `casper/tests/determinism.rs` is the open measurement. It also does not make the bounded-retry \
+      policy a consensus rule: holding a deploy set out of selection is proposer-local operating \
+      policy (C357), another validator may include the same deploy, and the quarantine is invisible \
+      to block validity. The Rust witness is the classification test, not the live arm." },
 ]
 
 def laws : List Law := lawsA ++ lawsB ++ lawsC

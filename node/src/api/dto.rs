@@ -181,19 +181,32 @@ pub struct HaltStatusDto {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SelfValidationRefusalDto {
-    /// A closed code: `BlockStatus::code()`, or `internal-error` for the internal-error arm.
+    /// A closed code: `BlockStatus::code()`, `internal-error`, or one of the replay codes (#564).
     pub code: String,
     pub block_number: i64,
     pub seq_num: i64,
     pub at_unix_ms: i64,
+    /// `ReplayCostMismatch`'s pair; null for every other refusal. Always present as a key.
+    pub initial_cost: Option<i64>,
+    pub replay_cost: Option<i64>,
+    /// Refused deploy ids, base16, capped; `deployCount` is the true count.
+    pub deploy_ids: Vec<String>,
+    pub deploy_count: usize,
+    /// Run length for this exact `(deploy set, code)` pair; a counted refusal is 1.
+    pub attempts: u64,
+    /// Whether this refusal's deploy set is now held out of the proposer's selection.
+    pub excluded: bool,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ProposerHealthDto {
     pub consecutive_self_validation_failures: u64,
-    /// **Why the last counted failure happened** (#485); `None` after a success or an operator resume.
+    /// **Why the last counted failure happened** (#485, #564); `None` after a success or an operator
+    /// resume.
     pub self_validation_refusal: Option<SelfValidationRefusalDto>,
+    /// Pooled deploy ids held out of selection after repeated self-replay refusals (#564).
+    pub pool_quarantined: u64,
     pub autopropose_timer_halted: bool,
     pub autopropose_timer_halt_episodes: u64,
     pub autopropose_halt: HaltStatusDto,
@@ -269,6 +282,10 @@ pub struct OperatorStatus {
     /// refused block. `None` after a successful propose or an operator resume. This is the field the
     /// counter could not carry: on the height-3122 wedge the only reason was a stderr line.
     pub self_validation_refusal: Option<SelfValidationRefusalDto>,
+    /// #564: pooled deploy ids this proposer is holding out of selection after repeated self-replay
+    /// refusals. Proposer-local operating state, not pool capacity — the deploys stay pooled and stay
+    /// valid for every other node. Always present; zero on a healthy proposer.
+    pub pool_quarantined: u64,
     /// #157: the shard's autopropose **timer** has stopped. Deliberately not called `halted`: the tap
     /// and the admin `POST /api/propose` keep running, so a node can have a stopped timer and still be
     /// producing blocks.

@@ -153,6 +153,10 @@ arm1_attestation() {
   if ! wait_for_log "$SUBJECT" "Recovered from the self-replay refusal" 60; then
     fail_arm "no attestation-only recovery line"; failed "$dir"; return 1
   fi
+  # The refusal's evidence is on the surface until the next ordinary success clears the cell; take
+  # it now, while the recovery is still the last event.
+  curl -fsS --max-time 5 "http://localhost:$S_ADMIN/api/v1/status/operator" \
+    >"$dir/operator-at-recovery.json" 2>/dev/null || true
   if ! logs "$SUBJECT" | grep -q "replay-cost-mismatch"; then
     fail_arm "the injected refusal is not the incident's cost-mismatch shape"; failed "$dir"; return 1
   fi
@@ -187,6 +191,8 @@ arm2_reset() {
   if ! wait_for_log "$SUBJECT" "the attestation fallback also failed its own replay" 60; then
     fail_arm "the node-level fault never happened"; failed "$dir"; return 1
   fi
+  curl -fsS --max-time 5 "http://localhost:$S_ADMIN/api/v1/status/operator" \
+    >"$dir/operator-at-halt.json" 2>/dev/null || true
   if ! wait_for_log "$SUBJECT" "reset complete: rewound to" 90; then
     fail_arm "no reset completed"; failed "$dir"; return 1
   fi
@@ -236,6 +242,8 @@ arm3_halt() {
   if ! wait_for "the subject's latch" subject_latched; then
     fail_arm "the latch never set"; failed "$dir"; return 1
   fi
+  curl -fsS --max-time 5 "http://localhost:$S_ADMIN/api/v1/status/operator" \
+    >"$dir/operator-at-halt.json" 2>/dev/null || true
   local marker
   marker="$(operator "$S_ADMIN" '.resetMarker')"
   if [[ "$marker" != "null" ]]; then

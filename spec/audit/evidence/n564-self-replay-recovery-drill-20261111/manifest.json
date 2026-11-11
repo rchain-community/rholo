@@ -1,0 +1,245 @@
+{
+  "arms": [
+    {
+      "control": "arm1-attestation",
+      "result": "PASS"
+    },
+    {
+      "control": "arm2-reset",
+      "result": "PASS"
+    },
+    {
+      "control": "arm3-halt",
+      "result": "PASS"
+    }
+  ],
+  "binary_sha256": "sha256:7e1b5c5c4404a27228e12582971116b8517c7271d255da31eab13d2506e3dde2",
+  "execution_proven": false,
+  "files": [
+    {
+      "bytes": 46308,
+      "kind": "log",
+      "path": "raw/arm1-attestation/devnet-bootstrap.log",
+      "sha256": "1f72f7b312cd57df0d67c3b09f1ec9ef9bee996e1d5d840901ab2d6b880e6ad2"
+    },
+    {
+      "bytes": 30372,
+      "kind": "log",
+      "path": "raw/arm1-attestation/devnet-validator-1.log",
+      "sha256": "ea9815811abbed392edca9adfc19822a18dde44d307e281b7fc6656dc16b9f2b"
+    },
+    {
+      "bytes": 30681,
+      "kind": "log",
+      "path": "raw/arm1-attestation/devnet-validator-2.log",
+      "sha256": "4ffed576dd0ac72a6877e7af7466e8db54d40d6b78a6a3a32b049ec475f73033"
+    },
+    {
+      "bytes": 735,
+      "kind": "json",
+      "path": "raw/arm1-attestation/health-bootstrap.json",
+      "sha256": "567ba7cecdf5f7f508dce1f0b6f14d66a740665ef7ff1b5469f6f69f2c390742"
+    },
+    {
+      "bytes": 734,
+      "kind": "json",
+      "path": "raw/arm1-attestation/health-peer.json",
+      "sha256": "2d554909a12f9ec4729aca7edf4d0a0b063b3705853e1884eeb727815cd42e90"
+    },
+    {
+      "bytes": 733,
+      "kind": "json",
+      "path": "raw/arm1-attestation/health-subject.json",
+      "sha256": "8b24d82ebb46741c294257ca2ab62ab7b2cc0a2e21992541f5ee4ce9fd408ef1"
+    },
+    {
+      "bytes": 3306,
+      "kind": "json",
+      "path": "raw/arm1-attestation/operator-at-recovery.json",
+      "sha256": "f1704fdfa64b5af4b347a80d1e4d4f4fe1e6faf02dd0590c5c416a5d84a448be"
+    },
+    {
+      "bytes": 2400,
+      "kind": "json",
+      "path": "raw/arm1-attestation/operator-subject.json",
+      "sha256": "690a5bf380fda15fe5fa3ebc626eae81f2dd6182c76ca8d58c9b1df74aa2469f"
+    },
+    {
+      "bytes": 5,
+      "kind": "text",
+      "path": "raw/arm1-attestation/result",
+      "sha256": "c26de83abdc9496cd1301470918ec39ecca1cf389ef0ae1c6504da1800d1c431"
+    },
+    {
+      "bytes": 1368,
+      "kind": "log",
+      "path": "raw/arm1-attestation/up.log",
+      "sha256": "cb5282bae2b3395bbdc68de1015568dfaa30a45b51675ee35798946056ebd4f7"
+    },
+    {
+      "bytes": 50674,
+      "kind": "log",
+      "path": "raw/arm2-reset/devnet-bootstrap.log",
+      "sha256": "e1144b16081a2997a421845b06b3f0d45468c8d8c8c427d17c69727b182395db"
+    },
+    {
+      "bytes": 43292,
+      "kind": "log",
+      "path": "raw/arm2-reset/devnet-validator-1.log",
+      "sha256": "10c02d034bb4fc32398013d052469cfe3a5e7741c803236564de205145606eee"
+    },
+    {
+      "bytes": 31124,
+      "kind": "log",
+      "path": "raw/arm2-reset/devnet-validator-2.log",
+      "sha256": "ac798a624312414f186abdcbd94527383dd8b950f2d8a206b0646c6120aa476f"
+    },
+    {
+      "bytes": 734,
+      "kind": "json",
+      "path": "raw/arm2-reset/health-bootstrap.json",
+      "sha256": "1d7ba80a4c244ce3c0e716066ebe47aba049663d2c46317ab2b83fb840cb875b"
+    },
+    {
+      "bytes": 735,
+      "kind": "json",
+      "path": "raw/arm2-reset/health-peer.json",
+      "sha256": "fdf6f6163952336f469221372ad7fefaf35a00069d2a96cdedf9c63ed4c07569"
+    },
+    {
+      "bytes": 734,
+      "kind": "json",
+      "path": "raw/arm2-reset/health-subject.json",
+      "sha256": "0200fe287a0d2f477ddbec212af6b3680d147ec84c5d1dbf4c9580c2d5b6ce22"
+    },
+    {
+      "bytes": 3689,
+      "kind": "json",
+      "path": "raw/arm2-reset/operator-at-halt.json",
+      "sha256": "e11a0976c23bff0ea1b63e569d35bcb946dc3ad93e81908fc44f13cdd97b6b71"
+    },
+    {
+      "bytes": 2402,
+      "kind": "json",
+      "path": "raw/arm2-reset/operator-subject.json",
+      "sha256": "1566f7d0bb1b16e080bd2ba5817f97bde1dc139fb566e6995c615bfbd6f18742"
+    },
+    {
+      "bytes": 5,
+      "kind": "text",
+      "path": "raw/arm2-reset/result",
+      "sha256": "c26de83abdc9496cd1301470918ec39ecca1cf389ef0ae1c6504da1800d1c431"
+    },
+    {
+      "bytes": 1368,
+      "kind": "log",
+      "path": "raw/arm2-reset/up.log",
+      "sha256": "9daf0ae7a5bfbf0db9a4274aacf4623c2257588dcccd20b252c23718744b2572"
+    },
+    {
+      "bytes": 44274,
+      "kind": "log",
+      "path": "raw/arm3-halt/devnet-bootstrap.log",
+      "sha256": "a3be854981b749d178da9ee5eeeca2a98dc48f890a9a42ecb3a697297b2b914e"
+    },
+    {
+      "bytes": 30933,
+      "kind": "log",
+      "path": "raw/arm3-halt/devnet-validator-1.log",
+      "sha256": "e3ac389c977f4cf888af28b2ca19e19627cf246909bd1fefc2b67fb413f65136"
+    },
+    {
+      "bytes": 30293,
+      "kind": "log",
+      "path": "raw/arm3-halt/devnet-validator-2.log",
+      "sha256": "7e40f0b7048dd45aba124232c56a06f53524f26067856b82c4f4527de9d0e6fb"
+    },
+    {
+      "bytes": 735,
+      "kind": "json",
+      "path": "raw/arm3-halt/health-bootstrap.json",
+      "sha256": "4e5b2b1477b2f6194f1991ad4d19d0ef32b0cbbc4fbf2978ef98c3a2e702edec"
+    },
+    {
+      "bytes": 735,
+      "kind": "json",
+      "path": "raw/arm3-halt/health-peer.json",
+      "sha256": "161932e244a5dcf058e44ed13adb188fa222602faba303332e00c33ac3ac24ed"
+    },
+    {
+      "bytes": 735,
+      "kind": "json",
+      "path": "raw/arm3-halt/health-subject.json",
+      "sha256": "88413817297e3abf575f2984a89699f0c8a092f0a9dd6ab3ddbbbde627797c76"
+    },
+    {
+      "bytes": 3529,
+      "kind": "json",
+      "path": "raw/arm3-halt/operator-at-halt.json",
+      "sha256": "7ab476559bfc34f7c16589ad53fa8a1ebcc0c1966a25a3130d9b41e7a8617dee"
+    },
+    {
+      "bytes": 2398,
+      "kind": "json",
+      "path": "raw/arm3-halt/operator-subject.json",
+      "sha256": "62fee26ac4d576f31e40d81da97219c09de0f2b07ada140f7a6cb9fef3ce7c27"
+    },
+    {
+      "bytes": 5,
+      "kind": "text",
+      "path": "raw/arm3-halt/result",
+      "sha256": "c26de83abdc9496cd1301470918ec39ecca1cf389ef0ae1c6504da1800d1c431"
+    },
+    {
+      "bytes": 1368,
+      "kind": "log",
+      "path": "raw/arm3-halt/up.log",
+      "sha256": "1e0c94d0f9175a5a4d0a8d770ae4692c70389967ab4694e3d1bb6abe47b34998"
+    },
+    {
+      "bytes": 72,
+      "kind": "txt",
+      "path": "raw/binary-sha256.txt",
+      "sha256": "481ea501fcee4934f5928044e3e2b7abff2778bc01db79d9ef98f399116ec531"
+    },
+    {
+      "bytes": 404,
+      "kind": "json",
+      "path": "raw/campaign.json",
+      "sha256": "331f7609c6c547e74c8111e475e7df28c7ceb82116835843ea6151e7da8ff0c6"
+    },
+    {
+      "bytes": 2384,
+      "kind": "md",
+      "path": "raw/drill-readout.md",
+      "sha256": "c44b2c4a13f55eea96b35eed20c68241ecc79991ccdf47f94a4f10c35c062024"
+    },
+    {
+      "bytes": 631,
+      "kind": "log",
+      "path": "raw/run.log",
+      "sha256": "65cd6238583e37ff6f86584dad7cc09c095e273055bcaf1036559347aa885c53"
+    },
+    {
+      "bytes": 41,
+      "kind": "txt",
+      "path": "raw/source-sha.txt",
+      "sha256": "6daaf2477bc9d99a177b626d05b383d8503718bf51db894f3f9534f841d6b0ad"
+    }
+  ],
+  "gate_id": "U23-C361-C364",
+  "locality": "local-devnet",
+  "packer": {
+    "packaged_at": "2026-11-11T15:05:22+00:00",
+    "tool": "evidence-pack",
+    "version": 1
+  },
+  "redactions": [],
+  "run": {
+    "attempt": null,
+    "url": null
+  },
+  "schema": 1,
+  "source_sha": "d79651d9c9085ab255c5a1864e8fe0933e8b5ec1",
+  "verdict": "PASS"
+}

@@ -609,11 +609,11 @@ mod tests {
         assert_eq!(refusal.refused_body_len, 4096);
         assert!(refusal.reset_attempted);
         assert_eq!(refusal.reset_anchor, Some("ab".repeat(32)));
-        let wired = serde_json::to_value(&refusal).expect("the refusal serializes");
+        let wired = serde_json::to_value(refusal).expect("the refusal serializes");
         assert_eq!(wired["refusedBodyAvailable"], true);
         assert_eq!(wired["refusedBodyLen"], 4096);
         assert_eq!(wired["resetAttempted"], true);
-        assert_eq!(wired["refusedBodyAvailable"].is_null(), false);
+        assert_eq!(wired["resetAnchor"], "ab".repeat(32));
         assert!(api.autopropose_timer_halted);
         // W-N10-01: the **episode count** beside the sticky flag, counted on the transition. It is the
         // durable count now — seeded from the store at boot — so unlike the flag it does not start at

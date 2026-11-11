@@ -1,0 +1,38 @@
+{
+  "recorded_at_utc": "2026-11-11T15:40:11.872937+00:00",
+  "source_commit": "a2497f0ea1f3b68fe2045e2adf6f7868fdaef39d",
+  "verification_commit": "4e71ad53d8275dd66b8ba038ba7ef35b20f78401",
+  "run_url": "https://github.com/aixaria0/rchain-rust/actions/runs/43047546442",
+  "job_url": "https://github.com/aixaria0/rchain-rust/actions/runs/43047546442/job/130615425007",
+  "artifact_id": 13867693481,
+  "artifact_digest": "sha256:e5a3f568d5206be23bc8f59b1a7c17e7354b9cb90e4198e583a9fa8039bd77c8",
+  "reset_suite": {
+    "passed": 11,
+    "failed": 0,
+    "ignored": 0,
+    "selected_test_lines": [
+      "test a_disk_backed_reset_preserves_the_inventory_across_store_reopen ... ok",
+      "test a_self_replay_reset_record_latches_the_next_boot ... ok",
+      "test a_self_replay_reset_refuses_a_dag_block_whose_body_is_missing ... ok",
+      "test a_self_replay_reset_returns_the_deploy_before_purging_its_only_block ... ok"
+    ]
+  },
+  "reported_libtest_counts": {
+    "passed": 2736,
+    "failed": 0,
+    "ignored": 3,
+    "summary_lines": 115,
+    "scope": "sum of libtest reports, not a statement of independent review or operational coverage"
+  },
+  "log_sha256": {
+    "baseline-negative.log": "14e7e7c9378c709ac7c4429219f482961b676a2d559cc0e23185802d7742ed0b",
+    "clippy.log": "2b51a4a22437d82bea7e5bd1e36c02e608b90653de97f3569f2342bcbd3b40c6",
+    "format.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "negative-control.json": "f036d6c8b23814e9e544734f290078d5adfa069b31c160cc1e804060ec3881cc",
+    "protoc-version.txt": "5d8e8ea015f9d39d174f30332765f0edeb50e00689dc792907c56d56ea637d22",
+    "workspace-tests.log": "6a456605711ff55fbc8a2571b34f94edbdb179bf6c857f81d9b29b57a5d0fa22",
+    "verification-receipt.json": "e8e2f6ba23461b7fa85f9928e32fcf2cd1018ae1660bbf4cbc66f1e20a86841b"
+  },
+  "scope": "function regression and normal LMDB store reopen; no devnet, process-kill, power-loss or original-trigger closure",
+  "upstream_ci": "blocked at protobuf dependency installation by runner DNS"
+}

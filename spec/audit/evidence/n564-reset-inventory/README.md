@@ -1,93 +1,95 @@
 # Reset deploy inventory: missing DAG body (C366)
 
-## Finding and scope
+## Result
 
-At `f4feb1a83862b5b58e682b09ec4188ca59294df6`, `return_unfinalised_deploys`
-enumerated `BlockStore.keys()`. A block present in the DAG but absent from the body
-store was never visited. The function could return `Ok(0)`, allowing the reset
-to rewind metadata without establishing which deploys that block carried.
+**VERIFIED, scoped to the tested reset implementation.** The original inventory
+enumerated surviving body-store keys, so a block present in the DAG but missing
+from the body store was never visited. The corrected function enumerates DAG
+candidate hashes and refuses incomplete metadata or a missing body above the
+anchor before writing the reset marker or performing the destructive rewind.
 
-The correction enumerates the DAG snapshot instead. Missing metadata or a missing
-body above the anchor refuses before the reset marker and destructive rewind.
-Bodies outside the DAG remain outside this inventory.
+The shared DAG snapshot is released after collecting the hashes. The candidate
+set is fixed for this check; no claim about arbitrary concurrent DAG mutation is
+made.
 
-This is a reset preflight defect found during #564 follow-up. It does not explain
-the incident's 274-phlo discrepancy and does not claim that the incident involved
-a missing body.
+## Pinned Rust verification
 
-## Executed dependency probe
+- Tested source: `a2497f0ea1f3b68fe2045e2adf6f7868fdaef39d`.
+- Fork-only workflow commit: `4e71ad53d8275dd66b8ba038ba7ef35b20f78401`.
+- [Successful run](https://github.com/aixaria0/rchain-rust/actions/runs/43047546442/job/130615425007).
+- Compiler: Rust **1.95.0**; official protoc **3.21.12**, downloaded from the
+  upstream v21.12 release with its observed SHA-256 pinned in the workflow.
+- Environment: Linux x86-64, two build jobs, two test threads, debug information
+  disabled. These are recorded test settings, not a production performance claim.
 
-`probe.py` extracts the production function text into a std-only Rust test binary
-with in-memory storage stubs. The original function failed the missing-body
-assertion (3 passed, 1 failed); the corrected function passed all four cases.
-The positive controls cover a complete empty inventory, an orphan body, and
-returning a known unfinalised deploy without duplication. See `probe-receipt.json`.
+The workflow checked production-source equivalence before execution. It then
+replaced only `casper/src/engine/reset.rs` with the original file from
+`f4feb1a83862b5b58e682b09ec4188ca59294df6` and ran the new real integration test.
+The intended missing-body assertion failed: **0 passed, 1 failed**, exit 101.
+A compile error would not satisfy the negative-control step. The candidate file
+was restored and checked before the successful full workspace run.
 
-This is a source-extracted algorithm probe, not a Casper crate test or a devnet
-measurement. The stubs do not verify signatures, expiry, replay, real storage,
-the reset lifecycle, or network finality.
+| Check | Observed result |
+|---|---|
+| Original real reset implementation, missing-body regression | Expected assertion failure |
+| Candidate `cargo test --locked --workspace --all-features` | Success; no failing executed test |
+| Candidate reset integration binary | **11 passed**, including the new LMDB fixture |
+| Pinned formatter | Success |
+| Repository Clippy contract, all targets and features | Success |
 
-From the repository root:
+[The verification receipt](pinned-verification-receipt.json),
+[the real negative control](integration-negative-control.json), and
+[the scoped summary and log hashes](verified-results.json) preserve the source
+identity, settings and results. The full logs are in the linked run and its
+artifact. Ignored tests are not claimed as executed.
 
-```sh
-tmp=$(mktemp -d)
-git show f4feb1a83862b5b58e682b09ec4188ca59294df6:casper/src/engine/reset.rs > "$tmp/original.rs"
-python3 spec/audit/evidence/n564-reset-inventory/probe.py "$tmp/original.rs" "$tmp/original-probe.rs"
-rustc --edition=2021 --test "$tmp/original-probe.rs" -o "$tmp/original-test"
-# Expected nonzero: the missing-body assertion fails.
-"$tmp/original-test" --nocapture
-python3 spec/audit/evidence/n564-reset-inventory/probe.py casper/src/engine/reset.rs "$tmp/fixed-probe.rs"
-rustc --edition=2021 --test "$tmp/fixed-probe.rs" -o "$tmp/fixed-test"
-"$tmp/fixed-test" --nocapture
-```
+## What the reset tests establish
 
-## Tests against the real reset entry point
+- `a_self_replay_reset_refuses_a_dag_block_whose_body_is_missing`: the real reset
+  entry point refuses without a reset marker or destructive rewind, preserving
+  the DAG, anchor body and pending request.
+- `a_self_replay_reset_returns_the_deploy_before_purging_its_only_block`: a
+  complete inventory permits reset; the exact deploy request returns to the pool,
+  its dropped-block index is removed, and the old body is purged.
+- `a_disk_backed_reset_preserves_the_inventory_across_store_reopen`: the production
+  LMDB manager and codecs preserve the refused reset state across normal store
+  close/reopen. After an explicit fixture body repair, a successful reset's
+  pooled deploy, purge and completion marker survive another close/reopen.
 
-`casper/tests/reset.rs` adds:
+The evaluation runtime is the in-memory fixture. The LMDB test is not a node
+process restart, power-loss test, cryptographic signature-validation test, or the
+three-arm devnet drill.
 
-- `a_self_replay_reset_refuses_a_dag_block_whose_body_is_missing`: refusal leaves the DAG,
-  anchor body and pending request intact, and writes no reset marker.
-- `a_self_replay_reset_returns_the_deploy_before_purging_its_only_block`: a complete
-  inventory permits reset; the exact deploy request returns to the pool, the
-  dropped block's deploy index is removed, and its body is purged.
+## Earlier dependency probe
 
-Run `cargo test --locked -p rchain-casper --test reset` with the pinned project toolchain.
-At this checkpoint these full crate tests await CI; the probe receipt is not their result.
+`probe.py` extracts the production function into a std-only Rust binary with
+storage stubs. The original function failed the missing-body assertion (3 passed,
+1 failed); the corrected function passed four cases. Its historical receipt is
+`probe-receipt.json`. This smaller probe is not the full crate verification above.
 
-## Remaining #564 work
+## Upstream CI and remaining #564 work
 
-The three-arm devnet drill, automatic post-catch-up resume, incident-time
-environment evidence, and the exact 274-phlo trigger are not closed by this change.
-The original incident terms and refused block were reported unavailable.
-The reset's successful-store semantics do not establish durability when a record
-write fails; that remains a separate failure-injection question under C365.
+The upstream workflow's protobuf installation failed resolving
+`azure.archive.ubuntu.com`. The successful fork-only lane uses the checksum-pinned
+official compiler release instead; it does not turn the upstream checks green.
+No upstream workflow or live validator was changed.
 
-— Ω-WITNESS
+C366 closes the incomplete-inventory defect at the tested function and LMDB
+store-reopen level. #564 remains open for the three-arm devnet drill, failed
+record-write behavior, automatic post-catch-up resume, and RC-B, the original
+274-phlo discrepancy. The incident inputs were reported unavailable.
 
 ## Current process observation for RC-B
 
-[The operator snapshot](current-environment.json) was collected read-only on 2026-11-11
-at 14:34-14:35 UTC. All four observed processes had the same binary SHA-256, and
-no matching batch/scheduler environment variables or explicit effect-scheduler CLI
-flag were observed. The binary basename was rnode-0a1e0236; a basename is not proof
-of its source revision. A's current process began after the incident, at
-2026-11-10 13:52:18 UTC, so these observations do not establish A's November 8
-settings. No service was restarted or reconfigured.
+[The read-only operator snapshot](current-environment.json) was collected on
+2026-11-11 at 14:34–14:35 UTC. All four observed services had the same binary
+SHA-256 and no matching batch/scheduler environment overrides or explicit
+effect-scheduler CLI flag. The basename rnode-0a1e0236 does not prove a source
+revision. A's current process began after the incident, so the observation does
+not establish its November 8 settings.
 
-The named source revision makes cross-deploy batching opt-in and verification
-default-on. The cost comparison in
-[the incident source](https://github.com/rhovision-org/rholo/blob/0a1e02362a7c34e474e068ffd47469c8d4be707a/casper/src/runtime_replay.rs#L489)
-is per processed deploy; the incident cost pair should not be promoted into a
-block-total measurement. RC-B remains open.
+The [incident source cost comparison](https://github.com/rhovision-org/rholo/blob/0a1e02362a7c34e474e068ffd47469c8d4be707a/casper/src/runtime_replay.rs#L489)
+is per processed deploy; the incident cost pair is not a measured block total.
+No original trigger reproduction is claimed.
 
-## LMDB store-reopen fixture (execution pending)
-
-The integration test
-`a_disk_backed_reset_preserves_the_inventory_across_store_reopen` uses the production
-LMDB manager and codecs. It removes a body, calls the real reset entry point,
-and closes/reopens the disk stores to inspect the unchanged DAG and absent
-marker. After an explicit fixture body repair, it resets and reopens again to
-check the exact pooled deploy, removed index/body, and completion marker.
-The evaluation runtime remains the in-memory test fixture. This is not a full
-node restart, a power-loss test, an authentication test, or the three-arm devnet
-drill. The test has been added and awaits execution on the pinned compiler.
+— Ω-WITNESS

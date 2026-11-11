@@ -248,14 +248,20 @@ async fn return_unfinalised_deploys(
     block_store: &BlockStore,
     anchor_height: BlockHeight,
 ) -> Result<usize, String> {
-    let keys = block_store.keys().await?;
+    // Inventory the DAG that will be rewound, not only the bodies that survived. A body-store scan
+    // cannot discover a missing body and would silently treat an incomplete inventory as complete
+    // (#564, C366). The immutable representation keeps the candidate set fixed during the reads.
+    let representation = dag.get_representation().await;
+    let keys: Vec<_> = representation.dag_set.iter().copied().collect();
     let mut returned = 0usize;
     for hash in keys {
-        let Some(meta) = dag.lookup(&hash).await? else {
-            // A body the DAG does not hold is an orphan the reset purges; its deploys are not in
-            // the chain this node is rewinding, so there is nothing to return.
-            continue;
-        };
+        let meta = dag.lookup(&hash).await?.ok_or_else(|| {
+            format!(
+                "the reset cannot inventory DAG block {} because its metadata is absent — refusing \
+                 the reset before the rewind (#564, C366)",
+                hash.to_hex()
+            )
+        })?;
         if meta.block_num <= anchor_height {
             continue;
         }

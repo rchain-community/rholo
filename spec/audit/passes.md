@@ -12307,3 +12307,16 @@ tests.
 **Owed.** The automatic post-catch-up resume (the reset currently halts and the operator resume is
 explicit), the devnet drill's three arms, and the refused-body surface test. The boot test for the
 `ResetRequested`/`Halted` stage and the `AttestOnly` pace-rule test have landed.
+
+## 156. Reset deploy inventory must include missing bodies (C366)
+
+The reset preflight enumerated body-store keys. A DAG block with no body was absent from that
+inventory, so the function could return success before deleting its metadata. Enumerating the DAG
+snapshot makes the missing body a refusal before the reset marker and rewind. The original
+production function, extracted with storage stubs, failed the missing-body assertion (3 pass, 1 fail);
+the corrected function passed all four probe cases. The real reset-entry tests cover refusal without
+mutation and returning an unfinalised deploy before purging its only block. Their full crate CI is
+pending at this checkpoint. The probe is not a Casper, signature, replay or network-finality run;
+see [the scoped receipt](evidence/n564-reset-inventory/README.md). No new Lean theorem is claimed: laws
+72/73 bound reset effects and request spending, while 94 is the abstract recovery machine. RC-B and
+the three-arm devnet drill remain open.

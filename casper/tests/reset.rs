@@ -37,7 +37,7 @@ use rchain_models::block::state_hash::StateHash;
 use rchain_models::block_hash::BlockHash;
 use rchain_models::block_metadata::{BlockMetadata, SlashSeverity};
 use rchain_models::casper::protocol::casper_message::{
-    BlockMessage, RholangState, SignedDeployData,
+    BlockMessage, DeployData, ProcessedDeploy, RholangState, SignedDeployData,
 };
 use rchain_models::validator::Validator;
 use rchain_shared::log::{LogSource, NopLog};
@@ -361,6 +361,149 @@ async fn a_reset_request_rewinds_the_stores_when_the_switch_is_on_and_does_nothi
         Some(pending),
         "and it is still takeable — the detector's next scan can act on it"
     );
+}
+
+/// A missing body above the anchor is an incomplete deploy inventory, not an empty one (#564,
+/// C366). The body-store enumeration used to skip this block altogether and commit the rewind.
+/// Drive the real reset entry point: it must refuse before the marker or any destructive effect.
+#[tokio::test]
+async fn a_self_replay_reset_refuses_a_dag_block_whose_body_is_missing() {
+    const SHARD: &str = "n564-reset-missing-body";
+    let _ = take_reset_request(SHARD);
+    let dag = build_dag().await;
+    let block_store = build_block_store().await;
+    let manager = Arc::new(common::build_runtime_manager().await);
+    let root = StateHash::new(manager.get_history_repo().root().to_byte_array());
+    let mut parents = Vec::new();
+    for n in 0..=2i64 {
+        let h = hash(n as u8);
+        let body = block(h, root);
+        dag.insert(meta(h, &parents, n, n), body.clone())
+            .await
+            .expect("metadata is stored");
+        if n != 2 {
+            block_store.put(&[(h, body)]).await.expect("body is stored");
+        }
+        parents = vec![h];
+    }
+    let request = ResetRequest {
+        anchor: hash(1),
+        anchor_height: BlockHeight::try_from(1).unwrap(),
+        blocks_above: 1,
+        refused: hash(2),
+        reason: ResetReason::SelfReplayFault,
+    };
+    assert!(rchain_casper::interpreter_util::request_reset(
+        SHARD.to_string(),
+        request.clone(),
+    ));
+    let log: Arc<dyn rchain_shared::log::Log> = Arc::new(NopLog);
+    let result = act_on_reset_request(
+        SHARD,
+        false,
+        true,
+        &(dag.clone() as Arc<dyn BlockDagStorage>),
+        &block_store,
+        &manager,
+        &log,
+        LogSource::new("test"),
+    )
+    .await;
+    assert!(
+        result.is_err(),
+        "the reset cannot recover deploys from a DAG block whose body is missing"
+    );
+    assert!(
+        result.unwrap_err().contains("body is not in the store"),
+        "the error identifies the incomplete inventory"
+    );
+    assert!(dag.get_representation().await.contains(&hash(2)));
+    assert!(dag.read_reset_marker().await.unwrap().is_none());
+    assert!(has(&block_store, hash(1)).await);
+    assert_eq!(reset_request(SHARD), Some(request.clone()));
+    assert_eq!(take_reset_request(SHARD), Some(request));
+}
+
+/// The healthy control for C366: returning an unfinalised deploy still precedes the rewind, and
+/// preserves the exact signed request. This is a storage fixture, not a signature-validation test.
+#[tokio::test]
+async fn a_self_replay_reset_returns_the_deploy_before_purging_its_only_block() {
+    const SHARD: &str = "n564-reset-preserve-deploy";
+    let _ = take_reset_request(SHARD);
+    let dag = build_dag().await;
+    let block_store = build_block_store().await;
+    let manager = Arc::new(common::build_runtime_manager().await);
+    let root = StateHash::new(manager.get_history_repo().root().to_byte_array());
+    let deploy = SignedDeployData {
+        data: DeployData {
+            attachments: Vec::new(),
+            term: "Nil".to_string(),
+            timestamp: 1,
+            phlo_price: 1,
+            phlo_limit: 500_000,
+            valid_after_block_number: 0,
+            shard_id: "root".to_string(),
+        },
+        deployer: vec![0u8; 65],
+        sig: vec![42u8; 65],
+        sig_algorithm: "secp256k1".to_string(),
+    };
+    let mut parents = Vec::new();
+    for n in 0..=1i64 {
+        let h = hash(n as u8);
+        let mut body = block(h, root);
+        if n == 1 {
+            body.state.deploys.push(ProcessedDeploy {
+                deploy: deploy.clone(),
+                cost: Default::default(),
+                deploy_log: Vec::new(),
+                is_failed: false,
+                system_deploy_error: None,
+            });
+        }
+        dag.insert(meta(h, &parents, n, n), body.clone())
+            .await
+            .expect("metadata is stored");
+        block_store.put(&[(h, body)]).await.expect("body is stored");
+        parents = vec![h];
+    }
+    assert!(!dag.contains_deploy_in_pool(&deploy.sig).await.unwrap());
+    let request = ResetRequest {
+        anchor: hash(0),
+        anchor_height: BlockHeight::zero(),
+        blocks_above: 1,
+        refused: hash(1),
+        reason: ResetReason::SelfReplayFault,
+    };
+    assert!(rchain_casper::interpreter_util::request_reset(
+        SHARD.to_string(),
+        request,
+    ));
+    let log: Arc<dyn rchain_shared::log::Log> = Arc::new(NopLog);
+    assert!(act_on_reset_request(
+        SHARD,
+        false,
+        true,
+        &(dag.clone() as Arc<dyn BlockDagStorage>),
+        &block_store,
+        &manager,
+        &log,
+        LogSource::new("test"),
+    )
+    .await
+    .expect("a complete inventory permits the reset")
+    .is_some());
+    let pooled = dag.pooled_deploys().await.unwrap();
+    assert_eq!(pooled.get(&deploy.sig), Some(&deploy));
+    assert!(dag
+        .lookup_by_deploy_id(&deploy.sig)
+        .await
+        .unwrap()
+        .is_none());
+    assert!(!dag.get_representation().await.contains(&hash(1)));
+    assert!(!has(&block_store, hash(1)).await);
+    assert!(has(&block_store, hash(0)).await);
+    assert!(reset_request(SHARD).is_none());
 }
 
 /// **The reset's crash window, and the boot guard that closes it** (F-U5-01's owed marker, register

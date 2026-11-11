@@ -2176,17 +2176,14 @@ where
     // **The recovery transition forces the attestation** (#564). `suppress_attestation` is the
     // empty-block storm's pace rule; an `AttestOnly` build exists precisely because the node must
     // move its latest message after a deploy-bearing refusal, so the pace rule must not withhold it.
-    let suppress_attestation = if mode == ProposalMode::AttestOnly {
-        false
-    } else {
-        attestation_suppressed(
-            nothing_to_finalize,
-            new_state_transition,
-            quorum_reachable,
-            cadence || quiet_retry,
-            paced,
-        )
-    };
+    let suppress_attestation = suppress_attestation_for(
+        mode,
+        nothing_to_finalize,
+        new_state_transition,
+        quorum_reachable,
+        cadence || quiet_retry,
+        paced,
+    );
     // **Why this node did or did not attest, in its own log** (#213's diagnostic). Without it a validator
     // that stays silent looks exactly like one with nothing to do: the R3 arm on #219 showed the genesis
     // signer making no block after genesis, and no run could say which input held it.
@@ -3629,6 +3626,33 @@ mod tests {
         assert!(none.is_none());
     }
 
+    /// **The recovery attestation is licensed even when the pace rule would withhold it** (#564,
+    /// F-U23-07). `nothing_to_finalize` is exactly the state a failed deploy-bearing block leaves:
+    /// the normal rule withholds an empty attestation then, and `AttestOnly` must not — that is the
+    /// transition the incident lacked.
+    #[test]
+    fn an_attestation_only_build_is_not_withheld_by_the_pace_rule() {
+        assert!(
+            super::suppress_attestation_for(ProposalMode::Normal, true, false, true, false, true),
+            "the ordinary pace rule withholds an empty attestation when there is nothing to finalise"
+        );
+        assert!(
+            !super::suppress_attestation_for(
+                ProposalMode::AttestOnly,
+                true,
+                false,
+                true,
+                false,
+                true
+            ),
+            "the recovery build must not be withheld by the rule it exists to bypass"
+        );
+        assert!(
+            !super::suppress_attestation_for(ProposalMode::Normal, false, true, true, true, true),
+            "the ordinary rule is unchanged for a licensed attestation"
+        );
+    }
+
     /// **The node-level fault reaches the reset exactly once and records the halt** (#564). The
     /// refusal is persisted first, the reset names one finalised anchor, and the halted stage is
     /// written after it — the ordering that lets a restart tell "already attempted" from "never
@@ -4171,6 +4195,28 @@ fn line_due(
 /// rate of them. Pinned by
 /// `an_unreachable_supermajority_suppresses_even_with_a_deploy_bearing_parent`, and the cadence half by
 /// `but_a_node_quiet_past_the_window_speaks_again`.
+/// **The pace rule with the recovery mode's override** (#564). `AttestOnly` exists to move this
+/// validator's latest message after a refusal, so the empty-block storm's rule must not withhold it;
+/// every other mode keeps `attestation_suppressed` unchanged. Extracted so the override is a
+/// function a test drives, not an `if` buried in `create_block` (F-U23-07).
+fn suppress_attestation_for(
+    mode: ProposalMode,
+    nothing_to_finalize: bool,
+    new_state_transition: bool,
+    quorum_reachable: bool,
+    cadence_due: bool,
+    paced: bool,
+) -> bool {
+    mode != ProposalMode::AttestOnly
+        && attestation_suppressed(
+            nothing_to_finalize,
+            new_state_transition,
+            quorum_reachable,
+            cadence_due,
+            paced,
+        )
+}
+
 fn attestation_suppressed(
     nothing_to_finalize: bool,
     new_state_transition: bool,

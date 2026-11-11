@@ -18,8 +18,7 @@ jobs:
       - name: Install pinned toolchain and protobuf
         run: |
           rustup toolchain install 1.95.0 --profile minimal --component rustfmt
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends -y protobuf-compiler libprotobuf-dev
+          sudo tools/ci-apt-install.sh protobuf-compiler libprotobuf-dev
       - name: Formatting
         run: cargo +1.95.0 fmt --all -- --check
       - name: Settlement and finality contract regressions

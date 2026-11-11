@@ -90,15 +90,16 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install Coq
-        # **Bounded, because an unbounded apt holds the job.** On 2026-10-09 this step stalled for 21
-        # minutes on a pull request while the identical step of the scheduled run completes in 20
-        # seconds: a runner whose `apt-get` hangs burns the job's whole 60-minute timeout, and the run
-        # then reads as "the Lean build is slow" rather than "a runner is stuck". A timeout turns that
-        # into a named failure in minutes, which is the difference between a diagnosis and a mystery.
-        run: sudo timeout 300 apt-get update && sudo timeout 900 apt-get install --no-install-recommends -y coq
+        # **Bounded and retried, because apt infrastructure is not the PR.** On 2026-10-09 this step
+        # stalled for 21 minutes on a pull request while the identical step of the scheduled run
+        # completes in 20 seconds; on 2026-11-11 it failed three times on a runner's DNS for
+        # `azure.archive.ubuntu.com`, before any Lean step ran. `tools/ci-apt-install.sh` bounds each
+        # attempt and retries the whole install with backoff, so a transient mirror outage is a retry
+        # rather than a false red, and a persistent one names itself in minutes.
+        run: sudo tools/ci-apt-install.sh coq
 
       - name: Install protobuf compiler
-        run: sudo timeout 300 apt-get update && sudo timeout 900 apt-get install --no-install-recommends -y protobuf-compiler libprotobuf-dev
+        run: sudo tools/ci-apt-install.sh protobuf-compiler libprotobuf-dev
 
       - name: Cache Cargo artifacts
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2

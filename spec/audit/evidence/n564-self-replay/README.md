@@ -42,13 +42,15 @@ the captured log, not artifacts re-derived here. The pack labels every claim `me
 
 **Current verdict (updated as the units land).**
 
-- **P0 confirmed by reading both revisions:** the replay decides `ReplayCostMismatch` before it compares
-  the declared post-state hash (`runtime_replay.rs:489-497`), and the trace check runs after that early
-  return. A state-correct block can be refused on cost alone, and the operator is never told which case
-  it was.
-- **P0′ confirmed by reading:** `RelaxedValidated` play accepts a run without comparing per-deploy cost
-  and returns the relaxed results (`runtime_manager.rs:1944-2041`); batched play with `_VERIFY=0` records
-  a cost the sequential replay may refuse. Both are representable today and are R1 targets.
+- **P0 confirmed by reading both revisions and by the cost-only tamper:** the replay decides
+  `ReplayCostMismatch` before it compares the declared post-state hash (`runtime_replay.rs:489-497`),
+  and the trace check runs after that early return. A state-correct block can be refused on cost alone,
+  and the enforcing path never said which case it was. The bounded shadow replay now reports
+  `state_hash_matched`, the replayed hash and the category/trace deltas; Law 93 states the independence;
+  the acceptance rule remains a protocol decision (`cost-criticality.md`).
+- **P0′ closed by R1:** `RelaxedValidated` play now requires per-deploy cost and status equality with
+  the sequential oracle (falling back to the oracle's results), and an enabled cross-deploy batch always
+  verifies. The play mode changes speed, not the recorded accounting.
 - **The stronger trace lead is unresolved:** an unused COMM or a refund-count difference on a
   state-neutral deploy would surface as `ReplayCostMismatch` and never as `UnusedCommEvent`, because of
   the same early return. This is the leading hypothesis for the incident's shape; it is measured in the

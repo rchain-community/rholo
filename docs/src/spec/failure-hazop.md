@@ -674,6 +674,51 @@ This is a desk study of the liveness-enforcement design (RCHIP #55), not a live 
 `tools/check-hazop-worksheet.sh --gate`. No live-net mutation; the partition and staged-withdrawal
 arms remain owed.
 
+### U22 — Self-built block replay and the recorded cost
+
+**Design intent.** A block this node built is replayed by this node before broadcast; a disagreement
+is a local fault, carries both the state verdict and the cost/trace evidence, and cannot retry without
+bound.
+
+**Guide words.** row: NO, MORE, LESS, AS WELL AS, PART OF, OTHER THAN, REVERSE, EARLY, LATE, BEFORE, AFTER
+
+### Table A — deviations
+
+| ID | Guide word | Deviation | RCA → causal chain | Current behaviour | Class | Disposition | Falsifier |
+|---|---|---|---|---|---|---|---|
+| **F-U22-01** | NO | **The replay does not compare the declared post-state hash when the recorded cost differs first** | `replay_deploy_eval` returns `ReplayCostMismatch` before `handle_errors` compares the hash; the trace check runs after the early return | the refusal is decided on cost; the state verdict is not computed | Drift | R2 | casper/tests/determinism.rs::a_cost_only_tamper_is_refused_before_the_state_hash_is_compared |
+| **F-U22-02** | EARLY | **The cost check runs before the trace check and the state check** | the cost comparison is inside `replay_deploy_eval`; `check_replay_data_with_fix` runs only after it returns | a trace difference can surface as a cost difference and never as `UnusedCommEvent` | Drift | R2 | owed: a test that leaves an unused COMM and observes the shadow trace counters |
+| **F-U22-03** | AS WELL AS | **A state hash and a cost pair are both computable, and the early return discards the first** | the shadow replay exists because the enforcing path cannot reach the checkpoint on a cost failure | the operator now gets `state_hash_matched` and the replayed hash when a self-built block is refused | Drift | R2 | casper/tests/determinism.rs::a_cost_only_tamper_is_refused_before_the_state_hash_is_compared |
+| **F-U22-04** | PART OF | **The recorded `PCost` is one block field and is not part of the post-state hash; refusal treats it as a state verdict** | the refund and executor payment use the recorded cost, not the replayed evaluation cost, and the evaluation cost is not an RSpace leaf | a state-correct block can be refused on accounting alone | Structural | R2 | owed: a refund-versus-state test proving the evaluation cost is not a state input |
+| **F-U22-05** | OTHER THAN | **A self-built failure is classified as a peer-view divergence** | `handle_errors` collapsed every non-internal failure to `InvalidStateHash`; fixed by `ValidationOrigin` and Law 92 | a self-replay failure is a local fault, never `Divergence` | Historic | R2 | casper/src/multi_parent_casper.rs::a_self_built_replay_failure_is_classified_as_a_local_fault |
+| **F-U22-06** | MORE | **The proposer retried the identical set more than the bound** | pre-fix there was no tracker; now three identical refusals hold the pooled set out of selection | the loop is bounded by construction, not by the operator noticing | Historic | R2 | casper/src/blocks/proposer/proposer.rs::a_self_replay_failure_is_bounded_and_not_counted_as_divergence |
+| **F-U22-07** | LESS | **Less evidence than the diagnosis needs: no cost breakdown, no state verdict, no trace counters** | the refusal carried only a code and a block; the census, shadow and trace counters are new | the operator record now names the category, the state verdict and the trace shape | Drift | R2 | rholang/src/accounting.rs::the_census_records_each_charge_without_moving_the_total |
+| **F-U22-08** | LATE | **Detection is late: three refusals, and with autopropose off no halt at all** | the counted path bumps only the autopropose counter; the timer is off on the testnet | a local fault halt at a frozen height is owed | Drift | R2 | owed: a self-replay fault halt at a frozen height |
+| **F-U22-09** | BEFORE | **The block is refused before its state is checked, and the refused body is not stored, so the evidence is gone** | `put_block` runs only after validation succeeds | the durable refused-block record is owed | Terminal | R2 | owed: a durable refused-block record across restart |
+| **F-U22-10** | AFTER | **After exclusion there is no durable record, no pool prune and no cap; a restart forgets the set** | the tracker is process-local and `excluded` only extends | prune/cap and the durable record are owed | Drift | R2 | owed: an exclusion pruned against the pool and capped |
+| **F-U22-11** | REVERSE | **A state-correct block is refused while the protocol treats the cost field as a state verdict** | C16; the port follows the Scala oracle, so accepting on a state match is a hard fork | the refusal is kept; the decision is recorded, not encoded | Structural | R2 | casper/tests/determinism.rs::a_cost_only_tamper_is_refused_before_the_state_hash_is_compared |
+| **F-U22-12** | REVERSE | **A peer block carrying an excluded deploy is still refused as `Divergence`; the exclusion is proposer-local** | `refusal_for(Peer, Failed) -> InvalidState`; the peer path is unchanged | the node excludes the deploy from its own proposals; it cannot accept it from a peer while its replay disagrees | Structural | R4 | owed: a peer-block-carrying-an-excluded-deploy test |
+
+### Table C — law coverage
+
+| deviation | law that captures it, or the law owed | why |
+|---|---|---|
+| U22-05 | **Law 92** (`spec/Rchain/Casper/Provenance.lean`) — a self-built replay failure is a local fault, never divergence | provenance decides the cause |
+| U22-01/U22-02/U22-03/U22-04/U22-11 | **Law 93** (`spec/Rchain/Casper/ReplayEvidence.lean`) — a cost verdict is not a state verdict; the state verdict is independent of the recorded cost | the shadow computes the hash the enforcing path skips |
+| U22-06/U22-08/U22-09/U22-10/U22-12 | **Operating policy**, not a consensus law: bounded retry, durable record, prune/cap, runbook | proposer-local state; another validator may include the deploy |
+
+### Provenance
+
+Read: `casper/src/runtime_replay.rs` (`replay_deploy_eval`, `check_replay_data_with_fix`),
+`casper/src/interpreter_util.rs` (`handle_errors`, `validate_block_checkpoint`),
+`casper/src/runtime_manager.rs` (`validate_relaxed_block`, `play_deploys_batched_with`),
+`casper/src/blocks/proposer/proposer.rs` (the self-replay arm, the tracker, `select_deploys`),
+`rholang/src/accounting.rs` (the census), `rspace/src/replay_rspace.rs` (the trace census),
+`models/src/casper/protocol/casper_message.rs` (`refund_amount`/`burned_amount`). Ran:
+`cargo test -p rchain-casper --lib`, `--test determinism`; `tools/check-hazop-worksheet.sh`.
+The incident's own store, terms and refused body are unavailable; the incident binary is
+`0a1e02362`. The 5576/5302 pair is a reported fact, not re-derived here.
+
 ## 4. The fault tree
 
 ```
@@ -839,7 +884,7 @@ not read: the whole of `casper/src/merging.rs` (3,800+ lines), `casper/src/dag.r
 `spec/findings.tsv`'s C248 row in the register's emitted form; the remaining `spec/audit/evidence/`
 runs; and the `rspace` history and store internals beyond the named cache and lock sites.
 
-**Debt.** falsifiers owed: 25 · node-words owed: 44
+**Debt.** falsifiers owed: 31 · node-words owed: 44
 
 *(A `F-` row with an `owed` falsifier is a deviation this pass **dispositioned** but did not **prove**;
 the number above is checked against the page by `tools/check-hazop-worksheet.sh`, so it cannot rot.

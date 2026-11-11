@@ -12220,3 +12220,48 @@ ordering candidates are still unexcluded.
 exclusion and the subsequent proposal without the set; durable persistence of the refusal and the
 exclusion across restart; and the `recover-pool` tool/runbook action. None of them is claimed by this
 pass.
+
+## 154. The self-replay cost refusal: adversarial audit, representability RCA, HAZOP (C357–C359, #564)
+
+The first unit (pass §153) fixed the consequence and added a synthetic test. This pass is the
+adversarial audit and the condition analysis the incident asked for, plus the code that makes two of
+the conditions unrepresentable and the evidence a refusal must carry.
+
+**P0 — cost before state.** `replay_deploy_eval` returns `ReplayCostMismatch` before
+`handle_errors` compares the declared post-state, and the trace check runs after that early return; the
+order is the same in the incident binary `0a1e02362`. The refund and executor payment use the recorded
+cost, not the replayed evaluation cost, and the evaluation cost is not an RSpace leaf, so a cost-only
+difference can coexist with a correct state. The enforcing rule is unchanged (the port follows the
+Scala oracle); the evidence is new: a diagnostic cost census at `CostAccounting::charge`, a
+play-side per-deploy table keyed by block identity, a replay-side delta, a trace census, and a bounded
+shadow replay on a self-built cost refusal that records `state_hash_matched`, the replayed hash and the
+category/trace deltas. Law 93 states the independence; the protocol decision on accepting a
+state-correct/cost-mismatched block is recorded in
+`spec/audit/evidence/n564-self-replay/cost-criticality.md`, not encoded.
+
+**P0′ — play modes could record a non-canonical cost.** `RelaxedValidated` accepted a run without
+comparing per-deploy cost and returned the relaxed results; batching with `_VERIFY=0` skipped the only
+cost comparison. Both are now unrepresentable: the relaxed oracle requires per-deploy cost and status
+equality (falling back to its results), and an enabled batch always verifies. The node warns when an
+operator asks for the unsafe combination.
+
+**The audit's other findings.** The tracker's exclusion was unbounded and never pruned (now capped and
+pruned against the pool); the selection association rested on queue discipline (now keyed by height,
+sender and pre-state); `/health`'s 4-field refusal object could drift from the 10-field DTO (the
+operator detail is the only full shape, and the public projection is now a contract); the proposer
+tests used fake validate closures (the real replay path now has a cost-only tamper and a shadow test);
+the synthetic determinism test is negative evidence for its own shape, not the RCA.
+
+**The HAZOP.** U22 in `docs/src/spec/failure-hazop.md` dispositions all eleven guide words; the
+companion study is `spec/audit/evidence/n564-self-replay/hazop.md`, and the evidence pack is
+`spec/audit/evidence/n564-self-replay/` (`audit.md`, `rca.md`, `condition-inventory.tsv`,
+`cost-criticality.md`, `matrix.tsv`). `tools/check-hazop-worksheet.sh --gate` is green; the debt is 31
+falsifiers and 44 node-words, and U22's owed rows name the fault halt, the durable record, the trace
+mask and the peer residual.
+
+**What this pass does not establish.** The incident's store, terms and refused body are unavailable, so
+#1115 is not reconstructible and the 274's cause is not established. The leading hypothesis is the
+trace/refund mask on a state-neutral deploy; the matrix on `0a1e02362` and `dev` is the measurement.
+The `recover-pool` tool and the signed pool fields (`signature`, `sigAlgorithm`, attachments, shard)
+are the operational fallback; the durable refusal record and the local fault halt remain owed (C359,
+F-U22-08/09/10).

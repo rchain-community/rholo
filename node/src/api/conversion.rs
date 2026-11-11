@@ -279,12 +279,21 @@ pub fn to_node_capabilities(
 pub fn to_pooled_deploy(signed: &SignedDeployData) -> PooledDeploy {
     PooledDeploy {
         deploy_id: base16::encode(&signed.sig),
+        signature: base16::encode(&signed.sig),
+        sig_algorithm: signed.sig_algorithm.clone(),
+        attachments: signed
+            .data
+            .attachments
+            .iter()
+            .map(|a| base16::encode(a))
+            .collect(),
         timestamp: signed.data.timestamp,
         deployer: base16::encode(&signed.deployer),
         term: signed.data.term.clone(),
         phlo_price: signed.data.phlo_price,
         phlo_limit: signed.data.phlo_limit,
         valid_after_block_number: signed.data.valid_after_block_number,
+        shard_id: signed.data.shard_id.clone(),
     }
 }
 
@@ -1169,5 +1178,34 @@ mod to_signed_deploy_tests {
             .err()
             .unwrap();
         assert_eq!(err.to_string(), "Signature algorithm not supported.");
+    }
+
+    /// **The pool DTO must carry everything `recover-pool` needs to reconstruct the signed deploy**
+    /// (#564). The old shape dropped `sigAlgorithm`, the attachments and the shard, so a tool could
+    /// not rebuild the bytes the client signed.
+    #[test]
+    fn a_pooled_deploy_carries_the_signed_fields_a_repost_needs() {
+        let signed = SignedDeployData {
+            data: DeployData {
+                attachments: vec![vec![0xaa, 0xbb]],
+                term: "Nil".to_string(),
+                timestamp: 7,
+                phlo_price: 1,
+                phlo_limit: 100,
+                valid_after_block_number: 3,
+                shard_id: "root".to_string(),
+            },
+            deployer: vec![0x11; 65],
+            sig: vec![0x22; 65],
+            sig_algorithm: "secp256k1".to_string(),
+        };
+        let dto = to_pooled_deploy(&signed);
+        assert_eq!(dto.deploy_id, base16::encode(&signed.sig));
+        assert_eq!(dto.signature, base16::encode(&signed.sig));
+        assert_eq!(dto.sig_algorithm, "secp256k1");
+        assert_eq!(dto.attachments, vec!["aabb".to_string()]);
+        assert_eq!(dto.shard_id, "root");
+        assert_eq!(dto.term, "Nil");
+        assert_eq!(dto.valid_after_block_number, 3);
     }
 }

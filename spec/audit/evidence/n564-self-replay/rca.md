@@ -105,6 +105,13 @@ matrix M04 (failed deploy with an unused COMM), M15 (transient produce/consume),
 
 ## 7. Status
 
-The audit found the ordering (C16) and the two play-mode holes (C10). The trace/refund hypothesis (H2)
-is the leading explanation for the incident's shape and is measured by the matrix. The 274's cause is
-not established; the pack says so.
+The audit found the ordering (C16) and the two play-mode holes (C10). The ordering has a test and a
+shadow; the play-mode holes are closed by construction. Law 93 states that a cost verdict is not a
+state verdict. The trace/refund hypothesis (H2) is the leading explanation for the incident's shape and
+is the next measurement; the matrix has not yet been run on `0a1e02362`, and the `dev` cells that have
+run are reported in `matrix.tsv`. The 274's cause is not established; the pack says so.
+
+The operational fallback is in place: the pool export now carries the signed fields a repost needs
+(`signature`, `sigAlgorithm`, attachments, shard), and `tools/recover-pool.sh` reposts a selected set to
+a healthy validator. The durable refusal record and the local fault halt remain owed (C359,
+F-U22-08/09/10).

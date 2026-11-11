@@ -5202,6 +5202,40 @@ def lawsC : List Law := [
       policy a consensus rule: holding a deploy set out of selection is proposer-local operating \
       policy (C357), another validator may include the same deploy, and the quarantine is invisible \
       to block validity. The Rust witness is the classification test, not the live arm." },
+  { number := 93, layer := "Casper",
+    statement := "**A cost verdict is not a state verdict.** A replay's evidence has two independent \
+      components: what it learned about the declared post-state (`matched`, `mismatched`, or \
+      `notComputed` when the enforcing path stopped at the cost check) and whether the recorded cost \
+      matched. A cost mismatch does not imply a state mismatch; a state-correct block can carry a cost \
+      mismatch. The enforcing path's `ReplayCostMismatch` is an accounting verdict taken before the \
+      checkpoint, so it is not evidence that the state failed. The Rust shadow replay computes the \
+      missing verdict on a bounded second pass and the operator record carries both. The incident \
+      (#564) is the live case: a cost-only refusal was read as a divergence and the state was never \
+      compared.",
+    status := .provedModel,
+    declarations := [`Rchain.StateVerdict, `Rchain.ReplayEvidence, `Rchain.StateCorrect,
+      `Rchain.cost_mismatch_does_not_imply_state_mismatch,
+      `Rchain.every_cost_verdict_admits_a_state_correct_replay,
+      `Rchain.not_computed_is_not_a_mismatch],
+    axioms := [],
+    rust := ["casper/src/runtime_replay.rs", "casper/src/interpreter_util.rs",
+      "casper/src/rholang.rs"],
+    rustWitness := ["casper/tests/determinism.rs:a_cost_only_tamper_is_refused_before_the_state_hash_is_compared"],
+    witness := [`Rchain.cost_mismatch_does_not_imply_state_mismatch,
+      `Rchain.every_cost_verdict_admits_a_state_correct_replay,
+      `Rchain.not_computed_is_not_a_mismatch],
+    falsifiable := "**Make the state verdict a function of the cost verdict** — e.g. return \
+      `StateVerdict.mismatched` whenever the cost mismatches. Then \
+      `cost_mismatch_does_not_imply_state_mismatch` is false by construction (`decide` fails), and the \
+      Rust witness reddens because the shadow can no longer report `state_hash_matched = true` for a \
+      cost-only difference. The incident is the negative case: the enforcing path returned the cost \
+      mismatch and never compared `8ae7d4de…`.",
+    note := "**What this law does not decide.** It does not say whether a state-correct block with a \
+      cost mismatch should be accepted; that is a protocol decision (the Scala oracle refuses it), \
+      recorded in `spec/audit/evidence/n564-self-replay/cost-criticality.md`. It also does not say the \
+      incident's block was state-correct: the refused body, the terms and A's store are unavailable, so \
+      the shadow's verdict is a future-occurrence instrument, not a retroactive one. The Rust witness \
+      is the cost-only tamper plus the shadow, which proves the mechanism, not the incident's state." },
 ]
 
 def laws : List Law := lawsA ++ lawsB ++ lawsC

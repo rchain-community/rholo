@@ -530,12 +530,21 @@ pub struct PooledDeploy {
     /// The deploy id (base16 signature) — identical to what `POST /api/v1/deploy` returns and
     /// `deploy-status` accepts.
     pub deploy_id: String,
+    /// The same bytes as `deployId`, under the name a recovery tool reconstructs a signed deploy
+    /// from (#564). It is stated rather than implied because `deployId`'s doc calls it an id, not a
+    /// signature, and a tool that guessed would be one signature spelling away from a wrong deploy.
+    pub signature: String,
+    pub sig_algorithm: String,
+    /// Hex-encoded attachments. The deploy pool stores them; the old DTO dropped them, so a
+    /// reconstructed deploy was not the one that was signed.
+    pub attachments: Vec<String>,
     pub timestamp: i64,
     pub deployer: String,
     pub term: String,
     pub phlo_price: i64,
     pub phlo_limit: i64,
     pub valid_after_block_number: i64,
+    pub shard_id: String,
 }
 
 /// The `/api/v1/deploys` response: the currently-pooled deploys, most-recent-first.

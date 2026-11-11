@@ -1895,12 +1895,16 @@ pub const OPENAPI_JSON: &str = r##"{
         "type": "object",
         "properties": {
           "deployId": { "type": "string" },
+          "signature": { "type": "string", "description": "The same bytes as deployId, named as the signature a recovery tool reconstructs the signed deploy from" },
+          "sigAlgorithm": { "type": "string" },
+          "attachments": { "type": "array", "items": { "type": "string" }, "description": "Hex-encoded attachments, as the pool stores them" },
           "timestamp": { "type": "integer", "format": "int64" },
           "deployer": { "type": "string" },
           "term": { "type": "string" },
           "phloPrice": { "type": "integer", "format": "int64" },
           "phloLimit": { "type": "integer", "format": "int64" },
-          "validAfterBlockNumber": { "type": "integer", "format": "int64" }
+          "validAfterBlockNumber": { "type": "integer", "format": "int64" },
+          "shardId": { "type": "string" }
         }
       },
       "PooledDeploys": {
@@ -4364,12 +4368,16 @@ mod tests {
             pooled_deploys: PooledDeploys {
                 deploys: vec![PooledDeploy {
                     deploy_id: "deadbeef".to_string(),
+                    signature: "deadbeef".to_string(),
+                    sig_algorithm: "secp256k1".to_string(),
+                    attachments: Vec::new(),
                     timestamp: 1724500000000,
                     deployer: "00".to_string(),
                     term: "Nil".to_string(),
                     phlo_price: 1,
                     phlo_limit: 100,
                     valid_after_block_number: -1,
+                    shard_id: "root".to_string(),
                 }],
             },
             deploy_result: None,

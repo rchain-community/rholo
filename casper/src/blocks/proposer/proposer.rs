@@ -185,6 +185,8 @@ struct SelfReplayTracker {
     /// that creates a block between this one's creation and its refusal cannot misattribute the set.
     /// Bounded; the key exists only until the block is accepted or refused.
     selected: BTreeMap<SelfReplayBlockKey, BTreeSet<DeployId>>,
+    /// The pool this proposer last read, so exclusions can be pruned when a deploy leaves it.
+    pooled: BTreeSet<DeployId>,
 }
 
 /// The identity of a created block that carries a selection: height, sender and pre-state. One block
@@ -193,6 +195,10 @@ struct SelfReplayTracker {
 type SelfReplayBlockKey = (i64, Vec<u8>, Vec<u8>);
 
 const MAX_SELECTED_BLOCKS: usize = 8;
+
+/// The cap on held-out deploy ids. A whole pool can be at most `MAX_POOLED_DEPLOYS`; the cap is a
+/// process-memory bound, and reaching it is a fault condition, not a reason to grow for ever.
+const MAX_SELF_REPLAY_EXCLUSIONS: usize = 256;
 
 /// The identity of a created block, as the selection is keyed.
 fn self_replay_block_key(block: &BlockMessage) -> SelfReplayBlockKey {
@@ -219,9 +225,28 @@ impl SelfReplayTracker {
         self.attempts
     }
 
-    /// Hold the union of these ids out of selection, returning the number of excluded ids.
-    fn exclude(&mut self, ids: &BTreeSet<DeployId>) -> u64 {
-        self.excluded.extend(ids.iter().cloned());
+    /// Hold the union of these ids out of selection. Returns the number held and whether the cap was
+    /// reached; a caller that sees `true` treats the fault as node-level rather than growing for ever.
+    fn exclude(&mut self, ids: &BTreeSet<DeployId>) -> (u64, bool) {
+        for id in ids {
+            if self.excluded.len() >= MAX_SELF_REPLAY_EXCLUSIONS {
+                return (self.excluded.len() as u64, true);
+            }
+            self.excluded.insert(id.clone());
+        }
+        (self.excluded.len() as u64, false)
+    }
+
+    /// Record the pool the last selection read.
+    fn set_pooled(&mut self, ids: BTreeSet<DeployId>) {
+        self.pooled = ids;
+    }
+
+    /// Drop exclusions for ids that have left the pool (included, expired or otherwise gone). Returns
+    /// the number still held. The deploy logs and the operator surface then agree that the exclusion
+    /// is not permanent.
+    fn prune(&mut self) -> u64 {
+        self.excluded.retain(|id| self.pooled.contains(id));
         self.excluded.len() as u64
     }
 
@@ -556,8 +581,30 @@ impl Proposer {
                     }
 
                     if attempts >= SELF_REPLAY_EXCLUSION_AFTER {
-                        let total = self.self_replay.lock().unpoison().exclude(&pool_ids);
+                        let (total, overflowed) = {
+                            let mut tracker = self.self_replay.lock().unpoison();
+                            let (_, overflowed) = tracker.exclude(&pool_ids);
+                            (tracker.prune(), overflowed)
+                        };
                         self.self_validation_refusal.set_quarantined(total);
+                        if overflowed {
+                            self.consecutive_failures.fetch_add(1, Ordering::Relaxed);
+                            self.log.error(
+                                LogSource::new("casper.blocks.Proposer"),
+                                &format!(
+                                    "Self-created block #{} (seq {}) reached the self-replay \
+                                     exclusion cap ({MAX_SELF_REPLAY_EXCLUSIONS}); this is a \
+                                     node-level fault, not a deploy-scoped one, and is counted \
+                                     toward the autopropose halt.",
+                                    block.block_number, block.seq_num
+                                ),
+                            );
+                            return Err(format!(
+                                "the node rejected its own block #{} (seq {}): the self-replay \
+                                 exclusion cap was reached. This is a node-side bug.",
+                                block.block_number, block.seq_num
+                            ));
+                        }
                         self.self_validation_refusal.note_self_replay(
                             failure.code(),
                             i64::from(block.block_number),
@@ -1058,13 +1105,16 @@ fn per_block_deploy_budget(slashes: usize) -> usize {
 /// `excluded` is the proposer-local set held out after repeated self-replay refusals (#564). It is not a
 /// validity rule: the deploy stays in the pool and another validator may include it. It is the bound
 /// that stops this node rebuilding the one block its own replay refuses.
+/// Returns the selected ids and the pool ids it read, so the caller can prune exclusions against the
+/// pool without a second DAG read.
 async fn select_deploys(
     dag: &dyn BlockDagStorage,
     next_block_num: BlockHeight,
     budget: usize,
     excluded: &BTreeSet<DeployId>,
-) -> Result<Vec<DeployId>, String> {
+) -> Result<(Vec<DeployId>, BTreeSet<DeployId>), String> {
     let pooled = dag.pooled_deploys().await?;
+    let pooled_ids: BTreeSet<DeployId> = pooled.keys().cloned().collect();
     let mut deploys: Vec<DeployId> = Vec::new();
     for (id, d) in pooled {
         if excluded.contains(&id) {
@@ -1084,7 +1134,7 @@ async fn select_deploys(
             }
         }
     }
-    Ok(deploys)
+    Ok((deploys, pooled_ids))
 }
 
 /// **Why a pooled deploy cannot go into a block at `next_block_num`** — the Scala proposer's filter
@@ -1776,7 +1826,7 @@ where
     // **And skip the set this node's own replay refused three times** (#564): the exclusion is
     // proposer-local, so the deploy stays valid for every other node.
     let excluded = self_replay.lock().unpoison().excluded();
-    let mut deploys = select_deploys(
+    let (mut deploys, pooled_ids) = select_deploys(
         dag,
         next_block_num,
         per_block_deploy_budget(to_slash.len()),
@@ -1791,10 +1841,11 @@ where
         creators_validator.as_bytes().to_vec(),
         pre_state_hash.as_bytes().to_vec(),
     );
-    self_replay
-        .lock()
-        .unpoison()
-        .set_selected(selection_key, deploys.iter().cloned().collect());
+    {
+        let mut tracker = self_replay.lock().unpoison();
+        tracker.set_pooled(pooled_ids);
+        tracker.set_selected(selection_key, deploys.iter().cloned().collect());
+    }
     // **A block with nothing to include says why** (issue #356). Reported here rather than at the
     // callers because this is where the reasons are known, and only on this path.
     if deploys.is_empty() {
@@ -2420,7 +2471,8 @@ mod tests {
 
         let selected = select_deploys(&dag, next, per_block_deploy_budget(0), &BTreeSet::new())
             .await
-            .unwrap();
+            .unwrap()
+            .0;
         assert_eq!(
             selected.len(),
             MAX_BLOCK_DEPLOYS,
@@ -2441,7 +2493,8 @@ mod tests {
         let excluded = BTreeSet::from([key(0)]);
         let without = select_deploys(&dag, next, per_block_deploy_budget(0), &excluded)
             .await
-            .unwrap();
+            .unwrap()
+            .0;
         assert!(
             !without.contains(&key(0)),
             "an excluded deploy must not be selected"
@@ -2461,7 +2514,8 @@ mod tests {
         let with_one_slash =
             select_deploys(&dag, next, per_block_deploy_budget(1), &BTreeSet::new())
                 .await
-                .unwrap();
+                .unwrap()
+                .0;
         assert_eq!(with_one_slash.len(), MAX_BLOCK_DEPLOYS - 1);
 
         // And the pool's own filter still runs at the exact validation boundary. At candidate
@@ -2479,7 +2533,8 @@ mod tests {
         assert_eq!(
             select_deploys(&dag, expiry_edge, per_block_deploy_budget(0), &BTreeSet::new())
                 .await
-                .unwrap(),
+                .unwrap()
+                .0,
             vec![vec![0u8, 8u8]],
             "the proposer must exclude both an old deploy and the exact first-height expiry boundary"
         );
@@ -2561,7 +2616,8 @@ mod tests {
             &BTreeSet::new(),
         )
         .await
-        .unwrap();
+        .unwrap()
+        .0;
         assert_eq!(selected_51, vec![vec![0u8, 2u8]]);
 
         let mut candidate_51 = block();
@@ -2598,7 +2654,8 @@ mod tests {
             &BTreeSet::new(),
         )
         .await
-        .unwrap();
+        .unwrap()
+        .0;
         assert_eq!(selected_52, vec![vec![0u8, 3u8]]);
 
         let mut candidate_52 = block();
@@ -2956,10 +3013,14 @@ mod tests {
     async fn a_self_replay_failure_is_bounded_and_not_counted_as_divergence() {
         let tracker = Arc::new(Mutex::new(SelfReplayTracker::default()));
         let id = vec![7u8; 65];
-        tracker.lock().unpoison().set_selected(
-            (0, vec![0u8; 65], vec![0u8; 32]),
-            BTreeSet::from([id.clone()]),
-        );
+        {
+            let mut guard = tracker.lock().unpoison();
+            guard.set_pooled(BTreeSet::from([id.clone()]));
+            guard.set_selected(
+                (0, vec![0u8; 65], vec![0u8; 32]),
+                BTreeSet::from([id.clone()]),
+            );
+        }
         let p = proposer_failing_self_replay(
             crate::rholang::ReplayFailure::replay_cost_mismatch(5576, 5302),
             block_with_deploy_sig(7),
@@ -3058,7 +3119,16 @@ mod tests {
             "a different failure kind is a different attempt"
         );
 
-        assert_eq!(tracker.exclude(&a), 1);
+        assert_eq!(tracker.exclude(&a).0, 1);
+        tracker.set_pooled(BTreeSet::from([vec![1u8]]));
+        assert_eq!(tracker.prune(), 1, "an id still in the pool stays excluded");
+        tracker.set_pooled(BTreeSet::new());
+        assert_eq!(
+            tracker.prune(),
+            0,
+            "an id that left the pool is no longer held"
+        );
+        tracker.exclude(&a);
         tracker.clear_attempts();
         assert_eq!(tracker.record(&a, "replay-cost-mismatch"), 1);
         assert!(

@@ -54,6 +54,7 @@ import Rchain.Casper.RecordJoin
 import Rchain.Casper.Liveness
 import Rchain.Casper.Stranding
 import Rchain.Casper.Provenance
+import Rchain.Casper.ReplayEvidence
 import Rchain.Durability
 import Rchain.Requests
 import Rchain.Checkpoint

@@ -1,0 +1,13 @@
+# The incident binary
+
+source_commit = 0a1e02362a7c34e474e068ffd47469c8d4be707a
+source_subject = Merge pull request #491 from rhovision-org/docs/current-testnet-epoch-20261029
+worktree = /home/patrick/rnode-incident-0a1e0236 (detached; disposable)
+rust_toolchain = 1.95.0 (from rust-toolchain.toml at the revision)
+build = cargo build --release --locked -p rchain-node --bin rnode
+protoc = required; models/build.rs runs tonic_prost_build::compile_protos
+binary = target/release/rnode
+binary_sha256 = (fill after the build; the deployed artifact's digest is unavailable, so this is a
+                 local build of the source revision, not a claim that it is byte-identical to A's)
+deployed_artifact_sha256 = unavailable (see ../incident/unavailable.tsv)
+run = the matrix runner records the command, environment and logs under ./logs/

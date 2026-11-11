@@ -1,0 +1,10 @@
+artifact	needed_for	status	evidence
+A deploypoolstorage (deploy-pool LMDB)	the six client terms, the Nil probe, deployer keys, phlo fields	unavailable	not snapshotted before the pool expired at height 1170; issue #564 says the terms were not captured
+A dagstorage / blockstorage / rspace/history / rspace/cold	the pre-state, fringe, native-changes sidecar and participation the replay used	unavailable	preserved on the testnet host; not exported to this worktree
+A genesis/ (bonds.txt, wallets.txt, validator key)	the disposable replay of the preserved store	unavailable	same host; identity must not leave the operator
+Block #1115 body	the exact 2-deploy block, its deploy log and recorded costs	unavailable	never broadcast and never stored: put_block runs only after validation succeeds
+A unit environment	systemctl show -p Environment,ExecStart rnode: RNODE_CROSS_DEPLOY_BATCHING, _VERIFY, --effect-scheduler	unavailable	not captured; the issue names it as the missing measurement
+Deployed binary digest	whether the running artifact was byte-identical to a local 0a1e02362 build	unavailable	the issue names the source revision, not the artifact sha256
+Peer copies of #1115	an independent view of the refused block	unavailable	the block was never broadcast
+Nginx / deploy-ingress request bodies	an independent copy of the client terms	unknown	no evidence one was retained; the public endpoint routes to A
+Client-held signed deploys	the exact terms	unavailable	the owners were told to resubmit; none is in this tree

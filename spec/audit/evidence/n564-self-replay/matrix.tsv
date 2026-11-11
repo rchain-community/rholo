@@ -1,0 +1,25 @@
+cell	condition	fixture / mode	dev result	incident-binary result	evidence
+M01	C01/C02/C04-C07	sequential, 2 same-key transfers + Nil probe, fresh vault	not run	not run
+M02	C07/C09	sequential, 6 same-key deploys	not run	not run
+M03	C11	failed deploy with a COMM (RCHAIN-3505)	not run	not run
+M04	C11/H2	failed deploy with an unused COMM	not run	not run
+M05	C16	cost-only record tamper +274	not run	not run
+M06	C16	state-hash-first shadow replay	not run	not run
+M07	C10	batch on + verify	not run	not run
+M08	C10	batch on + verify off	not run	not run
+M09	C10	effect scheduler gate	not run	not run
+M10	C10	effect scheduler relaxed-validated	not run	not run
+M11	C10	effect scheduler relaxed (block path)	not run	not run
+M12	C12/C13	fresh vault vs existing vault	not run	not run
+M13	C13	result channel matched vs unmatched	not run	not run
+M14	C11 persistent escrow continuation	not run	not run
+M15	C11 transient produce/consume	not run	not run
+M16	C14 slash+close system deploy tail	not run	not run
+M17	C15 dummy/probe only	not run	not run
+M18	C05/C11 second transfer reads the first's output	not run	not run
+M19	C08 census off vs on	not run	not run
+M20	C11 trace census on a failed deploy	not run	not run
+M21	C02/C18 pre-state/fringe tamper	not run	not run
+M22	A-05 peer block carrying an excluded deploy	not run	not run
+M23	A-08 durable record across restart	not run	not run
+M24	A-06 fault halt and resume	not run	not run

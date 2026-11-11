@@ -214,6 +214,84 @@ pub struct CasperConf {
     /// sequential-reference validation (Laws 23–25,
     /// `docs/src/formal/scheduling.md`).
     pub effect_mode: String,
+    /// **A deterministic self-replay refusal, injected into this node's own blocks** (#564). Devnet
+    /// only: it makes a node reject its own valid blocks with the incident's own
+    /// `ReplayCostMismatch`, so the three recovery arms can be driven on a live net. Off by default;
+    /// refused without `--dev-mode`.
+    pub self_replay_injection: SelfReplayInjection,
+}
+
+/// **The devnet-only self-replay injection** (#564).
+///
+/// It is a measurement instrument, not an operating mode: the refusals it produces are
+/// indistinguishable from a node-side fault, which is the point — the recovery state machine is
+/// exercised through the ordinary refusal path. `:N` spends the injection after N refusals in this
+/// process, which is what makes arm 2 (reset + automatic resume) and arm 3 (halt + operator resume)
+/// deterministic: the build after the recovery is clean.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum SelfReplayInjection {
+    #[default]
+    Off,
+    /// Refuse every self-built block that carries a user deploy. The attestation-only fallback has
+    /// none, so this arm recovers by attestation.
+    Deploy { limit: Option<usize> },
+    /// Refuse every self-built block, including the attestation-only fallback.
+    All { limit: Option<usize> },
+}
+
+impl SelfReplayInjection {
+    /// Parse `off`, `deploy`, `deploy:N`, `all`, or `all:N` (N >= 1).
+    pub fn parse(value: &str) -> Result<Self, String> {
+        let value = value.trim();
+        if value.eq_ignore_ascii_case("off") {
+            return Ok(Self::Off);
+        }
+        let (mode, limit) = match value.split_once(':') {
+            Some((mode, limit)) => {
+                let limit: usize = limit.parse().map_err(|_| {
+                    format!("self-replay-injection limit `{limit}` is not a number")
+                })?;
+                if limit == 0 {
+                    return Err(
+                        "self-replay-injection limit must be at least 1 (use `off` to disable)"
+                            .to_string(),
+                    );
+                }
+                (mode, Some(limit))
+            }
+            None => (value, None),
+        };
+        match mode.to_ascii_lowercase().as_str() {
+            "deploy" => Ok(Self::Deploy { limit }),
+            "all" => Ok(Self::All { limit }),
+            other => Err(format!(
+                "unknown self-replay-injection mode `{other}`; accepted: off, deploy, deploy:N, \
+                 all, all:N (N >= 1)"
+            )),
+        }
+    }
+
+    /// The refusal budget for this process, or `None` for unbounded.
+    pub fn limit(&self) -> Option<usize> {
+        match self {
+            Self::Off => None,
+            Self::Deploy { limit } | Self::All { limit } => *limit,
+        }
+    }
+
+    /// Whether any injection is armed.
+    pub fn is_on(&self) -> bool {
+        !matches!(self, Self::Off)
+    }
+
+    /// Whether this mode refuses a self-built block with the given deploy-ness.
+    pub fn refuses(&self, has_user_deploys: bool) -> bool {
+        match self {
+            Self::Off => false,
+            Self::Deploy { .. } => has_user_deploys,
+            Self::All { .. } => true,
+        }
+    }
 }
 
 /// Genesis-block data configuration (port of the Scala `GenesisBlockData` case class).
@@ -421,5 +499,39 @@ mod tests {
             memberships.primary().genesis_block_data.bonds_file,
             "/tmp/bonds"
         );
+    }
+
+    /// The injector's modes parse as the drill spells them, and a zero budget is refused rather
+    /// than armed-and-inert (#564).
+    #[test]
+    fn the_self_replay_injection_parses_its_modes_and_refuses_a_zero_limit() {
+        assert_eq!(
+            SelfReplayInjection::parse("off"),
+            Ok(SelfReplayInjection::Off)
+        );
+        assert_eq!(
+            SelfReplayInjection::parse("deploy"),
+            Ok(SelfReplayInjection::Deploy { limit: None })
+        );
+        assert_eq!(
+            SelfReplayInjection::parse("all:2"),
+            Ok(SelfReplayInjection::All { limit: Some(2) })
+        );
+        assert_eq!(
+            SelfReplayInjection::parse("deploy:1"),
+            Ok(SelfReplayInjection::Deploy { limit: Some(1) })
+        );
+        let zero = SelfReplayInjection::parse("all:0").expect_err("a zero budget is refused");
+        assert!(zero.contains("at least 1"), "{zero}");
+        let unknown = SelfReplayInjection::parse("sometimes").expect_err("an unknown mode");
+        assert!(unknown.contains("accepted"), "{unknown}");
+        let not_a_number = SelfReplayInjection::parse("all:many").expect_err("a non-numeric limit");
+        assert!(not_a_number.contains("not a number"), "{not_a_number}");
+
+        // The mode's refusal predicate: `deploy` spares the attestation-only fallback; `all` does not.
+        assert!(!SelfReplayInjection::Off.refuses(true));
+        assert!(SelfReplayInjection::Deploy { limit: None }.refuses(true));
+        assert!(!SelfReplayInjection::Deploy { limit: None }.refuses(false));
+        assert!(SelfReplayInjection::All { limit: None }.refuses(false));
     }
 }

@@ -150,6 +150,8 @@ pub async fn run_catchup(
     dag: Arc<dyn BlockDagStorage>,
     log: Arc<dyn Log>,
     window: Arc<CatchupWindow>,
+    // The one wake a completed self-replay reset needs (#564, F-U23-11).
+    resume: Arc<dyn crate::engine::reset::SelfReplayResume>,
     peer: PeerNode,
     mut answers: tokio::sync::mpsc::Receiver<BlockRange>,
 ) -> i64 {
@@ -275,6 +277,18 @@ pub async fn run_catchup(
     // walk's mere completion would re-open exactly the window the marker exists to close.
     match dag.read_reset_marker().await {
         Ok(Some(marker)) if frontier > i64::from(marker.height) => {
+            // **A completed self-replay reset is resumed here** (#564, F-U23-11): the walk's own
+            // result is the only evidence that this node is past the anchor it rewound to, and the
+            // record names whether the reset was this fault's. The helper is store-first and fails
+            // closed; a marker from any other reset leaves the predicate false and the latch alone.
+            crate::engine::reset::resume_self_replay_after_catchup(
+                dag.as_ref(),
+                &marker,
+                frontier,
+                resume.as_ref(),
+                &log,
+            )
+            .await;
             match dag.clear_reset_marker().await {
                 Ok(()) => log.info(
                     source,

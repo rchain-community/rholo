@@ -2231,6 +2231,8 @@ async fn setup_shard_runtime(
         conf.casper.self_reset,
         // #564: the self-replay fault's reset is safe by construction and on by default.
         conf.casper.self_replay_reset,
+        // #564, F-U23-11: the walk wakes this shard's self-replay latch once it passes the anchor.
+        Arc::new(propose_health.clone()),
         conf.protocol_server.disable_state_exporter,
         parts.validator_identity_opt.clone(),
         conf.standalone,
@@ -2341,6 +2343,7 @@ async fn setup_shard_runtime(
             self_validation_refusal,
             stale_snapshot_equivocations.clone(),
             conf.casper.equivocation_injection,
+            conf.casper.self_replay_injection,
             shard_health.clone(),
         );
         let proposer_stream = proposer_instance::create(

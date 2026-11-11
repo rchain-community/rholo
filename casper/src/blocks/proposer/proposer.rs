@@ -8,7 +8,7 @@ use rchain_shared::lock::Unpoison;
 use std::collections::{BTreeMap, BTreeSet};
 use std::future::Future;
 use std::pin::Pin;
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
@@ -34,6 +34,7 @@ use rchain_shared::refined::{BlockHeight, NonNegI64};
 use super::block_creator::BlockCreator;
 use super::propose_result::{BlockCreatorResult, ProposalMode, ProposeResult, ProposeStatus};
 use crate::api::block_api::SelfValidationRefusalSink;
+use crate::conf::SelfReplayInjection;
 use crate::interpreter_util::{ShardHealth, ValidationOrigin};
 use crate::merging::BlockIndex;
 use crate::multi_parent_casper::{
@@ -196,6 +197,73 @@ struct SelfReplayTracker {
 /// per validator per round is the protocol rule, and the pre-state distinguishes a re-derivation from
 /// the block it replaces; the sequence is derived from the parent set and is not needed in the key.
 type SelfReplayBlockKey = (i64, Vec<u8>, Vec<u8>);
+
+/// **What the reset closure decided** (#564). The distinction that matters is `Raised` versus
+/// `AlreadyAttempted`: a self-replay fault gets **one** reset per finalised anchor, so a recurrence
+/// at the same anchor halts instead of rewinding again. Without the distinction a deterministic
+/// fault would be a reset loop once the post-catch-up resume is automatic.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SelfReplayResetOutcome {
+    /// The request was raised (or found already pending) at this finalised anchor.
+    Raised([u8; 32]),
+    /// This anchor has already had its one reset; the caller halts without raising another.
+    AlreadyAttempted([u8; 32]),
+    /// No finalised anchor exists, so no reset can be named; the caller halts.
+    NoAnchor,
+}
+
+impl SelfReplayResetOutcome {
+    /// The anchor this outcome names, if it names one.
+    pub fn anchor(&self) -> Option<[u8; 32]> {
+        match self {
+            Self::Raised(anchor) | Self::AlreadyAttempted(anchor) => Some(*anchor),
+            Self::NoAnchor => None,
+        }
+    }
+
+    /// Whether this is the recurrence arm — the halt reason says so.
+    pub fn is_recurrence(&self) -> bool {
+        matches!(self, Self::AlreadyAttempted(_))
+    }
+}
+
+/// **Has this finalised anchor already had its one reset?** (#564, law 94). The pure decision the
+/// reset closure applies; the anchor equality is what makes it about *this* anchor rather than the
+/// fault in general.
+fn reset_is_recurrence(record: &SelfReplayRecord, anchor: &BlockHash) -> bool {
+    record.reset_attempted && record.reset_anchor == Some(*anchor.as_bytes())
+}
+
+/// **Should the devnet injector refuse this block?** (#564). Pure except for the one-shot budget:
+/// `Peer` is always false (defensive — the proposer's closure is never the inbound path), `Off` is
+/// false, `Deploy` spares the attestation-only fallback, and `:N` spends itself so the build after
+/// the recovery is clean.
+fn injection_refuses(
+    mode: SelfReplayInjection,
+    origin: ValidationOrigin,
+    has_user_deploys: bool,
+    anchored: bool,
+    injected: &AtomicUsize,
+) -> bool {
+    if !matches!(origin, ValidationOrigin::SelfBuilt)
+        || !mode.refuses(has_user_deploys)
+        // **The drill's fault lands on a node with a finalised anchor.** That is the incident's
+        // precondition: the node-level rung's whole safety argument is the reset to a finalised
+        // block, and a fault on a fresh chain has no anchor to name. Gating the instrument there
+        // keeps each arm deterministic without changing the recovery path itself.
+        || !anchored
+    {
+        return false;
+    }
+    match mode.limit() {
+        None => true,
+        Some(limit) => injected
+            .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |n| {
+                (n < limit).then_some(n + 1)
+            })
+            .is_ok(),
+    }
+}
 
 const MAX_SELECTED_BLOCKS: usize = 8;
 
@@ -409,13 +477,20 @@ pub struct Proposer {
     /// **The reset request a self-replay fault raises** after the attestation fallback also fails
     /// (#564). `apply` wires it to the DAG's finalised anchor and the reset-request cell; `new`
     /// gets a no-op so the proposer unit tests need no DAG. It takes the record so the request and
-    /// the `ResetRequested` stage are written together, and returns the anchor it named.
-    self_replay_reset: Arc<dyn Fn(SelfReplayRecord) -> BoxFuture<Option<[u8; 32]>> + Send + Sync>,
+    /// the `ResetRequested` stage are written together, and says whether this anchor has already
+    /// had its one reset.
+    self_replay_reset:
+        Arc<dyn Fn(SelfReplayRecord) -> BoxFuture<SelfReplayResetOutcome> + Send + Sync>,
     /// **Persist the self-replay fault and its stage** (#564). `apply` wires it to the DAG's
     /// durable record; `new` gets a no-op. A failed write is reported as `durable: false`; the
     /// fault is real whether or not its evidence reached the store.
     self_replay_persist:
         Arc<dyn Fn(SelfReplayRecord) -> BoxFuture<Result<(), String>> + Send + Sync>,
+    /// **Read the durable record before a refusal overwrites it** (#564). The refusal arm writes a
+    /// fresh `Refused` record, but "this finalised anchor has already had its one reset" lives on
+    /// the prior record, so the attempt history must be carried across. `new` reads nothing;
+    /// `apply` wires the DAG.
+    self_replay_load: Arc<dyn Fn() -> BoxFuture<Option<SelfReplayRecord>> + Send + Sync>,
 }
 
 impl Proposer {
@@ -461,8 +536,9 @@ impl Proposer {
             block_store,
             batch_cap: 1,
             self_replay: Arc::new(Mutex::new(SelfReplayTracker::default())),
-            self_replay_reset: Arc::new(|_| Box::pin(async { None })),
+            self_replay_reset: Arc::new(|_| Box::pin(async { SelfReplayResetOutcome::NoAnchor })),
             self_replay_persist: Arc::new(|_| Box::pin(async { Ok(()) })),
+            self_replay_load: Arc::new(|| Box::pin(async { None })),
         }
     }
 
@@ -488,10 +564,50 @@ impl Proposer {
     /// Wire the finalised-anchor reset the self-replay fault raises (#564).
     pub fn with_self_replay_reset(
         mut self,
-        effect: Arc<dyn Fn(SelfReplayRecord) -> BoxFuture<Option<[u8; 32]>> + Send + Sync>,
+        effect: Arc<dyn Fn(SelfReplayRecord) -> BoxFuture<SelfReplayResetOutcome> + Send + Sync>,
     ) -> Self {
         self.self_replay_reset = effect;
         self
+    }
+
+    /// Wire the durable-record read that carries a reset attempt across a refusal (#564).
+    pub fn with_self_replay_load(
+        mut self,
+        load: Arc<dyn Fn() -> BoxFuture<Option<SelfReplayRecord>> + Send + Sync>,
+    ) -> Self {
+        self.self_replay_load = load;
+        self
+    }
+
+    /// **Write the durable halt after the reset decision** (#564). `reset_attempted` is true when
+    /// this fault named a finalised anchor — whether the reset was raised now or already attempted
+    /// there. With no anchor the carried history is preserved, never zeroed.
+    async fn record_self_replay_halt(
+        &self,
+        record: &SelfReplayRecord,
+        outcome: SelfReplayResetOutcome,
+    ) {
+        let mut halted = record.clone();
+        halted.stage = SelfReplayStage::Halted;
+        if let Some(anchor) = outcome.anchor() {
+            halted.reset_anchor = Some(anchor);
+            halted.reset_attempted = true;
+        }
+        self.self_validation_refusal.note_self_replay_reset(
+            halted.reset_attempted,
+            halted
+                .reset_anchor
+                .map(|anchor| rchain_shared::base16::encode(&anchor)),
+        );
+        if let Err(e) = (self.self_replay_persist)(halted).await {
+            self.log.error(
+                LogSource::new("casper.blocks.Proposer"),
+                &format!(
+                    "the self-replay halt could not be recorded durably: {e} — a restart cannot \
+                     tell that the reset was already attempted (#564)"
+                ),
+            );
+        }
     }
 
     /// Wire the durable record the self-replay fault writes (#564).
@@ -703,6 +819,15 @@ impl Proposer {
                         }
                         (attempts, pool_ids, quarantined)
                     };
+                    // **Carry the reset attempt across the overwrite** (#564). The fresh `Refused`
+                    // record written below would otherwise erase "this anchor has had its one
+                    // reset", and the reset closure would raise a second one at the same anchor.
+                    let prior = (self.self_replay_load)().await;
+                    let (carried_attempted, carried_anchor) = prior
+                        .as_ref()
+                        .filter(|r| r.reset_attempted)
+                        .map(|r| (true, r.reset_anchor))
+                        .unwrap_or((false, None));
                     let cost_pair = failure.cost_pair();
                     let (state_hash_matched, replayed_state_hash) = match &failure {
                         crate::rholang::ReplayFailure::ReplayCostMismatchWithDetail {
@@ -721,6 +846,22 @@ impl Proposer {
                         .map(|id| rchain_shared::base16::encode(id))
                         .collect();
                     let held_out = quarantined || !pool_ids.is_empty();
+                    // **Evidence before the transition** (#564): the refused block, its verdict and
+                    // the suspect ids are durable before anything acts on them. This is the artifact
+                    // the incident did not have. A failed write is reported and the recovery
+                    // proceeds — the fault is real whether or not its evidence reached the store.
+                    let mut record = self_replay_record(
+                        &block,
+                        &failure,
+                        cost_pair,
+                        state_hash_matched,
+                        replayed_state_hash.clone(),
+                        &refused,
+                        deploy_count,
+                        SelfReplayStage::Refused,
+                    );
+                    record.reset_attempted = carried_attempted;
+                    record.reset_anchor = carried_anchor;
 
                     self.self_validation_refusal.note_self_replay(
                         failure.code(),
@@ -732,7 +873,9 @@ impl Proposer {
                         attempts,
                         held_out,
                         state_hash_matched,
-                        replayed_state_hash.clone(),
+                        replayed_state_hash,
+                        record.body.is_some(),
+                        record.body_len,
                     );
                     self.log.error(
                         LogSource::new("casper.blocks.Proposer"),
@@ -747,20 +890,6 @@ impl Proposer {
                         ),
                     );
 
-                    // **Evidence before the transition** (#564): the refused block, its verdict and
-                    // the suspect ids are durable before anything acts on them. This is the artifact
-                    // the incident did not have. A failed write is reported and the recovery
-                    // proceeds — the fault is real whether or not its evidence reached the store.
-                    let record = self_replay_record(
-                        &block,
-                        &failure,
-                        cost_pair,
-                        state_hash_matched,
-                        replayed_state_hash,
-                        &refused,
-                        deploy_count,
-                        SelfReplayStage::Refused,
-                    );
                     if let Err(e) = (self.self_replay_persist)(record.clone()).await {
                         self.log.error(
                             LogSource::new("casper.blocks.Proposer"),
@@ -799,6 +928,12 @@ impl Proposer {
                                     (self.propose_effect)(&attestation).await;
                                     let mut recovered = record.clone();
                                     recovered.stage = SelfReplayStage::Recovered;
+                                    self.self_validation_refusal.note_self_replay_reset(
+                                        recovered.reset_attempted,
+                                        recovered
+                                            .reset_anchor
+                                            .map(|a| rchain_shared::base16::encode(&a)),
+                                    );
                                     let _ = (self.self_replay_persist)(recovered).await;
                                     self.log.warn(
                                         LogSource::new("casper.blocks.Proposer"),
@@ -821,25 +956,20 @@ impl Proposer {
                                     // Even a block with no user deploy cannot replay: the fault is
                                     // node-level. Ask for the finalised reset (the engine acts only
                                     // when the reason's switch is on) and halt every trigger.
-                                    let anchor = (self.self_replay_reset)(record.clone()).await;
-                                    let mut halted = record.clone();
-                                    halted.stage = SelfReplayStage::Halted;
-                                    halted.reset_anchor = anchor;
-                                    halted.reset_attempted = anchor.is_some();
-                                    if let Err(e) = (self.self_replay_persist)(halted).await {
-                                        self.log.error(
-                                            LogSource::new("casper.blocks.Proposer"),
-                                            &format!(
-                                                "the self-replay halt could not be recorded durably: \
-                                                 {e} — a restart cannot tell that the reset was \
-                                                 already attempted (#564)"
-                                            ),
-                                        );
-                                    }
-                                    let reason = format!(
-                                        "the attestation fallback also failed its own replay: {}",
-                                        second.describe()
-                                    );
+                                    let outcome = (self.self_replay_reset)(record.clone()).await;
+                                    self.record_self_replay_halt(&record, outcome).await;
+                                    let reason = if outcome.is_recurrence() {
+                                        format!(
+                                            "the attestation fallback also failed its own replay \
+                                             after this finalised anchor's one reset: {}",
+                                            second.describe()
+                                        )
+                                    } else {
+                                        format!(
+                                            "the attestation fallback also failed its own replay: {}",
+                                            second.describe()
+                                        )
+                                    };
                                     self.self_validation_refusal
                                         .set_self_replay_halted(reason.clone());
                                     self.consecutive_failures.fetch_add(1, Ordering::Relaxed);
@@ -878,24 +1008,18 @@ impl Proposer {
                         Ok(other) => {
                             // No attestation was produced: the node cannot build any block at this
                             // pre-state. Retrying the deploy block is not an exit.
-                            let anchor = (self.self_replay_reset)(record.clone()).await;
-                            let mut halted = record.clone();
-                            halted.stage = SelfReplayStage::Halted;
-                            halted.reset_anchor = anchor;
-                            halted.reset_attempted = anchor.is_some();
-                            if let Err(e) = (self.self_replay_persist)(halted).await {
-                                self.log.error(
-                                    LogSource::new("casper.blocks.Proposer"),
-                                    &format!(
-                                        "the self-replay halt could not be recorded durably: {e} — \
-                                         a restart cannot tell that the reset was already attempted \
-                                         (#564)"
-                                    ),
-                                );
-                            }
-                            let reason = format!(
-                                "no attestation could be built after the refusal ({other:?})"
-                            );
+                            let outcome = (self.self_replay_reset)(record.clone()).await;
+                            self.record_self_replay_halt(&record, outcome).await;
+                            let reason = if outcome.is_recurrence() {
+                                format!(
+                                    "no attestation could be built after the refusal, and this \
+                                     finalised anchor's one reset was already attempted ({other:?})"
+                                )
+                            } else {
+                                format!(
+                                    "no attestation could be built after the refusal ({other:?})"
+                                )
+                            };
                             self.self_validation_refusal
                                 .set_self_replay_halted(reason.clone());
                             self.consecutive_failures.fetch_add(1, Ordering::Relaxed);
@@ -911,22 +1035,16 @@ impl Proposer {
                             Err(reason)
                         }
                         Err(e) => {
-                            let anchor = (self.self_replay_reset)(record.clone()).await;
-                            let mut halted = record.clone();
-                            halted.stage = SelfReplayStage::Halted;
-                            halted.reset_anchor = anchor;
-                            halted.reset_attempted = anchor.is_some();
-                            if let Err(e) = (self.self_replay_persist)(halted).await {
-                                self.log.error(
-                                    LogSource::new("casper.blocks.Proposer"),
-                                    &format!(
-                                        "the self-replay halt could not be recorded durably: {e} — \
-                                         a restart cannot tell that the reset was already attempted \
-                                         (#564)"
-                                    ),
-                                );
-                            }
-                            let reason = format!("the attestation build failed: {e}");
+                            let outcome = (self.self_replay_reset)(record.clone()).await;
+                            self.record_self_replay_halt(&record, outcome).await;
+                            let reason = if outcome.is_recurrence() {
+                                format!(
+                                    "the attestation build failed, and this finalised anchor's one \
+                                     reset was already attempted: {e}"
+                                )
+                            } else {
+                                format!("the attestation build failed: {e}")
+                            };
                             self.self_validation_refusal
                                 .set_self_replay_halted(reason.clone());
                             self.consecutive_failures.fetch_add(1, Ordering::Relaxed);
@@ -1124,6 +1242,9 @@ impl Proposer {
         self_validation_refusal: SelfValidationRefusalSink,
         stale_snapshot_equivocations: Arc<AtomicU64>,
         equivocation_injection: bool,
+        // **The devnet-only self-replay injector** (#564). Refused outside `--dev-mode` by
+        // `check_self_replay_injection`; it is applied only to this node's own blocks.
+        self_replay_injection: SelfReplayInjection,
         // **This shard's finality-and-merge health** (W-N10-02/03), held like the two counters above:
         // the proposer drives `validate` on its own blocks, so it is one of the writers.
         health: ShardHealth,
@@ -1255,6 +1376,8 @@ impl Proposer {
             let shard_id = shard_id.clone();
             let log = log.clone();
             let health = health.clone();
+            // **The injector's one-shot budget** (#564), shared by every call in this process.
+            let injected = Arc::new(AtomicUsize::new(0));
             Arc::new(move |block: &BlockMessage| {
                 let runtime = runtime.clone();
                 let dag = dag.clone();
@@ -1264,8 +1387,39 @@ impl Proposer {
                 let shard_id = shard_id.clone();
                 let log = log.clone();
                 let health = health.clone();
+                let injected = injected.clone();
                 let max_number_of_parents = max_number_of_parents;
                 Box::pin(async move {
+                    // **The devnet injector** (#564): a refusal on this node's own block, through the
+                    // ordinary path. `Peer` can never reach this closure, but the predicate refuses it
+                    // independently; the block is never inserted, stored or broadcast, exactly like
+                    // the real fault.
+                    let anchored = dag
+                        .get_representation()
+                        .await
+                        .rewind_plan()
+                        .anchor
+                        .is_some();
+                    if injection_refuses(
+                        self_replay_injection,
+                        ValidationOrigin::SelfBuilt,
+                        !block.state.deploys.is_empty(),
+                        anchored,
+                        &injected,
+                    ) {
+                        log.error(
+                            LogSource::new("casper.blocks.Proposer"),
+                            &format!(
+                                "[SELF-REPLAY INJECTION] refusing this node's own block #{} \
+                                 (seq {}) with a synthetic replay-cost-mismatch — devnet-only \
+                                 `--self-replay-injection` (#564)",
+                                block.block_number, block.seq_num
+                            ),
+                        );
+                        return Err(ValidateError::SelfReplayFailed(
+                            crate::rholang::ReplayFailure::replay_cost_mismatch(1, 0),
+                        ));
+                    }
                     // **This block is this node's own** (#564): a replay failure is a local fault,
                     // not a peer-view divergence. The inbound path keeps `validate`, unchanged.
                     match validate_with_origin(
@@ -1332,7 +1486,7 @@ impl Proposer {
         // one attempt this fault is allowed. A view with no finalised anchor cannot name one and the
         // proposer halts instead — "nothing to rewind to" never becomes "rewind to genesis".
         let self_replay_reset: Arc<
-            dyn Fn(SelfReplayRecord) -> BoxFuture<Option<[u8; 32]>> + Send + Sync,
+            dyn Fn(SelfReplayRecord) -> BoxFuture<SelfReplayResetOutcome> + Send + Sync,
         > = {
             let dag = dag.clone();
             let shard_id = shard_id.clone();
@@ -1345,6 +1499,43 @@ impl Proposer {
                     let plan = dag.get_representation().await.rewind_plan();
                     match (plan.anchor, plan.anchor_height) {
                         (Some(anchor), Some(anchor_height)) => {
+                            // **One reset per finalised anchor** (#564, law 94). The record carried
+                            // across the refusal names whether this anchor has already been reset;
+                            // a recurrence halts instead of rewinding again, so the automatic
+                            // post-catch-up resume cannot turn a deterministic fault into a loop.
+                            if reset_is_recurrence(&record, &anchor) {
+                                // Halt durably before the caller writes the same stage: a crash in
+                                // this window must not leave the non-latching `Refused` record as
+                                // the last word.
+                                let mut halted = record.clone();
+                                halted.stage = SelfReplayStage::Halted;
+                                halted.reset_anchor = Some(*anchor.as_bytes());
+                                halted.reset_attempted = true;
+                                if let Err(e) = dag.write_self_replay_record(halted).await {
+                                    log.error(
+                                        LogSource::new("casper.blocks.Proposer"),
+                                        &format!(
+                                            "the self-replay recurrence record could not be written: \
+                                             {e} — a restart may retry the unchanged input (#564)"
+                                        ),
+                                    );
+                                }
+                                log.error(
+                                    LogSource::new("casper.blocks.Proposer"),
+                                    &format!(
+                                        "self-replay fault at block {} (seq {}) at height {}: already \
+                                         reset once at the finalised anchor {} — halting instead of a \
+                                         second reset (#564, law 94)",
+                                        rchain_shared::base16::encode(&record.block_hash),
+                                        record.seq_num,
+                                        record.height,
+                                        anchor.to_hex(),
+                                    ),
+                                );
+                                return SelfReplayResetOutcome::AlreadyAttempted(
+                                    *anchor.as_bytes(),
+                                );
+                            }
                             let mut requested = record.clone();
                             requested.stage = SelfReplayStage::ResetRequested;
                             requested.reset_anchor = Some(*anchor.as_bytes());
@@ -1383,7 +1574,7 @@ impl Proposer {
                                     i64::from(anchor_height)
                                 ),
                             );
-                            Some(*anchor.as_bytes())
+                            SelfReplayResetOutcome::Raised(*anchor.as_bytes())
                         }
                         _ => {
                             log.error(
@@ -1397,7 +1588,7 @@ impl Proposer {
                                     record.height
                                 ),
                             );
-                            None
+                            SelfReplayResetOutcome::NoAnchor
                         }
                     }
                 })
@@ -1413,6 +1604,33 @@ impl Proposer {
             Arc::new(move |record: SelfReplayRecord| {
                 let dag = dag.clone();
                 Box::pin(async move { dag.write_self_replay_record(record).await })
+            })
+        };
+
+        // **The reset attempt survives the next refusal** (#564): a refusal writes a fresh `Refused`
+        // record, so the "this anchor has had its one reset" fact is read first and carried.
+        let self_replay_load: Arc<dyn Fn() -> BoxFuture<Option<SelfReplayRecord>> + Send + Sync> = {
+            let dag = dag.clone();
+            let log = log.clone();
+            Arc::new(move || {
+                let dag = dag.clone();
+                let log = log.clone();
+                Box::pin(async move {
+                    match dag.read_self_replay_record().await {
+                        Ok(record) => record,
+                        Err(e) => {
+                            log.error(
+                                LogSource::new("casper.blocks.Proposer"),
+                                &format!(
+                                    "the self-replay record could not be read before a new \
+                                     refusal: {e} — this refusal cannot tell whether its anchor has \
+                                     already been reset (#564)"
+                                ),
+                            );
+                            None
+                        }
+                    }
+                })
             })
         };
 
@@ -1440,6 +1658,7 @@ impl Proposer {
         .with_self_replay_tracker(self_replay)
         .with_self_replay_reset(self_replay_reset)
         .with_self_replay_persist(self_replay_persist)
+        .with_self_replay_load(self_replay_load)
     }
 }
 
@@ -3671,7 +3890,7 @@ mod tests {
             let resets = resets.clone();
             Arc::new(move |record: SelfReplayRecord| {
                 resets.lock().unpoison().push(record);
-                Box::pin(async { Some([4u8; 32]) })
+                Box::pin(async { SelfReplayResetOutcome::Raised([4u8; 32]) })
             })
         })
         .with_self_replay_persist({
@@ -3704,6 +3923,152 @@ mod tests {
         assert_eq!(records[1].reset_anchor, Some([4u8; 32]));
         assert!(records[1].reset_attempted);
         assert!(p.self_validation_refusal.self_replay_halted());
+    }
+
+    /// A prior record that already attempted a reset at `anchor` (#564).
+    fn prior_attempt(anchor: [u8; 32]) -> SelfReplayRecord {
+        SelfReplayRecord {
+            version: SELF_REPLAY_RECORD_VERSION,
+            at_ms: 1,
+            block_hash: [7u8; 32],
+            height: 1115,
+            seq_num: 3,
+            code: "replay-cost-mismatch".to_string(),
+            initial_cost: Some(1),
+            replay_cost: Some(0),
+            state_hash_matched: None,
+            replayed_state_hash: None,
+            deploy_ids: Vec::new(),
+            deploy_count: 0,
+            stage: SelfReplayStage::Halted,
+            reset_anchor: Some(anchor),
+            reset_attempted: true,
+            body: None,
+            body_len: 0,
+            durable: true,
+        }
+    }
+
+    /// **The one-reset-per-anchor rule**, pure (#564, law 94): attempted at *this* anchor is a
+    /// recurrence; attempted at another anchor is a new anchor's one attempt.
+    #[test]
+    fn a_reset_at_an_anchor_already_attempted_is_refused() {
+        let mut record = prior_attempt([4u8; 32]);
+        assert!(reset_is_recurrence(&record, &BlockHash::new([4u8; 32])));
+        assert!(
+            !reset_is_recurrence(&record, &BlockHash::new([5u8; 32])),
+            "a different finalised anchor has its own one attempt"
+        );
+        record.reset_attempted = false;
+        assert!(
+            !reset_is_recurrence(&record, &BlockHash::new([4u8; 32])),
+            "no attempt yet means the anchor may be reset once"
+        );
+    }
+
+    /// **The injector is SelfBuilt-only and its budget is one-shot** (#564). The first assertion is
+    /// the witness that a peer block can never be refused by this instrument; the last is what makes
+    /// the build after the recovery clean on a devnet.
+    #[test]
+    fn the_self_replay_injection_refuses_only_self_built_blocks_and_honours_its_limit() {
+        let counter = AtomicUsize::new(0);
+        assert!(
+            !injection_refuses(
+                SelfReplayInjection::All { limit: None },
+                ValidationOrigin::Peer,
+                true,
+                true,
+                &counter
+            ),
+            "the injector never touches a peer block"
+        );
+        assert!(
+            !injection_refuses(
+                SelfReplayInjection::All { limit: None },
+                ValidationOrigin::SelfBuilt,
+                true,
+                false,
+                &counter
+            ),
+            "no finalised anchor means the node-level rung has no safe reset to name"
+        );
+        assert!(injection_refuses(
+            SelfReplayInjection::All { limit: None },
+            ValidationOrigin::SelfBuilt,
+            true,
+            true,
+            &counter
+        ));
+        assert!(
+            !injection_refuses(
+                SelfReplayInjection::Deploy { limit: None },
+                ValidationOrigin::SelfBuilt,
+                false,
+                true,
+                &counter
+            ),
+            "the attestation-only fallback has no user deploy and is spared by `deploy`"
+        );
+        assert!(!injection_refuses(
+            SelfReplayInjection::Off,
+            ValidationOrigin::SelfBuilt,
+            true,
+            true,
+            &counter
+        ));
+
+        let counter = AtomicUsize::new(0);
+        let mode = SelfReplayInjection::All { limit: Some(1) };
+        assert!(injection_refuses(
+            mode,
+            ValidationOrigin::SelfBuilt,
+            true,
+            true,
+            &counter
+        ));
+        assert!(
+            !injection_refuses(mode, ValidationOrigin::SelfBuilt, true, true, &counter),
+            "the one-shot budget is spent, so the post-recovery build is clean"
+        );
+    }
+
+    /// **The attempt history survives the refusal record's overwrite** (#564). Without the carry, a
+    /// recurrence at the same anchor would look like a first fault and reset again — the loop the
+    /// automatic resume would otherwise make live.
+    #[tokio::test]
+    async fn the_prior_reset_attempt_is_carried_across_the_refusal_record() {
+        let tracker = Arc::new(Mutex::new(SelfReplayTracker::default()));
+        let records = Arc::new(Mutex::new(Vec::new()));
+        let p = proposer_failing_self_replay(
+            crate::rholang::ReplayFailure::replay_status_mismatch(false, true),
+            block_with_deploy_sig(9),
+            tracker,
+        )
+        .with_self_replay_load(Arc::new(|| {
+            Box::pin(async { Some(prior_attempt([4u8; 32])) })
+        }))
+        .with_self_replay_persist({
+            let records = records.clone();
+            Arc::new(move |record: SelfReplayRecord| {
+                records.lock().unpoison().push(record);
+                Box::pin(async { Ok(()) })
+            })
+        });
+
+        let (tx, _rx) = tokio::sync::oneshot::channel();
+        assert!(p
+            .propose(ProposeSource::Explicit { is_async: false }, tx)
+            .await
+            .is_err());
+        let records = records.lock().unpoison();
+        assert_eq!(records[0].stage, SelfReplayStage::Refused);
+        assert!(
+            records[0].reset_attempted,
+            "the refusal record carries the earlier attempt"
+        );
+        assert_eq!(records[0].reset_anchor, Some([4u8; 32]));
+        assert_eq!(records[1].stage, SelfReplayStage::Halted);
+        assert!(records[1].reset_attempted);
     }
 
     /// The tracker's identity rule: a run is per `(pre-state, deploy set, failure kind)`. A different

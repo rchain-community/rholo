@@ -804,6 +804,316 @@ async fn a_self_replay_reset_record_latches_the_next_boot() {
         !health.self_replay_halted(),
         "no record means no self-replay halt"
     );
+
+    // A `Recovered` record is evidence, not a stop — including the post-reset recovery the automatic
+    // resume writes, which keeps `reset_attempted` true so the two recoveries stay distinguishable.
+    let mut recovered = record(SelfReplayStage::Recovered);
+    recovered.reset_attempted = true;
+    dag.write_self_replay_record(recovered)
+        .await
+        .expect("the recovery is recorded");
+    let health = ProposeHealth::new();
+    health
+        .seed_self_replay_from_store(dag.as_ref())
+        .await
+        .expect("a healthy store reads");
+    assert!(
+        !health.self_replay_halted(),
+        "a recovered record must not halt the next process"
+    );
+    let refusal = health
+        .snapshot()
+        .self_validation_refusal
+        .expect("the recovered record is still evidence");
+    assert!(refusal.reset_attempted, "the reset attempt survives");
+    assert_eq!(refusal.code, "replay-cost-mismatch");
+    assert_eq!(refusal.initial_cost, Some(5576));
+    assert_eq!(refusal.replay_cost, Some(5302));
+    assert_eq!(refusal.deploy_ids.len(), 1);
+}
+
+/// A `SelfReplayRecord` fixture for the resume tests: node-level fault at height 1115, one reset
+/// attempted at `anchor`, and (when given) a refused body.
+fn self_replay_record_for(
+    stage: rchain_block_storage::dag::dag_storage::SelfReplayStage,
+    anchor: BlockHash,
+    body: Option<Vec<u8>>,
+    body_len: usize,
+) -> rchain_block_storage::dag::dag_storage::SelfReplayRecord {
+    rchain_block_storage::dag::dag_storage::SelfReplayRecord {
+        version: rchain_block_storage::dag::dag_storage::SELF_REPLAY_RECORD_VERSION,
+        at_ms: 1_700_000_000_000,
+        block_hash: [7u8; 32],
+        height: 1115,
+        seq_num: 3,
+        code: "replay-cost-mismatch".to_string(),
+        initial_cost: Some(5576),
+        replay_cost: Some(5302),
+        state_hash_matched: Some(true),
+        replayed_state_hash: None,
+        deploy_ids: vec![vec![7u8; 65]],
+        deploy_count: 1,
+        stage,
+        reset_anchor: Some(*anchor.as_bytes()),
+        reset_attempted: true,
+        body,
+        body_len,
+        durable: false,
+    }
+}
+
+/// **The reset's own exit: once the walk passes the anchor, the self-replay halt clears without an
+/// operator POST** (#564, F-U23-11). The record moves store-first, the body/ids/anchor survive, and
+/// a fresh boot is not halted.
+#[tokio::test]
+async fn a_caught_up_self_replay_reset_resumes_without_an_operator_post() {
+    use rchain_block_storage::dag::dag_storage::SelfReplayStage;
+    use rchain_casper::api::block_api::ProposeHealth;
+    use rchain_casper::engine::reset::resume_self_replay_after_catchup;
+
+    let dag = build_dag().await;
+    let anchor = hash(4);
+    let body = vec![0xA5u8; 11];
+    dag.write_self_replay_record(self_replay_record_for(
+        SelfReplayStage::Halted,
+        anchor,
+        Some(body.clone()),
+        body.len(),
+    ))
+    .await
+    .expect("the fault is recorded");
+
+    let health = ProposeHealth::new();
+    health
+        .seed_self_replay_from_store(dag.as_ref())
+        .await
+        .expect("a healthy store reads");
+    assert!(health.self_replay_halted(), "the boot seed latches");
+
+    let before = health
+        .snapshot()
+        .self_validation_refusal
+        .expect("the refusal is evidence");
+    assert!(before.refused_body_available);
+    assert_eq!(before.refused_body_len, body.len() as u64);
+    assert!(before.reset_attempted);
+    assert!(before.reset_anchor.is_some());
+
+    let marker = ResetMarker {
+        anchor,
+        height: BlockHeight::try_from(10).unwrap(),
+        phase: ResetPhase::Rewound,
+    };
+    let log: Arc<dyn rchain_shared::log::Log> = Arc::new(NopLog);
+    assert!(
+        resume_self_replay_after_catchup(dag.as_ref(), &marker, 11, &health, &log).await,
+        "caught up past the anchor resumes"
+    );
+    assert!(
+        !health.self_replay_halted(),
+        "the latch is cleared without an operator POST"
+    );
+
+    let recovered = dag
+        .read_self_replay_record()
+        .await
+        .expect("the store reads")
+        .expect("the record is kept as evidence");
+    assert_eq!(recovered.stage, SelfReplayStage::Recovered);
+    assert!(recovered.reset_attempted);
+    assert_eq!(recovered.body.as_deref(), Some(body.as_slice()));
+    assert_eq!(recovered.body_len, body.len());
+
+    // A fresh boot is not halted, and the surface still carries the evidence.
+    let rebooted = ProposeHealth::new();
+    rebooted
+        .seed_self_replay_from_store(dag.as_ref())
+        .await
+        .expect("a healthy store reads");
+    assert!(!rebooted.self_replay_halted());
+    let after = rebooted
+        .snapshot()
+        .self_validation_refusal
+        .expect("the recovered record is still evidence");
+    assert!(after.refused_body_available);
+    assert!(after.reset_attempted);
+
+    // Idempotent: the second call sees `Recovered` and does nothing.
+    assert!(
+        !resume_self_replay_after_catchup(dag.as_ref(), &marker, 12, &health, &log).await,
+        "a recovered record is not resumed twice"
+    );
+}
+
+/// **Below the anchor is not caught up** (#564). The reset's own rule is `frontier > height`; equal
+/// is still inside the gap the walk exists to close.
+#[tokio::test]
+async fn a_self_replay_reset_below_its_anchor_does_not_resume() {
+    use rchain_block_storage::dag::dag_storage::SelfReplayStage;
+    use rchain_casper::api::block_api::ProposeHealth;
+    use rchain_casper::engine::reset::resume_self_replay_after_catchup;
+
+    let dag = build_dag().await;
+    let anchor = hash(4);
+    dag.write_self_replay_record(self_replay_record_for(
+        SelfReplayStage::Halted,
+        anchor,
+        None,
+        0,
+    ))
+    .await
+    .expect("the fault is recorded");
+    let health = ProposeHealth::new();
+    health
+        .seed_self_replay_from_store(dag.as_ref())
+        .await
+        .expect("a healthy store reads");
+    assert!(health.self_replay_halted());
+
+    let marker = ResetMarker {
+        anchor,
+        height: BlockHeight::try_from(10).unwrap(),
+        phase: ResetPhase::Rewound,
+    };
+    let log: Arc<dyn rchain_shared::log::Log> = Arc::new(NopLog);
+    assert!(
+        !resume_self_replay_after_catchup(dag.as_ref(), &marker, 10, &health, &log).await,
+        "a frontier at the anchor has not passed it"
+    );
+    assert!(health.self_replay_halted(), "the halt stands");
+}
+
+/// **A reset at another anchor does not clear this fault** (#564). The anchor equality is what keeps
+/// a later divergence-budget reset from resuming a self-replay fault it did not fix.
+#[tokio::test]
+async fn a_marker_from_another_anchors_reset_does_not_clear_the_self_replay_fault() {
+    use rchain_block_storage::dag::dag_storage::SelfReplayStage;
+    use rchain_casper::api::block_api::ProposeHealth;
+    use rchain_casper::engine::reset::resume_self_replay_after_catchup;
+
+    let dag = build_dag().await;
+    dag.write_self_replay_record(self_replay_record_for(
+        SelfReplayStage::Halted,
+        hash(5),
+        None,
+        0,
+    ))
+    .await
+    .expect("the fault is recorded");
+    let health = ProposeHealth::new();
+    health
+        .seed_self_replay_from_store(dag.as_ref())
+        .await
+        .expect("a healthy store reads");
+    assert!(health.self_replay_halted());
+
+    let marker = ResetMarker {
+        anchor: hash(4),
+        height: BlockHeight::try_from(10).unwrap(),
+        phase: ResetPhase::Rewound,
+    };
+    let log: Arc<dyn rchain_shared::log::Log> = Arc::new(NopLog);
+    assert!(
+        !resume_self_replay_after_catchup(dag.as_ref(), &marker, 11, &health, &log).await,
+        "a reset at a different anchor is not this fault's reset"
+    );
+    assert!(health.self_replay_halted(), "the halt stands");
+}
+
+/// **An over-cap body is visible as unavailable, with its true length** (#564, C359/C365). The record
+/// keeps `body_len` when the body does not fit, so the surface can say "it existed and was too large"
+/// rather than implying there was none.
+#[tokio::test]
+async fn an_over_cap_refused_body_is_visible_as_unavailable_with_its_length() {
+    use rchain_block_storage::dag::dag_storage::SelfReplayStage;
+    use rchain_casper::api::block_api::ProposeHealth;
+
+    let dag = build_dag().await;
+    dag.write_self_replay_record(self_replay_record_for(
+        SelfReplayStage::Halted,
+        hash(4),
+        None,
+        70_000,
+    ))
+    .await
+    .expect("the fault is recorded");
+    let health = ProposeHealth::new();
+    health
+        .seed_self_replay_from_store(dag.as_ref())
+        .await
+        .expect("a healthy store reads");
+    let refusal = health
+        .snapshot()
+        .self_validation_refusal
+        .expect("the record is evidence");
+    assert!(!refusal.refused_body_available);
+    assert_eq!(refusal.refused_body_len, 70_000);
+}
+
+/// **The switch-off path writes no marker, so there is nothing to resume past** (#564, F-U23-11).
+/// With `casper.self-replay-reset=false` the request is consumed and the node keeps the halt; the
+/// automatic resume is not reachable, and the operator POST is the one way out.
+#[tokio::test]
+async fn a_self_replay_reset_with_the_switch_off_writes_no_marker() {
+    use rchain_block_storage::dag::dag_storage::SelfReplayStage;
+    use rchain_casper::api::block_api::ProposeHealth;
+
+    const LANE_OFF: &str = "test-shard-self-replay-off";
+    let _ = take_reset_request(LANE_OFF);
+
+    let dag = build_dag().await;
+    let block_store = build_block_store().await;
+    let manager = Arc::new(common::build_runtime_manager().await);
+    let request = ResetRequest {
+        anchor: hash(4),
+        anchor_height: BlockHeight::try_from(10).unwrap(),
+        blocks_above: 2,
+        refused: hash(7),
+        reason: ResetReason::SelfReplayFault,
+    };
+    assert!(
+        rchain_casper::interpreter_util::request_reset(LANE_OFF.to_string(), request),
+        "the fault raises its request"
+    );
+    let log: Arc<dyn rchain_shared::log::Log> = Arc::new(NopLog);
+    let acted = act_on_reset_request(
+        LANE_OFF,
+        true,
+        false,
+        &(dag.clone() as Arc<dyn BlockDagStorage>),
+        &block_store,
+        &manager,
+        &log,
+        LogSource::new("test"),
+    )
+    .await
+    .expect("a switched-off reset is not an error");
+    assert!(acted.is_none(), "the switch is off, so nothing acted");
+    assert!(
+        dag.read_reset_marker()
+            .await
+            .expect("the store reads")
+            .is_none(),
+        "no reset means no marker to catch up past"
+    );
+
+    dag.write_self_replay_record(self_replay_record_for(
+        SelfReplayStage::Halted,
+        hash(4),
+        None,
+        0,
+    ))
+    .await
+    .expect("the fault is recorded");
+    let health = ProposeHealth::new();
+    health
+        .seed_self_replay_from_store(dag.as_ref())
+        .await
+        .expect("a healthy store reads");
+    assert!(
+        health.self_replay_halted(),
+        "the halt stands until the operator resumes"
+    );
 }
 
 #[tokio::test]

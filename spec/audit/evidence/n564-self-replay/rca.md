@@ -144,4 +144,5 @@ The operational fallback is in place: the pool export now carries the signed fie
 a healthy validator. The recovery is the other half: one refusal rebuilds as an attestation, a
 node-level fault raises one finalised-anchor reset and latches a halt read by every trigger, and the
 refused body/verdict/ids are durable before either transition (`recovery-hazop.md`, U23). The boot
-tests for the stage and the `create_block` pace-rule test remain owed (F-U23-05/07/11).
+test and the pace-rule test have landed; the automatic post-catch-up resume and the devnet drill
+remain owed.

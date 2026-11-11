@@ -12304,6 +12304,6 @@ pool cannot take one. The record's `reset_attempted` bounds the rung to one atte
 green. Law 94 states the bounded exit; its Rust witnesses are the recovery and reset/halt proposer
 tests.
 
-**Owed.** The boot test for the `ResetRequested`/`Halted` stage (F-U23-05/11), the `create_block`
-pace-rule test (F-U23-07), the automatic post-catch-up resume (the reset currently halts and the
-operator resume is explicit), and the devnet drill's three arms.
+**Owed.** The automatic post-catch-up resume (the reset currently halts and the operator resume is
+explicit), the devnet drill's three arms, and the refused-body surface test. The boot test for the
+`ResetRequested`/`Halted` stage and the `AttestOnly` pace-rule test have landed.

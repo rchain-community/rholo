@@ -759,7 +759,7 @@ the recovery stage stored durably. No state retries an unchanged deterministic i
 
 | deviation | law that captures it, or the law owed | why |
 |---|---|---|
-| U23-01/U23-02/U23-04/U23-07/U23-11 | **Law 94** — a local fault has a bounded exit: no transition retries an unchanged input (`Recovery.lean`, owed before this lands) | the recovery is a state machine, not a retry policy; the theorem is `no_unchanged_retry` |
+| U23-01/U23-02/U23-04/U23-07/U23-11 | **Law 94** — a local fault has a bounded exit: no transition retries an unchanged input (`Recovery.lean`) | the recovery is a state machine, not a retry policy; the theorem is `no_unchanged_retry` |
 | U23-05/U23-09 | **Law 94** — `every_fault_reaches_safe`, and a reset anchors only at a finalised block (`reset_only_to_finalised`); composes with laws 72/73/76 | the reset record exists, the request is spent by the act, a stop stops |
 | U23-03/U23-06/U23-08/U23-10 | **Operating policy**, not a consensus law: the halt is shard-local, the exclusion is proposer-local, the body is diagnostic | no state relation is changed; State-C rows in the register, not Lean |
 
@@ -862,8 +862,8 @@ so rewinding to the last finalised anchor drops nothing this node published, and
 are returned to the pool before the rewind. It is therefore on by default (`casper.self-replay-reset`)
 rather than behind `casper.self-reset`, attempted at most once per finalised anchor, and with the
 switch off the node halts proposing and attesting instead. The reset lifecycle it reuses is U11–U16's;
-what is still owed is the automatic re-derive after catch-up (F-U23-11) and the boot tests
-(F-U23-05/11).
+what is still owed is the automatic re-derive after catch-up (F-U23-11), the devnet drill, and the
+refused-body surface test.
 
 **Built, 2026-10-10 (#320, register C274).** Dark first was the rule and it was kept: the detector, the
 `unrestorableRecords` count and the dry run shipped in §82, and the acting half came after, **off by

@@ -36,9 +36,11 @@ the captured log, not artifacts re-derived here. The pack labels every claim `me
 | `cost-criticality.md` | the protocol decision record: is a recorded-cost mismatch a block-validity rule? |
 | `matrix.tsv` | the measurement matrix on `0a1e02362` and `dev`, cell by cell |
 | `hazop.md` | the companion HAZOP study (the machine-checked rows are in `docs/src/spec/failure-hazop.md` U22) |
+| `recovery-hazop.md` | the recovery-state HAZOP study: the exits the node had, the safe exit it now has, and the U23 rows |
 | `incident/` | the incident evidence inventory and the list of what is unavailable |
 | `incident-binary/` | the build manifest and the logs the matrix produced on `0a1e02362` |
 | `dev/` | the same runs on `dev`, packed with `tools/evidence-pack.py` |
+| `../n564-self-replay-recovery-drill-20261111/` | the sibling pack: the three live recovery arms on a fresh devnet, digest-verified |
 
 **Current verdict (updated as the units land).**
 
@@ -64,3 +66,7 @@ the captured log, not artifacts re-derived here. The pack labels every claim `me
   still unavailable.
 - **RC1 (the 274's cause) is not established.** The matrix and the code conditions are the evidence;
   the missing terms/state are named in `incident/unavailable.tsv` and in the runbook row.
+- **RC-A (the 45-hour freeze) is established and live-verified.** The recovery state machine is the
+  safe exit the incident lacked; the sibling drill pack runs its three arms on a fresh devnet —
+  attestation recovery, reset plus the automatic post-catch-up resume, and halt plus the operator
+  resume — all PASS. RC-A and RC-B are different claims: the first is closed, the second is Aria's.

@@ -12308,15 +12308,67 @@ tests.
 explicit), the devnet drill's three arms, and the refused-body surface test. The boot test for the
 `ResetRequested`/`Halted` stage and the `AttestOnly` pace-rule test have landed.
 
-## 156. Reset deploy inventory must include missing bodies (C366)
+## 156. The self-replay recovery follow-on: the exit from the reset, the bound the record claimed, and the live arms (C357, C359, C361, C364, C365, #564)
 
-The reset preflight enumerated surviving body-store keys, silently skipping a DAG block whose body
-was absent. It now inventories DAG candidate hashes and refuses missing data before the reset
-marker and rewind. The real missing-body test fails at its intended assertion on the original
-reset file, then passes on the candidate. Source a2497f0 passed all executed workspace tests,
-including eleven reset cases and normal LMDB close/reopen, plus the pinned formatter and Clippy
-contract in the [fork-only run](https://github.com/aixaria0/rchain-rust/actions/runs/43047546442).
-[Receipts and scope](evidence/n564-reset-inventory/README.md) distinguish this from a process crash,
-power loss, signature verification or the three-arm devnet drill. Upstream CI remains blocked by
-protobuf-install DNS; no upstream workflow was changed. Laws 72/73/94 are unchanged. C366 closes
-this inventory defect; C361, C365 and the original 274-phlo trigger remain open.
+The §155 recovery was safe but incomplete: a node-level fault reset to its finalised anchor and then
+waited for an operator POST, the refused body was durable but not on the surface, and — the finding
+that made the first two urgent — the record's `reset_attempted` was written and **never read**, so
+the "one reset per finalised anchor" bound the HAZOP claimed had no enforcer. With the resume made
+automatic, that would have been a reset loop on a deterministic fault.
+
+**The exit from the reset.** The catch-up walk is the only thing that knows the node is past the
+anchor it rewound to. When it is, `resume_self_replay_after_catchup` moves the record to `Recovered`
+store-first and clears the self-replay latch with the same notify the operator route uses. It
+requires a completed (`Rewound`) marker, a `ResetRequested`/`Halted` record that names a reset, and
+anchor equality, so a divergence-budget reset cannot clear a self-replay fault and a disabled reset
+(none of whose requests produce a marker) cannot resume anything. The resume is narrow: unlike
+`clear_halt` it keeps the refusal cell and does not clear an independent timer halt. The operator
+POST remains the fallback for a recurrence, a missing anchor, or a disabled reset.
+
+**The bound, enforced.** The refusal arm now carries a prior `reset_attempted`/`reset_anchor` across
+the fresh `Refused` record it writes; the reset closure refuses a second reset at the same finalised
+anchor and writes a durable `Halted` before the caller's, so a crash in that window cannot leave the
+non-latching `Refused` stage as the last word. Law 94 models the new step (`resumeAfterCatchup`,
+admitted only from `resetRequested`) and its two theorems; the register note now says the operator
+resume is the fallback, not the model's only way back.
+
+**The surface.** `refusedBodyAvailable`/`refusedBodyLen` and `resetAttempted`/`resetAnchor` are on
+the operator refusal object, seeded from the durable record at boot; `/health` keeps its four-field
+summary and a test pins that the new fields stay off it. An over-cap body reads as unavailable with
+its true length rather than as no body.
+
+**The live arms.** A devnet-only `--self-replay-injection` (refused without `--dev-mode`,
+`SelfBuilt`-only, armed only once a finalised anchor exists, with a spent `:N` budget) drives
+`tools/self-replay-drill.sh`: arm 1 refuses a deploy-bearing block and recovers by attestation; arm 2
+refuses both builds, resets (rewound 9 blocks at height 1), catches up and resumes **without a
+POST**; arm 3 disables the reset, halts, holds finality frozen for 20 seconds and resumes on the
+operator route. The packed, digest-verified record is
+`spec/audit/evidence/n564-self-replay-recovery-drill-20261111/raw/drill-readout.md`; each arm's surface
+snapshot carries the 786-byte refused body and the reset anchor.
+
+**RC-B remains open.** The injected refusal has the incident's shape (`ReplayCostMismatch`), not its
+cause. The 274-phlo trigger is Aria's, and the one measurement that moves it is validator A's
+runtime environment.
+ 
+## 157. A complete DAG inventory before recovery rewind (C366)
+
+The reset preflight previously enumerated surviving block-body keys, so a DAG candidate
+whose body was absent could evade the inventory and still permit destructive rewind.
+`return_unfinalised_deploys` now enumerates DAG candidate hashes and refuses missing
+metadata or missing body above the finalised anchor before mutation. The production
+implementation and tests from #567 compose with #568's reset-history, write gating,
+automatic resume and operator surface.
+
+**Falsification.** The original reset source fails the new absent-body assertion,
+whereas the corrected source passes. The targeted integration cases cover refusal
+with missing body, the healthy deploy-return path and LMDB close/reopen. The original
+isolated fork run also executed the full workspace suite and pinned Clippy/format
+checks; see [receipts](evidence/n564-reset-inventory/README.md). Those receipts
+predate the #568 merge; a merged-tree verification is required independently.
+
+**Reconciliation.** The preceding §156 records the #568 three-arm injected devnet
+drill, so this inventory fix is accounted as §157 rather than overwriting that
+pass. C361/C364/C365 are done on their recovery evidence; C366 closes only
+the inventory defect. RC-B—the historical 274-phlo play/replay cost trigger—stays
+open. Neither the synthetic drill nor the inventory test reproduces that trigger.
+No validator deployment or live chain mutation is authorized by this pass.

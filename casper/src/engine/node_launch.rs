@@ -351,6 +351,10 @@ pub async fn apply<I: RSpaceImporter + Send + 'static, E: RSpaceExporter>(
     // **May a self-replay fault reset this node?** (#564) On by default; see
     // `CasperConf::self_replay_reset` for the constructive safety case. Off means the fault halts.
     self_replay_reset: bool,
+    // **The wake a completed self-replay reset needs** (#564, F-U23-11). The running loop owns the
+    // moment the catch-up walk passes the anchor it rewound to; the health cell behind the operator
+    // surface owns the latch. This is the narrow seam, not a process-wide cell.
+    self_replay_resume: Arc<dyn crate::engine::reset::SelfReplayResume>,
     // Operator switch, threaded to `NodeRunning`: when set, this node refuses store-items
     // (state-sync) requests (port of the Scala's `disableStateExporter`).
     disable_state_exporter: bool,
@@ -817,6 +821,7 @@ pub async fn apply<I: RSpaceImporter + Send + 'static, E: RSpaceExporter>(
             &rp_conf,
             &connections,
             &dag,
+            &self_replay_resume,
             &log,
             source,
         )
@@ -1115,6 +1120,7 @@ async fn start_catchup_if_anchored(
     rp_conf: &RPConf,
     connections: &ConnectionsCell,
     dag: &Arc<dyn BlockDagStorage>,
+    resume: &Arc<dyn crate::engine::reset::SelfReplayResume>,
     log: &Arc<dyn Log>,
     source: LogSource,
 ) {
@@ -1137,13 +1143,14 @@ async fn start_catchup_if_anchored(
     };
     let (block_range_tx, block_range_rx) = tokio::sync::mpsc::channel(4);
     *block_range_door.lock().await = block_range_tx;
-    let (transport, conf, connections, dag, log, catchup) = (
+    let (transport, conf, connections, dag, log, catchup, resume) = (
         transport.clone(),
         rp_conf.clone(),
         connections.clone(),
         dag.clone(),
         log.clone(),
         catchup.clone(),
+        resume.clone(),
     );
     tokio::spawn(async move {
         catchup::run_catchup(
@@ -1153,6 +1160,7 @@ async fn start_catchup_if_anchored(
             dag,
             log,
             catchup,
+            resume,
             peer,
             block_range_rx,
         )

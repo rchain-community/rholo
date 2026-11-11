@@ -32,13 +32,13 @@ use crate::resources::{AdmissionPolicy, ResourceSnapshot};
 /// not.
 pub const SINCE_PROCESS_START: &str = "SinceProcessStart";
 
-/// Map the proposer's last counted refusal (#485). The code is already a `'static` closed code; the
-/// DTO owns a `String` because it is serialized.
+/// Map the proposer's last counted refusal (#485). The code is a closed vocabulary; the DTO owns
+/// its own `String` because it is serialized.
 fn to_self_validation_refusal_dto(
     refusal: Option<SelfValidationRefusal>,
 ) -> Option<SelfValidationRefusalDto> {
     refusal.map(|r| SelfValidationRefusalDto {
-        code: r.code.to_string(),
+        code: r.code,
         block_number: r.block_number,
         seq_num: r.seq_num,
         at_unix_ms: r.at_unix_ms,
@@ -50,6 +50,10 @@ fn to_self_validation_refusal_dto(
         excluded: r.excluded,
         state_hash_matched: r.state_hash_matched,
         replayed_state_hash: r.replayed_state_hash,
+        refused_body_available: r.refused_body_available,
+        refused_body_len: r.refused_body_len,
+        reset_attempted: r.reset_attempted,
+        reset_anchor: r.reset_anchor,
     })
 }
 
@@ -509,7 +513,7 @@ mod tests {
         let health = ProposerHealth {
             consecutive_self_validation_failures: 3,
             self_validation_refusal: Some(rchain_casper::api::block_api::SelfValidationRefusal {
-                code: "justification-regression",
+                code: "justification-regression".to_string(),
                 block_number: 3122,
                 seq_num: 3122,
                 at_unix_ms: 1_700_000_000_000,
@@ -519,8 +523,12 @@ mod tests {
                 deploy_count: 0,
                 attempts: 1,
                 excluded: false,
-                state_hash_matched: None,
-                replayed_state_hash: None,
+                state_hash_matched: Some(false),
+                replayed_state_hash: Some("deadbeef".to_string()),
+                refused_body_available: true,
+                refused_body_len: 4096,
+                reset_attempted: true,
+                reset_anchor: Some("ab".repeat(32)),
             }),
             pool_quarantined: 0,
             self_replay_fault_halted: false,
@@ -595,6 +603,17 @@ mod tests {
         assert_eq!(refusal.block_number, 3122);
         assert_eq!(refusal.seq_num, 3122);
         assert_eq!(refusal.at_unix_ms, 1_700_000_000_000);
+        // #564, C359/C365: the refused body and the reset attempt reach the operator surface, and
+        // the serde names are the camelCase ones the operator reads.
+        assert!(refusal.refused_body_available);
+        assert_eq!(refusal.refused_body_len, 4096);
+        assert!(refusal.reset_attempted);
+        assert_eq!(refusal.reset_anchor, Some("ab".repeat(32)));
+        let wired = serde_json::to_value(refusal).expect("the refusal serializes");
+        assert_eq!(wired["refusedBodyAvailable"], true);
+        assert_eq!(wired["refusedBodyLen"], 4096);
+        assert_eq!(wired["resetAttempted"], true);
+        assert_eq!(wired["resetAnchor"], "ab".repeat(32));
         assert!(api.autopropose_timer_halted);
         // W-N10-01: the **episode count** beside the sticky flag, counted on the transition. It is the
         // durable count now — seeded from the store at boot — so unlike the flag it does not start at

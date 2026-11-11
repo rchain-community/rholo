@@ -119,9 +119,24 @@ fault. The code paths are in §1 and the issue timeline is the measurement.
 claim it. The prior pass's sentence "the cause of the 274 is not established" was true of RC-B and
 wrong as a statement about the incident.
 
-**What is owed.** The devnet drill (three arms: attestation recovery, reset after an attestation
-failure, halt on recurrence). The automatic post-catch-up resume is not wired: the reset halts, and an
-operator resume is the explicit way back. That is safe and bounded, not silent. The boot test for the
-`ResetRequested`/`Halted` stage is in
-`casper/tests/reset.rs::a_self_replay_reset_record_latches_the_next_boot`, and the pace-rule override
-is in `casper/src/blocks/proposer/proposer.rs::an_attestation_only_build_is_not_withheld_by_the_pace_rule`.
+**What was owed, and what closed it.** The follow-on closes the automatic post-catch-up resume: a
+completed reset's catch-up moves the record to `Recovered` store-first and clears the latch with the
+operator route's own wake, while the operator POST remains the fallback when the reset was disabled,
+no anchor existed, or the anchor has had its one attempt. The one-reset-per-anchor bound, which was
+written but never read, is enforced in the reset closure and carried across the refusal record's
+overwrite. The refused body's availability and the reset attempt are on the operator surface and are
+seeded from the record at boot. The tests are
+`casper/tests/reset.rs::a_caught_up_self_replay_reset_resumes_without_an_operator_post`,
+`casper/tests/reset.rs::an_over_cap_refused_body_is_visible_as_unavailable_with_its_length` and
+`casper/src/blocks/proposer/proposer.rs::a_reset_at_an_anchor_already_attempted_is_refused`; the
+pace-rule override is
+`casper/src/blocks/proposer/proposer.rs::an_attestation_only_build_is_not_withheld_by_the_pace_rule`.
+
+**The drill, packed.** `tools/self-replay-drill.sh` ran the three arms (attestation recovery; reset
+after an attestation failure with the automatic resume; halt with the reset disabled and the operator
+resume). The digest-verified record is
+`spec/audit/evidence/n564-self-replay-recovery-drill-20261111/README.md`, with the arm-by-arm reading
+in `raw/drill-readout.md`.
+
+**Still owed.** **RC-B**, the trigger, which is Aria's and is blocked on validator A's runtime
+environment.

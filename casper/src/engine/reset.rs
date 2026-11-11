@@ -42,7 +42,9 @@
 use std::sync::Arc;
 
 use rchain_block_storage::block_store::BlockStore;
-use rchain_block_storage::dag::dag_storage::{BlockDagStorage, ResetMarker, ResetPhase};
+use rchain_block_storage::dag::dag_storage::{
+    BlockDagStorage, ResetMarker, ResetPhase, SelfReplayRecord, SelfReplayStage,
+};
 use rchain_crypto::hash::blake2b256_hash::Blake2b256Hash;
 use rchain_models::block_hash::BlockHash;
 use rchain_models::casper::protocol::casper_message::BlockMessage;
@@ -426,6 +428,109 @@ pub async fn act_on_reset_request(
     // The act committed; the request is spent now, and not one step earlier.
     let _ = crate::interpreter_util::take_reset_request(shard_id);
     Ok(Some(request))
+}
+
+/// **The one wake a completed self-replay reset needs** (#564, F-U23-11).
+///
+/// The catch-up walk owns the moment the node is past the anchor it rewound to; the proposer's
+/// self-replay latch lives with the API surface. This is the narrow seam between them: the walk
+/// says "caught up past the anchor", the surface clears the latch and wakes the parked timer.
+///
+/// **Deliberately not the operator's [`crate::api::block_api::ProposeHealth::clear_halt`].** The
+/// refused body, the deploy ids and the reset attempt are evidence that must survive an automatic
+/// resume, and an unrelated autopropose halt must not be cleared by a self-replay recovery. The
+/// implementation is one method, so the two exits cannot drift.
+pub trait SelfReplayResume: Send + Sync {
+    fn resume(&self);
+}
+
+/// **Is a self-replay reset due to be resumed?** The pure decision, shared by the catch-up arm and
+/// its tests, so "the reset completed and the walk passed it" has one definition.
+///
+/// The stage is `ResetRequested` or `Halted`: the proposer's normal terminal stage is `Halted`
+/// (`proposer.rs` writes it immediately after raising the reset), and `ResetRequested` survives only
+/// a crash between those two writes. `Refused`/`Recovered` never reached the node-level rung, and a
+/// `Halted` record with no reset attempt has no anchor to have rewound to. The anchor equality is
+/// what keeps a later divergence-budget reset from clearing a self-replay fault it did not fix.
+pub fn self_replay_resume_is_due(
+    marker: &ResetMarker,
+    frontier: i64,
+    record: Option<&SelfReplayRecord>,
+) -> bool {
+    marker.phase == ResetPhase::Rewound
+        && frontier > i64::from(marker.height)
+        && record.is_some_and(|r| {
+            matches!(
+                r.stage,
+                SelfReplayStage::ResetRequested | SelfReplayStage::Halted
+            ) && r.reset_attempted
+                && r.reset_anchor == Some(*marker.anchor.as_bytes())
+        })
+}
+
+/// **Resume a self-replay fault once its reset has completed and the walk has passed the anchor**
+/// (#564, F-U23-11). Returns whether the latch was cleared.
+///
+/// Store-first: the durable record moves to `Recovered` before the in-process latch is cleared, so a
+/// crash in the window cannot leave a boot that latches a fault the operator already resumed. The
+/// body, ids, costs and reset attempt are all kept; `reset_attempted` distinguishes this post-reset
+/// recovery from the attestation-fallback `Recovered` record, which never attempted a reset.
+///
+/// **Fail closed:** a store read or write that fails leaves the latch standing and logs why. The
+/// operator's `POST /api/v1/autopropose/resume` remains the fallback.
+pub async fn resume_self_replay_after_catchup(
+    dag: &dyn BlockDagStorage,
+    marker: &ResetMarker,
+    frontier: i64,
+    resume: &dyn SelfReplayResume,
+    log: &Arc<dyn Log>,
+) -> bool {
+    let source = LogSource::new("casper.engine.Reset");
+    let record = match dag.read_self_replay_record().await {
+        Ok(record) => record,
+        Err(e) => {
+            log.warn(
+                source,
+                &format!(
+                    "caught up past the reset anchor (height {}) but could not read the self-replay \
+                     record: {e} — the self-replay halt stands; the operator resume is the way out \
+                     (#564, F-U23-11)",
+                    i64::from(marker.height)
+                ),
+            );
+            return false;
+        }
+    };
+    let Some(record) = record else {
+        return false;
+    };
+    if !self_replay_resume_is_due(marker, frontier, Some(&record)) {
+        return false;
+    }
+    let mut recovered = record;
+    recovered.stage = SelfReplayStage::Recovered;
+    if let Err(e) = dag.write_self_replay_record(recovered).await {
+        log.warn(
+            source,
+            &format!(
+                "caught up past the self-replay reset anchor (height {}) but could not record the \
+                 recovery: {e} — the halt stands, so the operator resume is the way out (#564, \
+                 F-U23-11)",
+                i64::from(marker.height)
+            ),
+        );
+        return false;
+    }
+    resume.resume();
+    log.warn(
+        source,
+        &format!(
+            "automatic post-catch-up resume: frontier {frontier} passed the reset anchor at height \
+             {}; the self-replay halt is cleared (#564, F-U23-11)",
+            i64::from(marker.height)
+        ),
+    );
+    true
 }
 
 /// The act itself, in the order the design requires — the anchor's state is read first (an anchor this

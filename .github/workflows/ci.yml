@@ -109,7 +109,9 @@ jobs:
           rustup component add --toolchain 1.95.0 rustfmt clippy
 
       - name: Install protobuf compiler
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y protobuf-compiler libprotobuf-dev
+        # Bounded retries: a runner's transient mirror/DNS failure is not a red PR
+        # (tools/ci-apt-install.sh; 2026-11-11).
+        run: sudo tools/ci-apt-install.sh protobuf-compiler libprotobuf-dev
 
       - name: Cache Cargo artifacts
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
@@ -145,7 +147,9 @@ jobs:
           rustup component add rustfmt clippy
 
       - name: Install protobuf compiler
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y protobuf-compiler libprotobuf-dev
+        # Bounded retries: a runner's transient mirror/DNS failure is not a red PR
+        # (tools/ci-apt-install.sh; 2026-11-11).
+        run: sudo tools/ci-apt-install.sh protobuf-compiler libprotobuf-dev
 
       - name: Cache Cargo artifacts
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2

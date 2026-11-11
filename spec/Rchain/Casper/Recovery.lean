@@ -15,6 +15,12 @@ attestation with no user deploy), moves to a reset of a **finalised** anchor, or
 unrecognised transition is a halt, which is the safe fallback. Every fault therefore reaches a safe
 state in one step, and "retry the unchanged input" has no representation to write.
 
+**The way back.** A reset is not a terminal state. Once the catch-up walk has passed the finalised
+anchor it rewound to, the fault is spent and the node returns to `.healthy` by
+`resumeAfterCatchup`; the operator's explicit resume remains the fallback when no reset was named
+(no finalised anchor), when the reset was disabled, or when the anchor has already had its one
+attempt.
+
 **What it does not claim.** It does not model the replay's cause (that is RC-B, open), the cost/state
 ordering (law 93), or the reset's durable bracket (laws 72/73/76). It says only that the fault state
 has an exit and that the exit is not a no-op. The Rust witnesses are the proposer's recovery/halt
@@ -40,6 +46,8 @@ inductive RecoveryStep where
   | changeInput
   | attestOnly
   | resetFinalised
+  /-- The reset completed and the catch-up walk passed the finalised anchor: the fault is spent. -/
+  | resumeAfterCatchup
   | halt
 deriving DecidableEq, Repr
 
@@ -48,6 +56,7 @@ def nextState : RecoveryState → RecoveryStep → RecoveryState
   | .refused, .changeInput => .recovering
   | .refused, .attestOnly => .recovering
   | .recovering, .resetFinalised => .resetRequested
+  | .resetRequested, .resumeAfterCatchup => .healthy
   | .recovering, .halt => .halted
   | _, _ => .halted
 
@@ -69,6 +78,17 @@ theorem no_unchanged_retry (s : RecoveryState) (step : RecoveryStep) :
 theorem every_fault_reaches_safe (step : RecoveryStep) :
     RecoverySafe (nextState .refused step) := by
   cases step <;> trivial
+
+/-- **A completed reset resumes to healthy.** The step is the automatic post-catch-up resume; the
+Rust predicate (`self_replay_resume_is_due`) admits it only when the walk's frontier has passed the
+finalised anchor and the record names that anchor. -/
+theorem a_caught_up_reset_resumes :
+    nextState .resetRequested .resumeAfterCatchup = .healthy := rfl
+
+/-- **A resume is not a way out of the fault itself.** It is admitted only from `resetRequested`,
+so it cannot be used to skip the reset rung. -/
+theorem resume_requires_a_reset :
+    nextState .refused .resumeAfterCatchup = .halted := rfl
 
 /-- A reset is admitted only when its anchor is finalised. -/
 def resetAdmitted (anchorFinalised : Bool) : Prop := anchorFinalised = true

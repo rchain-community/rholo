@@ -1,0 +1,19 @@
+    Finished `test` profile [unoptimized] target(s) in 0.15s
+     Running tests/omega_rcb_modes.rs (target/debug/deps/omega_rcb_modes-9a61aef35bccac07)
+
+running 1 test
+test omega_m11_relaxed_must_be_rejected ... [deploy] deployer=0000000000000000 ok cost=3 
+
+thread 'omega_m11_relaxed_must_be_rejected' (10970) panicked at casper/tests/omega_rcb_modes.rs:217:18:
+OMEGA_UNSAFE_RELAXED_BLOCK_ACCEPTED
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+FAILED
+
+failures:
+
+failures:
+    omega_m11_relaxed_must_be_rejected
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.07s
+
+error: test failed, to rerun pass `-p rchain-casper --test omega_rcb_modes`

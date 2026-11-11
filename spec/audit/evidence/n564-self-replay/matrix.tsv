@@ -2,24 +2,34 @@ cell	condition	fixture / mode	dev result	incident-binary result	evidence
 M01	C01/C02/C04-C07	sequential, 2 same-key transfers + Nil probe, fresh vault	not run	replay OK, state_match=true; costs [984, 3]; total 987	incident-binary/n564_matrix.rs
 M02	C07/C09	sequential, 6 same-key deploys	not run	replay OK, state_match=true; costs [986, 984, 984, 986, 986, 984]; total 5910	incident-binary/n564_matrix.rs
 M03	C11	failed deploy with a COMM (RCHAIN-3505)	not run	not run
-M04	C11/H2	failed deploy with an unused COMM	not run	replay OK, state_match=true; cost 599 (failed deploy with a COMM)	incident-binary/n564_matrix.rs
+M04	C11/H2	failed deploy with a COMM; unused-COMM-specific condition not established	not run	failed-COMM fixture599, state matched; A-M21 deletion changes replay status; no claim of an original unused COMM	../n564-rcb-trace-20261111/M21-original.log; ../n564-rcb-trace-20261111/M20-post566.log
 M05	C16	cost-only record tamper +274	not run	not run
 M06	C16	state-hash-first shadow replay	not run	not run
 M07	C10	batch on + verify	not run	replay OK, state_match=true; costs [986, 984, 984, 984]	incident-binary/n564_matrix.rs
 M08	C10	batch on + verify off	not run	replay OK, **state_match=false**; costs [986, 984, 984, 984]	incident-binary/n564_matrix.rs — batched play without verification produced a state replay rejected
-M09	C10	effect scheduler gate	not run	not run
-M10	C10	effect scheduler relaxed-validated	not run	not run
-M11	C10	effect scheduler relaxed (block path)	not run	not run
+M09	C10	effect scheduler gate	not run	returned Sequential/Gate costs match: [984,3] and [984,599,739]; replay state matched	../n564-rcb-trace-20261111/M09-M10-original.log
+M10	C10	effect scheduler relaxed-validated	not run	RelaxedValidated returned canonical [984,3] and [984,599,739] with state match; speculative raw costs differ before fallback	../n564-rcb-trace-20261111/M09-M10-original.log
+M11	C10	effect scheduler relaxed (block path)	not run	expected negative failure: OMEGA_UNSAFE_RELAXED_BLOCK_ACCEPTED; separate enforcement issue in PR569	../n564-rcb-trace-20261111/M11-negative-original.log
 M12	C12/C13	fresh vault vs existing vault	not run	not run
 M13	C13	result channel matched vs unmatched	not run	replay OK, state_match=true; cost 739 (result channel not consumed)	incident-binary/n564_matrix.rs
 M14	C11 persistent escrow continuation	not run	not run
-M15	C11 transient produce/consume	not run	not run
+M15	C11 transient produce/consume	not run	maintainer-recorded [984,444,984], [984,926,984], [984,1081,984], costs/state match; not rerun in this continuation		https://github.com/rhovision-org/rholo/issues/564#issuecomment-6802917515
 M16	C14 slash+close system deploy tail	not run	not run
 M17	C15 dummy/probe only	not run	not run
 M18	C05/C11 second transfer reads the first's output	not run	not run
-M19	C08 census off vs on	not run	not run
-M20	C11 trace census on a failed deploy	not run	not run
+M19	C08 census off vs on	not run	post566 f4feb1a census OFF/ON [984,599,737], failed [false,true,false], matching trace/state; not incident-source execution		../n564-rcb-trace-20261111/M19-post566.log
+M20	C11 trace census on a failed deploy	not run	post566 failed COMM599; one recorded/matched COMM; no filtered/leftover COMM; state matched		../n564-rcb-trace-20261111/M20-post566.log
 M21	C02/C18 pre-state/fringe tamper	not run	not run
 M22	A-05 peer block carrying an excluded deploy	not run	not run
 M23	A-08 durable record across restart	not run	not run
 M24	A-06 fault halt and resume	not run	not run
+A-M21	C11/H2	raw local M21; trace-only COMM/Consume deletion, cost/status/term/pre-state fixed	newer-source synthetic confirmation	transfer986→947 (one),986→910 (both); failed-COMM599 changes status first; Produce deletion state matches	../n564-rcb-trace-20261111/README.md
+RCB-R22	historical authentication	raw local M22; five contiguous signed deploys plus authenticated dd2d reconstruction	not run on current; original production verifier used	six signatures pass;18 term/timestamp/signature tamper controls fail	../n564-rcb-recovered-20261111/M22-M24-historical-source.log
+RCB-R23	C09/C11 controls	raw local M23; authenticated terms on synthetic funded genesis	not run	registry2460; short registry1861; simple291; probe327; strict replay/state match; three repeats	../n564-rcb-recovered-20261111/M22-M24-historical-source.log
+RCB-R24	C10/C11 controls	raw local M24; synthetic order/four scheduler controls	not run	registry→probe [2460,1106], probe→registry [327,3239], two registries [2460,2460]; state matches	../n564-rcb-recovered-20261111/M22-M24-historical-source.log
+RCB-R25	C01-C07/C11 exact instance	raw local M25; actual signed inputs and Merkle pre-states; regenerated trace	current-source verification pending	1073 [5576],1115 [5576,2460]; strict replay5576/5302; original post-state roots; three repeats each	../n564-rcb-recovered-20261111/M25-historical-prestate.log
+RCB-R26	C08/C11 cost differential	raw local M26; observer ON/OFF on historical states	not run	141 play charges sum5576;109 replay charges sum5302; first sequence difference29 after inner consume240; same costs/roots without observer	../n564-rcb-recovered-20261111/cost-stream-differential.json
+RCB-R27	C11 single-variable intervention	raw local M27; reverse COMM-binding iteration only; no trace/cost edits	current-source verification pending	both historical cases strict ACCEPT at original cost/post-state; three timestamp variants each	../n564-rcb-recovered-20261111/M27.log
+RCB-R28	Law11 strict controls	raw local M28; corrected order plus trace-deletion controls/RSpace suite	not run	missing COMM/Consume retain cost/status failure; Produce removal accepted as before;192 RSpace tests pass	../n564-rcb-recovered-20261111/M28-strict-trace-controls.log; ../n564-rcb-recovered-20261111/M28-rspace-suite.log
+RCB-R29	current-source baseline	raw local M29; regression and historical inputs on87583050	run43104341321: attempt1 no runner; attempt2 setup failure; no tests; replacement43108778606 in progress	not applicable: current-source cell	../n564-rcb-recovered-20261111/M29-attempt1-infrastructure.json
+RCB-R30	current-source correction	raw local M30; strict cost/state/counter checks retained	replacement43108778606 in progress; no pass claimed	not applicable: current-source cell	https://github.com/aixaria0/rchain-rust/actions/runs/43108778606

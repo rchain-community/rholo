@@ -1,0 +1,13 @@
+diff --git a/rspace/src/replay_rspace.rs b/rspace/src/replay_rspace.rs
+index eb70f84..7a24aa4 100644
+--- a/rspace/src/replay_rspace.rs
++++ b/rspace/src/replay_rspace.rs
+@@ -142,7 +142,7 @@ where
+         }
+ 
+         let mut data = ReplayData::default();
+-        for event in log {
++        for event in log.iter().rev() {
+             if let Event::Comm(comm) = event {
+                 if consumes.contains(&comm.consume) {
+                     data.by_consume

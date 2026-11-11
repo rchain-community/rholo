@@ -1,0 +1,96 @@
+{
+  "observed_at_utc": "2026-11-11T19:03:10.020680+00:00",
+  "source": "8a64f4274bf2dc2ef5a0c347c2d57a0339bea5d8",
+  "files": [
+    {
+      "file": "M09-M10-original.log",
+      "sha256": "fcd90a32b0b2f19e23bc5415bc18889ba9f0b37c0f1b18662fecf03206278709",
+      "manifest_match": true,
+      "download_copy_match": true,
+      "bytes": 2080
+    },
+    {
+      "file": "M11-negative-original.log",
+      "sha256": "cfdc273d7e56e86614d9387a918dfc26a6188f679078892bb63b80568992e276",
+      "manifest_match": true,
+      "download_copy_match": true,
+      "bytes": 721
+    },
+    {
+      "file": "M19-post566.log",
+      "sha256": "73e8ebd379d6600578268a84816c2f1ff9f7918c1a621d582a16cafe87fcd743",
+      "manifest_match": true,
+      "download_copy_match": true,
+      "bytes": 18415
+    },
+    {
+      "file": "M20-post566.log",
+      "sha256": "61fcacfc0a4b3018307c08ca9a89336c643cbaede4736d3689685b17944e8f88",
+      "manifest_match": true,
+      "download_copy_match": true,
+      "bytes": 664
+    },
+    {
+      "file": "M21-original.log",
+      "sha256": "8759944c6935b89d8b0f71ac1c5640589faa0a9bedcdaa88dfb14a9445566c03",
+      "manifest_match": true,
+      "download_copy_match": true,
+      "bytes": 19484
+    },
+    {
+      "file": "M21-post566.log",
+      "sha256": "8e9cf166a78efbfada78bd7b99115c910038eb194a80b417e689729617e284df",
+      "manifest_match": true,
+      "download_copy_match": true,
+      "bytes": 3453
+    }
+  ],
+  "all_match": true,
+  "summary": {
+    "M09-M10-original.log": [
+      "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.75s"
+    ],
+    "M11-negative-original.log": [
+      "OMEGA_UNSAFE_RELAXED_BLOCK_ACCEPTED",
+      "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.07s"
+    ],
+    "M19-post566.log": [
+      "     Running tests/omega_n564_m19_m20.rs (target/debug/deps/omega_n564_m19_m20-4c4217e4f94f7c9b)",
+      "test omega_m19_cost_census_is_observational ... [deploy] deployer=0000000000000000 ok cost=984 ",
+      "OMEGA_M19_M20 M19 OFF costs=[984, 599, 737] failed=[false, true, false] traces=[5, 3, 3] replay_trace=TraceCensusSnapshot { recorded_comms: 4, matched_data: 4, filtered_data: 0, leftover_comms: 0, swallowed_for_failed_deploy: 0 } state_match=true",
+      "OMEGA_M19_M20 M19 ON costs=[984, 599, 737] failed=[false, true, false] traces=[5, 3, 3] replay_trace=TraceCensusSnapshot { recorded_comms: 4, matched_data: 4, filtered_data: 0, leftover_comms: 0, swallowed_for_failed_deploy: 0 } state_match=true",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.21s"
+    ],
+    "M20-post566.log": [
+      "     Running tests/omega_n564_m19_m20.rs (target/debug/deps/omega_n564_m19_m20-4c4217e4f94f7c9b)",
+      "test omega_m20_failed_comm_trace_census ... [deploy] deployer=0000000000000000 FAILED (state changes reverted) cost=599 Error: Operator `+` is not defined on String.",
+      "OMEGA_M19_M20 M20 failed COMM costs=[599] failed=[true] traces=[3] replay_trace=TraceCensusSnapshot { recorded_comms: 1, matched_data: 1, filtered_data: 0, leftover_comms: 0, swallowed_for_failed_deploy: 0 } state_match=true",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.09s"
+    ],
+    "M21-original.log": [
+      "test omega_m21_trace_integrity_falsifier ... [deploy] deployer=0000000000000000 FAILED (state changes reverted) cost=599 Error: Operator `+` is not defined on String.",
+      "OMEGA_M21 shape=failed-comm mutation=remove-comm trace=3->2 recorded_cost=599 play_failed=true verdict=REJECT ReplayStatusMismatch { initial_failed: true, replay_failed: false }",
+      "OMEGA_M21 shape=failed-comm mutation=remove-produce trace=3->2 recorded_cost=599 play_failed=true verdict=ACCEPT state_match=true",
+      "OMEGA_M21 shape=failed-comm mutation=remove-consume trace=3->2 recorded_cost=599 play_failed=true verdict=REJECT ReplayStatusMismatch { initial_failed: true, replay_failed: false }",
+      "OMEGA_M21 shape=failed-comm mutation=remove-all-comm trace=3->2 recorded_cost=599 play_failed=true verdict=REJECT ReplayStatusMismatch { initial_failed: true, replay_failed: false }",
+      "OMEGA_M21 shape=transfer-comm mutation=remove-comm trace=5->4 recorded_cost=986 play_failed=false verdict=REJECT ReplayCostMismatch { initial_cost: 986, replay_cost: 947 }",
+      "OMEGA_M21 shape=transfer-comm mutation=remove-produce trace=5->4 recorded_cost=986 play_failed=false verdict=ACCEPT state_match=true",
+      "OMEGA_M21 shape=transfer-comm mutation=remove-consume trace=5->4 recorded_cost=986 play_failed=false verdict=REJECT ReplayCostMismatch { initial_cost: 986, replay_cost: 947 }",
+      "OMEGA_M21 shape=transfer-comm mutation=remove-all-comm trace=5->3 recorded_cost=986 play_failed=false verdict=REJECT ReplayCostMismatch { initial_cost: 986, replay_cost: 910 }",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.80s"
+    ],
+    "M21-post566.log": [
+      "     Running tests/omega_n564_m19_m20.rs (target/debug/deps/omega_n564_m19_m20-4c4217e4f94f7c9b)",
+      "test omega_m21_trace_integrity_falsifier ... [deploy] deployer=0000000000000000 FAILED (state changes reverted) cost=599 Error: Operator `+` is not defined on String.",
+      "OMEGA_M21 shape=failed-comm mutation=remove-comm trace=3->2 recorded_cost=599 play_failed=true verdict=REJECT ReplayStatusMismatch { initial_failed: true, replay_failed: false } trace_census=TraceCensusSnapshot { recorded_comms: 0, matched_data: 0, filtered_data: 0, leftover_comms: 0, swallowed_for_failed_deploy: 0 }",
+      "OMEGA_M21 shape=failed-comm mutation=remove-produce trace=3->2 recorded_cost=599 play_failed=true verdict=ACCEPT state_match=true trace_census=TraceCensusSnapshot { recorded_comms: 1, matched_data: 1, filtered_data: 0, leftover_comms: 0, swallowed_for_failed_deploy: 0 }",
+      "OMEGA_M21 shape=failed-comm mutation=remove-consume trace=3->2 recorded_cost=599 play_failed=true verdict=REJECT ReplayStatusMismatch { initial_failed: true, replay_failed: false } trace_census=TraceCensusSnapshot { recorded_comms: 1, matched_data: 0, filtered_data: 0, leftover_comms: 0, swallowed_for_failed_deploy: 0 }",
+      "OMEGA_M21 shape=failed-comm mutation=remove-all-comm trace=3->2 recorded_cost=599 play_failed=true verdict=REJECT ReplayStatusMismatch { initial_failed: true, replay_failed: false } trace_census=TraceCensusSnapshot { recorded_comms: 0, matched_data: 0, filtered_data: 0, leftover_comms: 0, swallowed_for_failed_deploy: 0 }",
+      "OMEGA_M21 shape=transfer-comm mutation=remove-comm trace=5->4 recorded_cost=986 play_failed=false verdict=REJECT ReplayCostMismatch { initial_cost: 986, replay_cost: 947 } trace_census=TraceCensusSnapshot { recorded_comms: 1, matched_data: 1, filtered_data: 0, leftover_comms: 0, swallowed_for_failed_deploy: 0 }",
+      "OMEGA_M21 shape=transfer-comm mutation=remove-produce trace=5->4 recorded_cost=986 play_failed=false verdict=ACCEPT state_match=true trace_census=TraceCensusSnapshot { recorded_comms: 2, matched_data: 2, filtered_data: 0, leftover_comms: 0, swallowed_for_failed_deploy: 0 }",
+      "OMEGA_M21 shape=transfer-comm mutation=remove-consume trace=5->4 recorded_cost=986 play_failed=false verdict=REJECT ReplayCostMismatch { initial_cost: 986, replay_cost: 947 } trace_census=TraceCensusSnapshot { recorded_comms: 2, matched_data: 1, filtered_data: 0, leftover_comms: 0, swallowed_for_failed_deploy: 0 }",
+      "OMEGA_M21 shape=transfer-comm mutation=remove-all-comm trace=5->3 recorded_cost=986 play_failed=false verdict=REJECT ReplayCostMismatch { initial_cost: 986, replay_cost: 910 } trace_census=TraceCensusSnapshot { recorded_comms: 0, matched_data: 0, filtered_data: 0, leftover_comms: 0, swallowed_for_failed_deploy: 0 }",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 1.18s"
+    ]
+  }
+}

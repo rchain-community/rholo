@@ -1,0 +1,54 @@
+{
+  "source_copy_tar_gz_sha256": "068f933b8442bf1446cb072f644d9647771a543e1188a917b1b36bb914d61002",
+  "format": "RCB1: root count/roots, history record count/hash+u32LE length+value, cold record count/hash+u32LE length+value",
+  "raw_bytes": 274242,
+  "raw_sha256": "16406738f65d3c2d9ea80f59687bbd3d72c822df7a5611c103723b88a9a6b49f",
+  "gzip_bytes": 100008,
+  "gzip_sha256": "8f8a35a181b334e160805397e9c6081f608ffba8060d41bf7140bcadc05fced2",
+  "nodes": 52,
+  "leaves": 252,
+  "roots": {
+    "bcc2ae1c219466ca33bee5c05bef2033af8ecfe2c97eeb0576cbccfa6b72ff07": {
+      "nodes": 29,
+      "leaf_paths": 251,
+      "unique_leaves": 224,
+      "missing": 0,
+      "invalid_hashes": 0
+    },
+    "83622575f2cc14cefe3cac00c9b833f53514f92219d95df4ee177aef4dfcb1fa": {
+      "nodes": 29,
+      "leaf_paths": 251,
+      "unique_leaves": 224,
+      "missing": 0,
+      "invalid_hashes": 0
+    },
+    "53d8c26858bfdaf609e1f5bab8b601db2ac372b03693705b3e0fdec6fca0ed10": {
+      "nodes": 29,
+      "leaf_paths": 251,
+      "unique_leaves": 224,
+      "missing": 0,
+      "invalid_hashes": 0
+    },
+    "daef89b3479de6730588948a8f035d3cc9a8067614cbbd58f18698347871100a": {
+      "nodes": 33,
+      "leaf_paths": 257,
+      "unique_leaves": 230,
+      "missing": 0,
+      "invalid_hashes": 0
+    },
+    "14cbed18ffb12ac22ab5253fe9dd8f0bc72ccf3cefb2bd4282fa16a86b4447f2": {
+      "nodes": 32,
+      "leaf_paths": 258,
+      "unique_leaves": 231,
+      "missing": 0,
+      "invalid_hashes": 0
+    }
+  },
+  "fringe_1073": [
+    "049a746802f5ba2f839afdc747d06634d80a2f7f4745e6ac72f94b65b24a396d",
+    "3d1ff779597d6a6e0cb4c9ac6c35a64c98cde83099f7f3991c29515b3de2cdf3",
+    "4d7754e32db80c95ca700c402cadfb238f1edcfc03c979768e9c3709247045cc",
+    "a9b7a4b1722da031917affe38f1f57d80d06750b259f1354c9b3d298da850834"
+  ],
+  "scope": "content-addressed closure of five original public testnet roots; block timestamp and rejected block body not recovered"
+}

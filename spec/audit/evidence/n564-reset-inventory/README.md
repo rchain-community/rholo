@@ -63,3 +63,19 @@ The reset's successful-store semantics do not establish durability when a record
 write fails; that remains a separate failure-injection question under C365.
 
 — Ω-WITNESS
+
+## Current process observation for RC-B
+
+[The operator snapshot](current-environment.json) was collected read-only on 2026-11-11
+at 14:34-14:35 UTC. All four observed processes had the same binary SHA-256, and
+no matching batch/scheduler environment variables or explicit effect-scheduler CLI
+flag were observed. The binary basename was rnode-0a1e0236; a basename is not proof
+of its source revision. A's current process began after the incident, at
+2026-11-10 13:52:18 UTC, so these observations do not establish A's November 8
+settings. No service was restarted or reconfigured.
+
+The named source revision makes cross-deploy batching opt-in and verification
+default-on. The cost comparison in
+[the incident source](https://github.com/rhovision-org/rholo/blob/0a1e02362a7c34e474e068ffd47469c8d4be707a/casper/src/runtime_replay.rs#L489)
+is per processed deploy; the incident cost pair should not be promoted into a
+block-total measurement. RC-B remains open.

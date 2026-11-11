@@ -251,8 +251,10 @@ async fn return_unfinalised_deploys(
     // Inventory the DAG that will be rewound, not only the bodies that survived. A body-store scan
     // cannot discover a missing body and would silently treat an incomplete inventory as complete
     // (#564, C366). The immutable representation keeps the candidate set fixed during the reads.
-    let representation = dag.get_representation().await;
-    let keys: Vec<_> = representation.dag_set.iter().copied().collect();
+    let keys: Vec<_> = {
+        let representation = dag.get_representation().await;
+        representation.dag_set.iter().copied().collect()
+    };
     let mut returned = 0usize;
     for hash in keys {
         let meta = dag.lookup(&hash).await?.ok_or_else(|| {

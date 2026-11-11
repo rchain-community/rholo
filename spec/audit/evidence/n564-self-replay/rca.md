@@ -103,7 +103,25 @@ matrix M04 (failed deploy with an unused COMM), M15 (transient produce/consume),
 - A state-correct/cost-mismatched block being refused is not a code bug to fix locally: it is the
   protocol's rule, and the PR records the decision.
 
-## 7. Status
+## 7. What the incident-binary matrix found
+
+Run on `0a1e02362` (`incident-binary/n564_matrix.rs`, results in `matrix.tsv`):
+
+- A plain `revVault!("transfer", ..., 30000000, ...)` deploy costs **984–986**; a `Nil` probe costs
+  **3**; six same-key transfers cost **5910** in total. The incident's per-deploy **5576** is therefore
+  **not** the plain-transfer shape — it is roughly 5.6× a transfer. The six missing terms are
+  load-bearing, not interchangeable with an analogous fixture.
+- A failed deploy with a COMM event costs **599** and replays with a matching state; an unconsumed
+  result channel costs **739** and replays with a matching state. The transfer/COMM/result-channel
+  shapes do **not** reproduce the cost mismatch on the incident binary.
+- **Batched play with `verify = 0` produces a state hash the replay rejects** (`state_match=false`)
+  while recording costs `[986, 984, 984, 984]`. With `verify = 1`, the same shape matches. This is a
+  confirmed play/replay divergence on the incident binary and is why the R1 normalization (an enabled
+  batch always verifies) is a correctness fix, not a preference.
+- No cost mismatch was reproduced. The trigger remains unestablished; the next discriminating
+  experiments are the effect-scheduler modes (M09–M11) and the exact terms, neither available here.
+
+## 8. Status
 
 The audit found the ordering (C16) and the two play-mode holes (C10). The ordering has a test and a
 shadow; the play-mode holes are closed by construction. Law 93 states that a cost verdict is not a

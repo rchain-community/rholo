@@ -55,5 +55,12 @@ the captured log, not artifacts re-derived here. The pack labels every claim `me
   state-neutral deploy would surface as `ReplayCostMismatch` and never as `UnusedCommEvent`, because of
   the same early return. This is the leading hypothesis for the incident's shape; it is measured in the
   matrix, not assumed.
+- **The incident-binary matrix narrows RC1 without closing it.** A plain 30,000,000 transfer costs
+  984–986 phlo on `0a1e02362`, six of them 5910; the incident's per-deploy 5576 is not that shape, so
+  the missing terms are load-bearing. The failed-COMM, unconsumed-result-channel and 2-deploy shapes
+  replay with matching state. **Batched play with verification off produced a state hash the replay
+  rejects** (M07 verifies and matches; M08 does not), which is why the R1 normalization is a
+  correctness fix. No cost mismatch was reproduced; the effect-scheduler cells and the exact terms are
+  still unavailable.
 - **RC1 (the 274's cause) is not established.** The matrix and the code conditions are the evidence;
   the missing terms/state are named in `incident/unavailable.tsv` and in the runbook row.

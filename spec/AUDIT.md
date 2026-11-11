@@ -102,9 +102,9 @@ on the rows that are not reads.
 
 ## Check-off
 
-**Findings  TODO 1 · IN PROGRESS 6 · DONE 387** &nbsp;&nbsp;·&nbsp;&nbsp; **Coverage  all 89 T1 modules read**
+**Findings  TODO 1 · IN PROGRESS 6 · DONE 388** &nbsp;&nbsp;·&nbsp;&nbsp; **Coverage  all 89 T1 modules read**
 
-**Laws  188 of 394 findings name one** (ceiling 206; 206 done row(s) unclassified)
+**Laws  189 of 395 findings name one** (ceiling 206; 206 done row(s) unclassified)
 
 Closed when both halves are zero. A **done** row is settled -- fixed, assessed faithful, a
 deliberate deviation, or refuted -- and names what holds it. A **todo** row names what would
@@ -134,7 +134,7 @@ defects this register had not recorded (C164, C165).
 | `C357` | **A deterministic self-replay refusal rebuilt the same block without bound** (#564). The proposer divergence arm is deliberately uncounted (C270), and `handle_errors` collapsed every non-internal `ReplayFailure` into `InvalidStateHash` -> `Divergence`, so a self-built block's own play/replay disagreement had no action, no surface and no bound; validator A repeated the identical block for ~45 hours and finality froze. The fix is two-part - provenance decides the cause (Law 92: a self-built replay failure is a local fault, never divergence) and after three identical refusals the pooled deploy set is held out of selection, loudly, while remaining valid for every other node. Exclusions are proposer-local, capped and pruned against the pool; they are process-local until the durable record lands, and the deploy expires with the pool at height + 50. | owed: a devnet arm that forces three identical self-replay refusals and observes the exclusion and the subsequent proposal without the set; durable persistence across restart (C359); the RC1 trigger remains open (Aria). | §153 |
 | `C358` | **A self-replay cost refusal is decided before the declared post-state is compared, so a state-correct block can be refused on an accounting field and the operator is never told which case it was.** `replay_deploy_eval` returns `ReplayCostMismatch` before `handle_errors` compares the hash, and the trace check runs after the early return; the refund and executor payment use the recorded cost, not the replayed evaluation cost, and the evaluation cost is not an RSpace leaf, so a cost-only difference can coexist with a correct state. Law 93 states the independence. The shadow replay now reports `state_hash_matched`, the replayed hash, the category delta and the trace census; the enforcing rule is unchanged because the port follows the Scala oracle. `owed:` the protocol decision on whether a state-correct/cost-mismatched block should be accepted (hard fork), and the trace-mask test. casper/src/interpreter_util.rs::a_cost_only_tamper_is_refused_before_the_state_hash_is_compared/casper/tests/determinism.rs::a_cost_only_tamper_is_refused_before_the_state_hash_is_compared | the protocol decision and the trace-mask arm; the incident body and state are unavailable | §154 |
 
-### DONE (387)
+### DONE (388)
 
 | id | what | evidence | account |
 |---|---|---|---|
@@ -439,6 +439,7 @@ defects this register had not recorded (C164, C165).
 | `C354` | The two `rho:gov:tally` modes charge `(ballots + weights)^2` and do not count the ranked or approved option lists at all, while the work is linear in them and round-multiplied by the longest ballot | rholang/src/system_processes.rs::a_tally_charges_the_option_lists_it_scans/rholang/src/accounting.rs::the_tally_charges_are_the_models | §150 |
 | `C355` | The v3 to v4 ledger move discards fault history and retry budgets by adopting old bodies as fresh Pending rows | casper/src/block_disposition.rs::v3_to_v4_preserves_fault_history_instead_of_adopting_it_as_pending/casper/src/block_disposition.rs::v3_copy_error_leaves_no_completion_and_restarts_from_its_durable_prefix/casper/src/block_disposition.rs::v3_copy_preserves_varied_disposition_payloads/casper/src/block_disposition.rs::v3_copy_never_revives_a_durable_accepted_or_refused_verdict/spec/audit/evidence/c355-v3-disposition-negative.txt | §151 |
 | `C356` | Acceptance can bless a different block or a loopback peer, lose duplicate kept effects, or misclassify incomplete recovery evidence | tests/test_n420_root_capture.py/tests/test_evidence_locality.py/tests/test_recovery_harness_controls.py/tests/test_recount_artifact.py/casper/src/merging.rs::coverage_preserves_duplicate_occurrences_within_and_across_kept_chains/casper/src/block_disposition.rs::stored_pending_and_faulted_bodies_are_owned_without_a_dag_entry | §152 |
+| `C360` | **Batched play with verification disabled produced a state hash a Sequential replay rejected on the incident binary.** The batched path forks deploys and merges them, and the only comparison against the sequential oracle sat behind RNODE_CROSS_DEPLOY_BATCH_VERIFY. With verification off, four same-key transfers recorded costs [986,984,984,984] and replayed to a different post-state (matrix M08; M07 with verification on matched). The play mode changed the state, not just the accounting. Fixed by `canonical_batch_policy`: an enabled batch always verifies; the node warns when the unsafe flag is requested. | casper/src/runtime_manager.rs::a_batch_policy_without_verification_is_not_representable | §154 |
 | `F1` | The interpreter core is a mechanical Scala port. `rholang/src/reduce.rs` (1773 lines) | — | §9 |
 | `F2` | The blessed genesis contracts re-implement a HashMap trie in interpreted rholang | — | §9 |
 | `F3` | Silent partiality hides the failure. `compute_bonds` (`casper/src/runtime_manager.rs:503-509`) | — | §9 |

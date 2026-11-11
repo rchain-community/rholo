@@ -695,7 +695,7 @@ bound.
 | **F-U22-07** | LESS | **Less evidence than the diagnosis needs: no cost breakdown, no state verdict, no trace counters** | the refusal carried only a code and a block; the census, shadow and trace counters are new | the operator record now names the category, the state verdict and the trace shape | Drift | R2 | rholang/src/accounting.rs::the_census_records_each_charge_without_moving_the_total |
 | **F-U22-08** | LATE | **Detection is late: three refusals, and with autopropose off no halt at all** | the counted path bumps only the autopropose counter; the timer is off on the testnet | a local fault halt at a frozen height is owed | Drift | R2 | owed: a self-replay fault halt at a frozen height |
 | **F-U22-09** | BEFORE | **The block is refused before its state is checked, and the refused body is not stored, so the evidence is gone** | `put_block` runs only after validation succeeds | the durable refused-block record is owed | Terminal | R2 | owed: a durable refused-block record across restart |
-| **F-U22-10** | AFTER | **After exclusion there is no durable record, no pool prune and no cap; a restart forgets the set** | the tracker is process-local and `excluded` only extends | prune/cap and the durable record are owed | Drift | R2 | owed: an exclusion pruned against the pool and capped |
+| **F-U22-10** | AFTER | **After exclusion there is no durable record, no pool prune and no cap; a restart forgets the set** | the tracker is process-local and `excluded` only extended | the exclusion is capped and pruned against the pool; the durable record is owed | Drift | R2 | casper/src/blocks/proposer/proposer.rs::the_tracker_counts_only_identical_sets_and_keeps_exclusions_on_success |
 | **F-U22-11** | REVERSE | **A state-correct block is refused while the protocol treats the cost field as a state verdict** | C16; the port follows the Scala oracle, so accepting on a state match is a hard fork | the refusal is kept; the decision is recorded, not encoded | Structural | R2 | casper/tests/determinism.rs::a_cost_only_tamper_is_refused_before_the_state_hash_is_compared |
 | **F-U22-12** | REVERSE | **A peer block carrying an excluded deploy is still refused as `Divergence`; the exclusion is proposer-local** | `refusal_for(Peer, Failed) -> InvalidState`; the peer path is unchanged | the node excludes the deploy from its own proposals; it cannot accept it from a peer while its replay disagrees | Structural | R4 | owed: a peer-block-carrying-an-excluded-deploy test |
 
@@ -884,7 +884,7 @@ not read: the whole of `casper/src/merging.rs` (3,800+ lines), `casper/src/dag.r
 `spec/findings.tsv`'s C248 row in the register's emitted form; the remaining `spec/audit/evidence/`
 runs; and the `rspace` history and store internals beyond the named cache and lock sites.
 
-**Debt.** falsifiers owed: 31 · node-words owed: 44
+**Debt.** falsifiers owed: 30 · node-words owed: 44
 
 *(A `F-` row with an `owed` falsifier is a deviation this pass **dispositioned** but did not **prove**;
 the number above is checked against the page by `tools/check-hazop-worksheet.sh`, so it cannot rot.

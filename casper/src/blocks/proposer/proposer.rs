@@ -3135,6 +3135,15 @@ mod tests {
             tracker.excluded().contains(&vec![1u8]),
             "a success must not put an unrebuildable deploy back into selection"
         );
+
+        // The cap is a fault condition, not a reason to grow for ever.
+        let mut capped = SelfReplayTracker::default();
+        let many: BTreeSet<DeployId> = (0..=MAX_SELF_REPLAY_EXCLUSIONS)
+            .map(|i| vec![(i & 0xff) as u8, (i >> 8) as u8])
+            .collect();
+        let (held, overflow) = capped.exclude(&many);
+        assert!(overflow, "the cap must be reported, not silently exceeded");
+        assert_eq!(held, MAX_SELF_REPLAY_EXCLUSIONS as u64);
     }
 
     /// The control: a status that is the **block's own fault** is still counted, so the halt is a

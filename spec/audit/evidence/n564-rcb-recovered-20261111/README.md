@@ -62,9 +62,50 @@ The raw-copy digest must equal the recorded digest before extraction proceeds. `
 
 ## Source-test provenance
 
-The previous current-source run43104341321 did not execute tests: attempt1 failed to acquire a runner; attempt2 failed during shallow-checkout setup. Both receipts are retained. The workflow now fetches the pinned base before comparison. Run43108778606 succeeded with the unchanged production correction. Its artifact manifest was checked before import; corrected source and regression bytes exactly match this branch. The synthetic four-request regression is4844/4554 before the correction; zero/one request controls pass. After the correction all three pass, and both historical cases strictly replay to their original costs and roots. The current RSpace suite has193 passing tests.
+The previous current-source run43104341321 did not execute tests: attempt1 failed to acquire a runner; attempt2 failed during shallow-checkout setup. Both receipts are retained. The workflow now fetches the pinned base before comparison. Run43108778606 succeeded with the unchanged production correction. Its artifact manifest was checked before import; corrected source and regression bytes exactly match this branch. The synthetic four-request regression is4844/4554 before the correction; zero/one request controls pass. After the correction all three pass, and both historical cases strictly replay to their original costs and roots. The current-source RSpace suite has 193 passing tests (192 belongs to the older incident-source snapshot; the Casper pending-request regression is a separate test target).
+
+The byte-equality receipt above describes the captured pre-review regression at `7f24fb6635af5e2938eb360a7475ba3ffdb90503`. The review follow-up adds exact play-cost assertions of 1860/2606/4844 for 0/1/4 pending requests to `casper/tests/replay_trace_order.rs`; the archived test, correction patch and raw run receipts remain unchanged.
 
 This is a source-pinned test evidence pack. Executable binary SHA-256 was not captured; no binary-pinned execution or project evidence-pack.py invocation is claimed. SHA-256 verifies the bytes retained here, not the truth of an assertion by itself.
+
+## Compatibility and rollout
+
+**Consensus-critical acceptance change; hard-fork class / category-A candidate.** The loop builds
+ordered COMM candidate lists from a newest-first log. Reversing it can change strict replay's cost,
+status or state verdict where multiple candidates make their order observable. Ambiguous pending
+requests whose peeks require different repetition counters are the demonstrated shape; this is not
+a proof that no other order-sensitive shape exists.
+
+No recorded-chain sweep proves that every previously accepted block retains its verdict. In
+particular, verdicts can differ for blocks with ambiguous pending-request/peek patterns accepted
+before the fix. The historical reconstructions demonstrate previously refused blocks becoming
+acceptable; they do not establish the reverse direction or certify any complete accepted chain.
+The 0/1-request controls preserve acceptance for those fixtures only. Encodings, recorded trace
+events, costs/refunds and the cost/status/state/counter/unused-COMM guards are unchanged.
+
+**All validators must upgrade in lockstep.** This production loop is ungated: it has no block-height
+or protocol-version activation switch, so adding a schedule row does not stage its activation.
+Mixed corrected/uncorrected nodes can disagree on an affected block and split the chain. For an
+unswept chain, the supported boundary is a coordinated new genesis with all validators running the
+corrected build from genesis. Continuing an existing chain requires an independently accepted
+compatibility sweep through the agreed retained checkpoint and a coordinated activation before
+production resumes. A rolling binary replacement is not an accepted continuation procedure.
+Record validator and replay-node source/binary digests at that boundary; no boundary or rollout
+has been executed by this PR.
+
+The canonical §6 row in [passes.md](../../passes.md#6-scala-deviation-register), its exact
+[reverse inventory](../../section6-gap-inventory.json), and the existing #51
+[Audit:section6-categoryA obligation](../../hardfork-51-closeout.json) record this change.
+Implementation/evidence review is not a release decision.
+
+**C357's operational arm remains owed.** On an isolated devnet/live acceptance run, a corrected
+proposer must self-replay and broadcast the pending-request/peek block; a second corrected node
+must strictly replay that same serialized block with matching recorded per-deploy costs and
+post-state. Capture the block and pre-state identities, source/executable SHA-256 and both nodes'
+verdicts, then exercise the merged #568 attestation, reset/catch-up and halt/resume recovery arms on
+the integrated corrected build. The existing injected-refusal drill establishes recovery behavior;
+it does not substitute for this natural-trigger, second-node arm. Keep C357 and #564 open until
+compatibility and operational acceptance are independently satisfied.
 
 ## Verification boundary
 

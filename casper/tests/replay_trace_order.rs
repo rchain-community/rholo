@@ -57,7 +57,7 @@ const REGISTRY: &str = r#"new state in {
 async fn pending_peeks_replay_with_exact_cost_and_state() {
     // Zero and one pending request are controls. Four expose a persistent
     // consume choosing a later COMM before an earlier peek repetition exists.
-    for count in [0u8, 1, 4] {
+    for (count, expected_cost) in [(0u8, 1860), (1, 2606), (4, 4844)] {
         let rm = common::build_runtime_manager().await;
         let rand = Blake2b512Random::from_init(&[7; 32]);
         let vault = Vault {
@@ -130,6 +130,10 @@ async fn pending_peeks_replay_with_exact_cost_and_state() {
         let systems: Vec<ProcessedSystemDeploy> = systems.into_iter().map(|x| x.deploy).collect();
         assert_eq!(users.len(), 1);
         assert!(!users[0].is_failed);
+        assert_eq!(
+            users[0].cost.cost, expected_cost,
+            "play accounting must remain fixed for {count} pending requests"
+        );
         println!(
             "REPLAY_ORDER pending={count} play_cost={} trace_events={}",
             users[0].cost.cost,

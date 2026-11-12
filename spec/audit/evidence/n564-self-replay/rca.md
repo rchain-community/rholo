@@ -211,7 +211,11 @@ strict failure controls. This is a replay-selection defect, not a cost waiver.
 The exact archived block/timestamp is not claimed. Complete compatibility for every historical block
 and live operational recovery are not claimed. Law11 proves COMM-occurrence agreement over supplied
 traces; it does not prove that this Rust selection implementation recomputes the correct trace.
-Independent review and controlled operational acceptance remain required.
+Independent review and controlled operational acceptance remain required. Strict replay verdicts
+can differ for previously accepted blocks with ambiguous pending-request/peek patterns; no
+complete accepted-chain compatibility sweep is supplied. Section 6 records the hard-fork-class
+boundary, ungated implementation and mandatory lockstep upgrade. See the
+[compatibility/rollout and C357 operational acceptance conditions](../n564-rcb-recovered-20261111/README.md#compatibility-and-rollout).
 
 Current-source red/green run [43108778606](https://github.com/aixaria0/rchain-rust/actions/runs/43108778606) succeeded. The uncorrected synthetic regression fails4844/4554 with four pending requests, while zero/one controls pass. Both recovered historical cases reproduce5576/5302 on87583050. Applying the exact production correction makes the regression and both historical strict cost/state replays pass;193 current RSpace tests and the cost register also pass. Prior run43104341321 executed no tests (runner/setup failures). Artifact checksums and source-byte equality were verified before import.
 

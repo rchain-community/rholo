@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "source_dev_sha": "ad77fb442de28df39ce913b79dde59973aae05b2",
-  "observed_date": "2026-10-31",
+  "source_dev_sha": "e33125f65a95cff4f12baf8139a7361c7d158e43",
+  "observed_date": "2026-11-12",
   "tracker": "#51",
   "boundary": "44 overlapping tracker obligations, not 44 defects. Maintainer deferrals are recorded with source links; this matrix grants no release authorization.",
   "items": [
@@ -585,17 +585,20 @@
     {
       "id": "Audit:section6-categoryA",
       "classification": "IMPLEMENTED / EVIDENCE INCOMPLETE",
-      "exact_file_function_or_invariant": "spec/audit/section6-gap-inventory.json exact reverse coverage",
+      "exact_file_function_or_invariant": "spec/audit/section6-gap-inventory.json exact reverse coverage; #570 ReplayRSpace::build_replay_data chronological COMM lists",
       "related_issue_pr": [
         "spec/audit/passes.md",
-        "#51"
+        "#51",
+        "#570",
+        "#564",
+        "C357"
       ],
       "existing_evidence": {
         "source": "Existing pinned #51 ledger; Register rows and late audit deviations have not all been independently linked to a merged commit or signed named-release deferral."
       },
-      "missing_proof": "All 90 current \u00a76 rows are enumerated with exact row hashes, including the changed Decimal decision and five additional rows. Independent classification and construct-specific historical replay remain open.",
-      "smallest_corrective_action": "Integrate and review existing implementation; attach the specific acceptance artifact below without generalizing its scope",
-      "required_acceptance_test": "check-section6-inventory.py plus independent reviewer sign-off on every A candidate",
+      "missing_proof": "All 94 section 6 rows are enumerated with exact row hashes. The #570 COMM replay-order row is a consensus-critical category-A candidate: accepted ambiguous pending-request/peek blocks may change replay verdict; no full history sweep is supplied. Independent classification, mandatory lockstep rollout at the recorded boundary, natural-trigger proposer/second-node same-block replay and integrated #568 recovery acceptance remain open under C357.",
+      "smallest_corrective_action": "Independently classify the 94 rows, including #570; retain the explicit ungated replay compatibility boundary and lockstep activation requirement; attach C357's operational acceptance rather than closing it from isolated source tests.",
+      "required_acceptance_test": "check-section6-inventory.py; independent A-candidate review; accepted recorded-history compatibility sweep or coordinated new-genesis boundary; corrected proposer and second node replay the identical pending-peek block at matching costs/state, plus #568 recovery arms on the integrated corrected build.",
       "decision_owner": "Jim / auditors",
       "recorded_owner_reason_deferral": false
     },
@@ -849,5 +852,5 @@
     }
   ],
   "section6_inventory": "section6-gap-inventory.json",
-  "source_dev_base_sha": "ad77fb442de28df39ce913b79dde59973aae05b2"
+  "source_dev_base_sha": "87583050ceb1d908516e67bdbfffb16defa72e2e"
 }

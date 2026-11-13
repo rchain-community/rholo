@@ -1,0 +1,49 @@
+{
+  "policy": "Preserve global shared matrix M01-M24. Raw logs are immutable and retain local labels. Use the scoped names below in new discussion.",
+  "prior_trace_experiment": {
+    "canonical": "A-M21",
+    "raw_local": "M21",
+    "source_pack": "../n564-rcb-trace-20261111",
+    "immutable_commit": "8a64f4274bf2dc2ef5a0c347c2d57a0339bea5d8"
+  },
+  "experiments": [
+    {
+      "canonical": "RCB-R22",
+      "raw_local": "M22"
+    },
+    {
+      "canonical": "RCB-R23",
+      "raw_local": "M23"
+    },
+    {
+      "canonical": "RCB-R24",
+      "raw_local": "M24"
+    },
+    {
+      "canonical": "RCB-R25",
+      "raw_local": "M25"
+    },
+    {
+      "canonical": "RCB-R26",
+      "raw_local": "M26"
+    },
+    {
+      "canonical": "RCB-R27",
+      "raw_local": "M27"
+    },
+    {
+      "canonical": "RCB-R28",
+      "raw_local": "M28"
+    },
+    {
+      "canonical": "RCB-R29",
+      "raw_local": "M29"
+    },
+    {
+      "canonical": "RCB-R30",
+      "raw_local": "M30"
+    }
+  ],
+  "reason": "Global M21 already means pre-state/fringe tamper; global M22 already means A-05 peer-excluded deploy. No global rows are renamed.",
+  "request": "https://github.com/rhovision-org/rholo/issues/564#issuecomment-6807495722"
+}

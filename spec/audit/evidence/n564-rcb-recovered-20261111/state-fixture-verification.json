@@ -1,0 +1,40 @@
+{
+  "all_hashes_and_root_closures_valid": true,
+  "roots": {
+    "bcc2ae1c219466ca33bee5c05bef2033af8ecfe2c97eeb0576cbccfa6b72ff07": {
+      "nodes": 29,
+      "leaf_paths": 251,
+      "unique_leaves": 224,
+      "missing": 0,
+      "invalid_hashes": 0
+    },
+    "83622575f2cc14cefe3cac00c9b833f53514f92219d95df4ee177aef4dfcb1fa": {
+      "nodes": 29,
+      "leaf_paths": 251,
+      "unique_leaves": 224,
+      "missing": 0,
+      "invalid_hashes": 0
+    },
+    "53d8c26858bfdaf609e1f5bab8b601db2ac372b03693705b3e0fdec6fca0ed10": {
+      "nodes": 29,
+      "leaf_paths": 251,
+      "unique_leaves": 224,
+      "missing": 0,
+      "invalid_hashes": 0
+    },
+    "daef89b3479de6730588948a8f035d3cc9a8067614cbbd58f18698347871100a": {
+      "nodes": 33,
+      "leaf_paths": 257,
+      "unique_leaves": 230,
+      "missing": 0,
+      "invalid_hashes": 0
+    },
+    "14cbed18ffb12ac22ab5253fe9dd8f0bc72ccf3cefb2bd4282fa16a86b4447f2": {
+      "nodes": 32,
+      "leaf_paths": 258,
+      "unique_leaves": 231,
+      "missing": 0,
+      "invalid_hashes": 0
+    }
+  }
+}

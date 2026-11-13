@@ -1,0 +1,360 @@
+{
+  "observed_at_utc": "2026-11-11T21:00:23.527611+00:00",
+  "scope": "page traversal of private raw copies; active B-tree records only",
+  "files": [
+    {
+      "file": "blockstorage/data.mdb",
+      "txn": 2866,
+      "main_entries": 1,
+      "databases": [
+        {
+          "name": "blocks",
+          "entries": 2865,
+          "key_sizes": [
+            32
+          ],
+          "root_hits": {
+            "pre1073": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            },
+            "pre1115": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            },
+            "block1073": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            },
+            "block1115": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "file": "dagstorage/data.mdb",
+      "txn": 33922,
+      "main_entries": 7,
+      "databases": [
+        {
+          "name": "block-metadata",
+          "entries": 1832,
+          "key_sizes": [
+            32
+          ],
+          "root_hits": {
+            "pre1073": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            },
+            "pre1115": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            },
+            "block1073": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            },
+            "block1115": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            }
+          }
+        },
+        {
+          "name": "deploy-index",
+          "entries": 85,
+          "key_sizes": [
+            69,
+            70,
+            71
+          ],
+          "root_hits": {
+            "pre1073": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            },
+            "pre1115": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            },
+            "block1073": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            },
+            "block1115": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            }
+          }
+        },
+        {
+          "name": "deployer-index",
+          "entries": 23,
+          "key_sizes": [
+            12,
+            13,
+            32
+          ],
+          "root_hits": {
+            "pre1073": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            },
+            "pre1115": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            },
+            "block1073": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            },
+            "block1115": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            }
+          }
+        },
+        {
+          "name": "finalized-store",
+          "entries": 1,
+          "key_sizes": [
+            1
+          ],
+          "root_hits": {
+            "pre1073": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            },
+            "pre1115": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            },
+            "block1073": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            },
+            "block1115": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            }
+          }
+        },
+        {
+          "name": "mergeable-channel-cache",
+          "entries": 1943,
+          "key_sizes": [
+            102,
+            103
+          ],
+          "root_hits": {
+            "pre1073": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            },
+            "pre1115": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            },
+            "block1073": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            },
+            "block1115": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            }
+          }
+        },
+        {
+          "name": "native-changes-cache",
+          "entries": 1943,
+          "key_sizes": [
+            102,
+            103
+          ],
+          "root_hits": {
+            "pre1073": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            },
+            "pre1115": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            },
+            "block1073": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            },
+            "block1115": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            }
+          }
+        },
+        {
+          "name": "reset-marker",
+          "entries": 1,
+          "key_sizes": [
+            21
+          ],
+          "root_hits": {
+            "pre1073": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            },
+            "pre1115": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            },
+            "block1073": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            },
+            "block1115": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "file": "rspace/history/data.mdb",
+      "txn": 101805,
+      "main_entries": 2,
+      "databases": [
+        {
+          "name": "rspace-history",
+          "entries": 1232,
+          "key_sizes": [
+            32
+          ],
+          "root_hits": {
+            "pre1073": {
+              "present": true,
+              "value_bytes": 204,
+              "value_sha256": "5e01f3efdb4fdeb84b67fa1e2718cb147be6b44b8235c83ef8ac76ed1797622e"
+            },
+            "pre1115": {
+              "present": true,
+              "value_bytes": 204,
+              "value_sha256": "cd3cdb57d23c7d2639b1e1f3786d4a5337b1bea751f5dacf19a44ac166aab7b2"
+            },
+            "block1073": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            },
+            "block1115": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            }
+          }
+        },
+        {
+          "name": "rspace-roots",
+          "entries": 346,
+          "key_sizes": [
+            12,
+            32
+          ],
+          "root_hits": {
+            "pre1073": {
+              "present": true,
+              "value_bytes": 4,
+              "value_sha256": "4813494d137e1631bba301d5acab6e7bb7aa74ce1185d456565ef51d737677b2"
+            },
+            "pre1115": {
+              "present": true,
+              "value_bytes": 4,
+              "value_sha256": "4813494d137e1631bba301d5acab6e7bb7aa74ce1185d456565ef51d737677b2"
+            },
+            "block1073": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            },
+            "block1115": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "file": "rspace/cold/data.mdb",
+      "txn": 318,
+      "main_entries": 1,
+      "databases": [
+        {
+          "name": "rspace-cold",
+          "entries": 1461,
+          "key_sizes": [
+            32
+          ],
+          "root_hits": {
+            "pre1073": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            },
+            "pre1115": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            },
+            "block1073": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            },
+            "block1115": {
+              "present": false,
+              "value_bytes": null,
+              "value_sha256": null
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

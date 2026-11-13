@@ -142,7 +142,10 @@ where
         }
 
         let mut data = ReplayData::default();
-        for event in log {
+        // RSpace prepends events, so restore execution order before binding COMMs.
+        // A later pending request may otherwise run before the peek repetition
+        // its recorded COMM requires, suppressing work and changing replay cost.
+        for event in log.iter().rev() {
             if let Event::Comm(comm) = event {
                 if consumes.contains(&comm.consume) {
                     data.by_consume

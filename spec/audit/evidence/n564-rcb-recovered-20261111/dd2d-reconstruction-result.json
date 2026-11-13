@@ -1,0 +1,31 @@
+{
+  "scope": "bounded authenticated reconstruction, not a contiguous raw-byte recovery",
+  "lower_timestamp": 1794159381000,
+  "upper_timestamp": 1794159382999,
+  "limits": [
+    5000000,
+    10000000,
+    1000000
+  ],
+  "heights": [
+    1070,
+    1071,
+    1069,
+    1072
+  ],
+  "term_sha256": "3e5b827a0abefa8112acf9ef9afce1eafd9cb422bb7c7635154e1d8ed0ff5158",
+  "matched": true,
+  "timestamp": 1794159382930,
+  "phlo_price": 1,
+  "phlo_limit": 5000000,
+  "valid_after": 1071,
+  "shard": "/testnet",
+  "wire_sha256": "643c2fd10fc575e079f49d6f6be64d5cca58086d9c6cd81fc5e445c123afe821",
+  "wire_bytes": 1273,
+  "signed_data_blake2b256": "1ef214ed60d04dd85343affd72bdabaac0b659f3ee4bc8aa42d31e13b320ce3a",
+  "signature": "3045022100dd2db7e82d159ff1c0be9e7c25702cd73af097562860164ac66225fb9557419402203896bbf5a0bfbeee5a969eb278789bc1807318c0b30d0bf697845e565f92c409",
+  "deployer": "04bf50a43821ca9672808a0d79289011a66aa2f741e3a066d46965762870edb5a58a6ded751e28a70891961391284933976e9f4514f0b4135ae0f7d98b786f9a17",
+  "term": "// BYOID public REV proof registry.\n//\n// Deploy once per writable rholo network. The contract stores the latest\n// signed proof-card string for each REV address. Readers verify the DID and REV\n// signatures themselves; the contract is an index, not a trust anchor.\n//\n// Publish:\n//   @\"byoid:rev:registry\"!(\"publish\", \"<revAddress>\", \"<card>\", \"<resultName>\")\n// Get:\n//   @\"byoid:rev:registry\"!(\"get\", \"<revAddress>\", \"unused\", \"<resultName>\")\n//\n// The result name is a public name chosen by the caller. The app also writes\n// the card to byoid:rev:<address> so reads do not require a deploy.\n\nnew state in {\n  state!({}) |\n  contract @\"byoid:rev:registry\"(@action, @address, @payload, @resultName) = {\n    match action {\n      \"publish\" => {\n        for (@store <- state) {\n          state!(store.set(address, payload)) |\n          @resultName!(\"OK\")\n        }\n      }\n      \"get\" => {\n        for (@store <<- state) {\n          match store.get(address) {\n            Nil => { @resultName!(\"MISS\") }\n            value => { @resultName!(value) }\n          }\n        }\n      }\n    }\n  }\n}\n",
+  "trials": 2070,
+  "elapsed_seconds": 1.284
+}

@@ -1,0 +1,166 @@
+{
+  "observed_at_utc": "2026-11-11T19:20:54.705872+00:00",
+  "source_raw_sha256": "9502a5396a9c83381d3fc5e36930e7a2847ff6c17214a6fb19c71c7483892f02",
+  "candidate_starts": 33,
+  "unique_candidates": 5,
+  "matched_distinct_signatures": 5,
+  "candidates": [
+    {
+      "sig": "304502210098dd6363cee961e262f636390febb7c49ab7a12f6c4936fe7b561195f19b32380220194409aab86eb8e67a0f246660be9c35c5b092dce59f97a8031febdd5d90db87",
+      "wire_sha256": "c30ebeffdf7350441474c34125e0d8d9700f317fbd14ab9235bde3a6bcc27e12",
+      "wire_bytes": 264,
+      "offsets": [
+        {
+          "start": 10673,
+          "end": 10937
+        },
+        {
+          "start": 31153,
+          "end": 31417
+        },
+        {
+          "start": 48135,
+          "end": 48399
+        },
+        {
+          "start": 52231,
+          "end": 52495
+        },
+        {
+          "start": 55729,
+          "end": 55993
+        },
+        {
+          "start": 59825,
+          "end": 60089
+        },
+        {
+          "start": 64519,
+          "end": 64783
+        }
+      ],
+      "deployer": "04bf50a43821ca9672808a0d79289011a66aa2f741e3a066d46965762870edb5a58a6ded751e28a70891961391284933976e9f4514f0b4135ae0f7d98b786f9a17",
+      "timestamp": 1794159883286,
+      "phlo_price": 1,
+      "phlo_limit": 5000000,
+      "valid_after": 1115,
+      "shard": "/testnet",
+      "term_bytes": 84,
+      "term_sha256": "b168889a741f973246a656dca1ba8a0099197bf6feaae4833f880d941bca04b2",
+      "term": "@\"byoid:rev:registry\"!(\"get\", \"__byoid_probe__\", \"x\", \"byoid:rev:probe:uPBegZQe2A4\")",
+      "attachments": 0
+    },
+    {
+      "sig": "304402202e37ec045c6a56421e285438a53979e58f3772b836520e411504361fd817b24b022021d654896225a8a931f865483b98da8cf2e7bd2d47a86657079dfe2253b19d1d",
+      "wire_sha256": "ee239c255be5d3beb73bce3b8244f7421afae4c19e17855ace074d4a2076b432",
+      "wire_bytes": 230,
+      "offsets": [
+        {
+          "start": 14804,
+          "end": 15034
+        },
+        {
+          "start": 22996,
+          "end": 23226
+        },
+        {
+          "start": 35284,
+          "end": 35514
+        },
+        {
+          "start": 36634,
+          "end": 36864
+        },
+        {
+          "start": 43476,
+          "end": 43706
+        }
+      ],
+      "deployer": "04bf50a43821ca9672808a0d79289011a66aa2f741e3a066d46965762870edb5a58a6ded751e28a70891961391284933976e9f4514f0b4135ae0f7d98b786f9a17",
+      "timestamp": 1794159733641,
+      "phlo_price": 1,
+      "phlo_limit": 1000000,
+      "valid_after": 1115,
+      "shard": "/testnet",
+      "term_bytes": 52,
+      "term_sha256": "51684e9511ce7f99a56f92109e549b7c1ad2ab2b680a236866c6e740eba3fc28",
+      "term": "contract @\"byoid:test:simple\"(@x, ret) = { ret!(x) }",
+      "attachments": 0
+    },
+    {
+      "sig": "30450221009915abb44847d701d84b52bd6d936d18b7df428c63a6f7c20141faff3dda1a15022042832a0caca3c6af88390cc8ae968b110a3e635d180d635023988aebec0673b7",
+      "wire_sha256": "5260ee3acd34dfb80f468297a0b52261ce43d0e4437cde998e820f349096e243",
+      "wire_bytes": 673,
+      "offsets": [
+        {
+          "start": 19053,
+          "end": 19726
+        },
+        {
+          "start": 39533,
+          "end": 40206
+        },
+        {
+          "start": 48479,
+          "end": 49152
+        }
+      ],
+      "deployer": "04bf50a43821ca9672808a0d79289011a66aa2f741e3a066d46965762870edb5a58a6ded751e28a70891961391284933976e9f4514f0b4135ae0f7d98b786f9a17",
+      "timestamp": 1794159605365,
+      "phlo_price": 1,
+      "phlo_limit": 1000000,
+      "valid_after": 1115,
+      "shard": "/testnet",
+      "term_bytes": 493,
+      "term_sha256": "6f199f65660faa147d7dd21c9462fb8ce47ecdf97d460c22d46bf9bb45e242bf",
+      "term": "new state in {\n  state!({}) |\n  contract @\"byoid:rev:registry\"(@action, @address, @payload, @resultName) = {\n    match action {\n      \"publish\" => {\n        for (@store <- state) {\n          state!(store.set(address, payload)) |\n          @resultName!(\"OK\")\n        }\n      }\n      \"get\" => {\n        for (@store <<- state) {\n          match store.get(address) {\n            Nil => { @resultName!(\"MISS\") }\n            value => { @resultName!(value) }\n          }\n        }\n      }\n    }\n  }\n}",
+      "attachments": 0
+    },
+    {
+      "sig": "304402201e4f03747e9d7ec7b12c21eb07a31a2071a5f40b666a224751b5100a2ad22d9a02205b5068481c5376095f1a27c8670c858f21924c41d08bc3e51de7260eb05d6402",
+      "wire_sha256": "ef9e8a0efbe701042093c67be4926404d257a4982f3ca406d7033474063ca78f",
+      "wire_bytes": 1271,
+      "offsets": [
+        {
+          "start": 43784,
+          "end": 45055
+        }
+      ],
+      "deployer": "04bf50a43821ca9672808a0d79289011a66aa2f741e3a066d46965762870edb5a58a6ded751e28a70891961391284933976e9f4514f0b4135ae0f7d98b786f9a17",
+      "timestamp": 1794159477568,
+      "phlo_price": 1,
+      "phlo_limit": 1000000,
+      "valid_after": 1114,
+      "shard": "/testnet",
+      "term_bytes": 1092,
+      "term_sha256": "3e5b827a0abefa8112acf9ef9afce1eafd9cb422bb7c7635154e1d8ed0ff5158",
+      "term": "// BYOID public REV proof registry.\n//\n// Deploy once per writable rholo network. The contract stores the latest\n// signed proof-card string for each REV address. Readers verify the DID and REV\n// signatures themselves; the contract is an index, not a trust anchor.\n//\n// Publish:\n//   @\"byoid:rev:registry\"!(\"publish\", \"<revAddress>\", \"<card>\", \"<resultName>\")\n// Get:\n//   @\"byoid:rev:registry\"!(\"get\", \"<revAddress>\", \"unused\", \"<resultName>\")\n//\n// The result name is a public name chosen by the caller. The app also writes\n// the card to byoid:rev:<address> so reads do not require a deploy.\n\nnew state in {\n  state!({}) |\n  contract @\"byoid:rev:registry\"(@action, @address, @payload, @resultName) = {\n    match action {\n      \"publish\" => {\n        for (@store <- state) {\n          state!(store.set(address, payload)) |\n          @resultName!(\"OK\")\n        }\n      }\n      \"get\" => {\n        for (@store <<- state) {\n          match store.get(address) {\n            Nil => { @resultName!(\"MISS\") }\n            value => { @resultName!(value) }\n          }\n        }\n      }\n    }\n  }\n}\n",
+      "attachments": 0
+    },
+    {
+      "sig": "304402207c03393eafc284f78e1caed09c44eaf7ec293e9b920069df597c6a858d41746b022011545f04d8d21de7be11ba73f09fb879f1c4ab6c620443993973881024d02d01",
+      "wire_sha256": "9130c49e1d077cbb8f4a037b6efc843da691b17ac6b98841cd8ff4869c2ad11b",
+      "wire_bytes": 1272,
+      "offsets": [
+        {
+          "start": 56072,
+          "end": 57344
+        }
+      ],
+      "deployer": "04bf50a43821ca9672808a0d79289011a66aa2f741e3a066d46965762870edb5a58a6ded751e28a70891961391284933976e9f4514f0b4135ae0f7d98b786f9a17",
+      "timestamp": 1794159913600,
+      "phlo_price": 1,
+      "phlo_limit": 5000000,
+      "valid_after": 1115,
+      "shard": "/testnet",
+      "term_bytes": 1092,
+      "term_sha256": "3e5b827a0abefa8112acf9ef9afce1eafd9cb422bb7c7635154e1d8ed0ff5158",
+      "term": "// BYOID public REV proof registry.\n//\n// Deploy once per writable rholo network. The contract stores the latest\n// signed proof-card string for each REV address. Readers verify the DID and REV\n// signatures themselves; the contract is an index, not a trust anchor.\n//\n// Publish:\n//   @\"byoid:rev:registry\"!(\"publish\", \"<revAddress>\", \"<card>\", \"<resultName>\")\n// Get:\n//   @\"byoid:rev:registry\"!(\"get\", \"<revAddress>\", \"unused\", \"<resultName>\")\n//\n// The result name is a public name chosen by the caller. The app also writes\n// the card to byoid:rev:<address> so reads do not require a deploy.\n\nnew state in {\n  state!({}) |\n  contract @\"byoid:rev:registry\"(@action, @address, @payload, @resultName) = {\n    match action {\n      \"publish\" => {\n        for (@store <- state) {\n          state!(store.set(address, payload)) |\n          @resultName!(\"OK\")\n        }\n      }\n      \"get\" => {\n        for (@store <<- state) {\n          match store.get(address) {\n            Nil => { @resultName!(\"MISS\") }\n            value => { @resultName!(value) }\n          }\n        }\n      }\n    }\n  }\n}\n",
+      "attachments": 0
+    }
+  ],
+  "not_recovered": [
+    "3045022100dd2db7e82d159ff1c0be9e7c25702cd73af097562860164ac66225fb9557419402203896bbf5a0bfbeee5a969eb278789bc1807318c0b30d0bf697845e565f92c409"
+  ],
+  "scope": "contiguous raw-byte protobuf carving; never spliced or edited; exact-source Rust decode and signature verification still required"
+}

@@ -1,0 +1,1 @@
+{"file": "rholang/src/accounting.rs", "original_sha256": "0b1612b30f97eef13389c7a6b972fe9c76b7e4fe7d5ceaac679fdb1e9d36c8bf", "observed_sha256": "ada523e80a44b0fa2253e75dc8ceb8d34ac91dc2f217f03de5e78b6403b552e5", "change": "environment-gated logging only; cost arithmetic and validation unchanged"}

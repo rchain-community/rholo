@@ -1,0 +1,24 @@
+    Finished `test` profile [unoptimized] target(s) in 0.20s
+     Running tests/omega_n564_m19_m20.rs (target/debug/deps/omega_n564_m19_m20-4c4217e4f94f7c9b)
+
+running 1 test
+test omega_m21_trace_integrity_falsifier ... [deploy] deployer=0000000000000000 FAILED (state changes reverted) cost=599 Error: Operator `+` is not defined on String.
+OMEGA_M21 shape=failed-comm mutation=remove-comm trace=3->2 recorded_cost=599 play_failed=true verdict=REJECT ReplayStatusMismatch { initial_failed: true, replay_failed: false } trace_census=TraceCensusSnapshot { recorded_comms: 0, matched_data: 0, filtered_data: 0, leftover_comms: 0, swallowed_for_failed_deploy: 0 }
+[deploy] deployer=0000000000000000 FAILED (state changes reverted) cost=599 Error: Operator `+` is not defined on String.
+OMEGA_M21 shape=failed-comm mutation=remove-produce trace=3->2 recorded_cost=599 play_failed=true verdict=ACCEPT state_match=true trace_census=TraceCensusSnapshot { recorded_comms: 1, matched_data: 1, filtered_data: 0, leftover_comms: 0, swallowed_for_failed_deploy: 0 }
+[deploy] deployer=0000000000000000 FAILED (state changes reverted) cost=599 Error: Operator `+` is not defined on String.
+OMEGA_M21 shape=failed-comm mutation=remove-consume trace=3->2 recorded_cost=599 play_failed=true verdict=REJECT ReplayStatusMismatch { initial_failed: true, replay_failed: false } trace_census=TraceCensusSnapshot { recorded_comms: 1, matched_data: 0, filtered_data: 0, leftover_comms: 0, swallowed_for_failed_deploy: 0 }
+[deploy] deployer=0000000000000000 FAILED (state changes reverted) cost=599 Error: Operator `+` is not defined on String.
+OMEGA_M21 shape=failed-comm mutation=remove-all-comm trace=3->2 recorded_cost=599 play_failed=true verdict=REJECT ReplayStatusMismatch { initial_failed: true, replay_failed: false } trace_census=TraceCensusSnapshot { recorded_comms: 0, matched_data: 0, filtered_data: 0, leftover_comms: 0, swallowed_for_failed_deploy: 0 }
+[deploy] deployer=0000000000000000 ok cost=986 
+OMEGA_M21 shape=transfer-comm mutation=remove-comm trace=5->4 recorded_cost=986 play_failed=false verdict=REJECT ReplayCostMismatch { initial_cost: 986, replay_cost: 947 } trace_census=TraceCensusSnapshot { recorded_comms: 1, matched_data: 1, filtered_data: 0, leftover_comms: 0, swallowed_for_failed_deploy: 0 }
+[deploy] deployer=0000000000000000 ok cost=986 
+OMEGA_M21 shape=transfer-comm mutation=remove-produce trace=5->4 recorded_cost=986 play_failed=false verdict=ACCEPT state_match=true trace_census=TraceCensusSnapshot { recorded_comms: 2, matched_data: 2, filtered_data: 0, leftover_comms: 0, swallowed_for_failed_deploy: 0 }
+[deploy] deployer=0000000000000000 ok cost=986 
+OMEGA_M21 shape=transfer-comm mutation=remove-consume trace=5->4 recorded_cost=986 play_failed=false verdict=REJECT ReplayCostMismatch { initial_cost: 986, replay_cost: 947 } trace_census=TraceCensusSnapshot { recorded_comms: 2, matched_data: 1, filtered_data: 0, leftover_comms: 0, swallowed_for_failed_deploy: 0 }
+[deploy] deployer=0000000000000000 ok cost=986 
+OMEGA_M21 shape=transfer-comm mutation=remove-all-comm trace=5->3 recorded_cost=986 play_failed=false verdict=REJECT ReplayCostMismatch { initial_cost: 986, replay_cost: 910 } trace_census=TraceCensusSnapshot { recorded_comms: 0, matched_data: 0, filtered_data: 0, leftover_comms: 0, swallowed_for_failed_deploy: 0 }
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 1.18s
+

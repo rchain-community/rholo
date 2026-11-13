@@ -1,0 +1,38 @@
+    Finished `test` profile [unoptimized] target(s) in 0.16s
+     Running tests/omega_rcb_modes.rs (target/debug/deps/omega_rcb_modes-9a61aef35bccac07)
+
+running 2 tests
+test omega_m09_m10_transfer_failed_comm ... [deploy] deployer=0000000000000000 ok cost=984 
+[deploy] deployer=0000000000000000 FAILED (state changes reverted) cost=599 Error: Operator `+` is not defined on String.
+[deploy] deployer=0000000000000000 ok cost=739 
+OMEGA_MODE Sequential costs=[984, 599, 739] traces=[5, 3, 3]
+[deploy] deployer=0000000000000000 ok cost=984 
+[deploy] deployer=0000000000000000 FAILED (state changes reverted) cost=599 Error: Operator `+` is not defined on String.
+[deploy] deployer=0000000000000000 ok cost=739 
+OMEGA_MODE Gate costs=[984, 599, 739] traces=[5, 3, 3]
+[deploy] deployer=0000000000000000 ok cost=1176 
+[deploy] deployer=0000000000000000 FAILED (state changes reverted) cost=766 Error: Operator `+` is not defined on String.
+[deploy] deployer=0000000000000000 ok cost=932 
+[deploy] deployer=0000000000000000 ok cost=984 
+[deploy] deployer=0000000000000000 FAILED (state changes reverted) cost=599 Error: Operator `+` is not defined on String.
+[deploy] deployer=0000000000000000 ok cost=739 
+OMEGA_MODE RelaxedValidated costs=[984, 599, 739] traces=[5, 3, 3]
+ok
+test omega_m09_m10_transfer_nil ... [deploy] deployer=0000000000000000 ok cost=984 
+[deploy] deployer=0000000000000000 ok cost=3 
+OMEGA_MODE Sequential costs=[984, 3] traces=[5, 0]
+[deploy] deployer=0000000000000000 ok cost=984 
+[deploy] deployer=0000000000000000 ok cost=3 
+OMEGA_MODE Gate costs=[984, 3] traces=[5, 0]
+[deploy] deployer=0000000000000000 ok cost=1176 
+[deploy] deployer=0000000000000000 ok cost=3 
+[deploy] deployer=0000000000000000 ok cost=984 
+[deploy] deployer=0000000000000000 ok cost=3 
+OMEGA_MODE RelaxedValidated costs=[984, 3] traces=[5, 0]
+[deploy] deployer=0000000000000000 ok cost=984 
+[deploy] deployer=0000000000000000 ok cost=3 
+OMEGA_MODE ForkJoin costs=[984, 3] traces=[5, 0]
+ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.75s
+

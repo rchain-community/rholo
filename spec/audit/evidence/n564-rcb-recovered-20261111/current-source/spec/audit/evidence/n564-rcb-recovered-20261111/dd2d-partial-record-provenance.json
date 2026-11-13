@@ -1,0 +1,11 @@
+{
+  "source_raw_sha256": "9502a5396a9c83381d3fc5e36930e7a2847ff6c17214a6fb19c71c7483892f02",
+  "key_offset": 47056,
+  "value_offset": 47127,
+  "declared_value_bytes": 1273,
+  "declared_term_bytes": 1092,
+  "term_offset": 47197,
+  "matching_term_prefix_bytes": 859,
+  "reconstructed_wire_sha256": "643c2fd10fc575e079f49d6f6be64d5cca58086d9c6cd81fc5e445c123afe821",
+  "status": "authenticated reconstruction; overwritten tail not restored as original raw bytes"
+}

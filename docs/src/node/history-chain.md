@@ -172,6 +172,34 @@ Ports are **43400-based** (`--protocol-port 43400`, `--api-port-http 43403`, …
 on the same host holds the whole 40400 family and the testnet join holds 42400. Only 80/443 are exposed;
 nginx proxies the API from `127.0.0.1:43403`.
 
+### The binary is part of the contract
+
+Reads here depend on a behaviour the current build lost. `explore-deploy` with no block hash anchors to the
+**genesis block**, because this chain has no finalized block to anchor to (see "There is no finality"
+above). Builds from the C56 line up to
+[#556](https://github.com/rhovision-org/rholo/pull/556) resolve that anchor through
+`last_finalized_block_unsafe()` and answer `"Finalized fringe is not available."` instead — while
+`/api/status` and `/api/blocks/1` still answer normally, so the failure presents as every address
+holding nothing rather than as a broken node. A wallet reading it shows a zero balance.
+
+`rnode-history.service` therefore has to run the **pre-C56** binary — currently `/usr/local/bin/rnode`,
+version string `rchain 0.1.0`, dated 2026-09-22 — and must not be repointed at the fleet's current
+build when the other units are bumped. The fallback that makes later builds usable is
+[#556](https://github.com/rhovision-org/rholo/pull/556), merged in `dev`; the unit may move only
+after a build containing it is deployed and the balance query below is re-verified.
+
+```bash
+systemctl show rnode-history -p ExecStart | grep -o '/usr/local/bin/rnode[^ ]*'
+```
+
+A healthy answer to the balance query above carries `blockNumber: 0`; the broken one is the sentence
+`"Finalized fringe is not available."` Note also that the response shape differs by build: pre-C56
+emits the bare `{"ExprInt":<balance>}`, later builds emit `{"ExprInt":{"data":<balance>}}`. R Wallet
+and the parser above accept either.
+
+Re-checked 2026-11-13: the unit still answers the balance query with `blockNumber: 0` and the bare
+`{"ExprInt":…}` shape, so the pre-C56 binary is still the one serving it.
+
 A changed allocation produces a **different genesis block**, and therefore a different chain.
 Preserve the current snapshot while preparing its replacement:
 

@@ -1,12 +1,14 @@
-# Release gap matrix — 2026-10-31
+# Release gap matrix — 2026-11-12
 
-Upstream baseline and register snapshot: `ad77fb442de28df39ce913b79dde59973aae05b2` (the #532 merge commit; `source_dev_sha` pins the snapshot and `source_dev_base_sha` records the same commit). #404, #373 (including #376), #391, #392, #402 and #532 are merged. #379, #389 and #390 are also in its ancestry.
+Upstream base: `87583050ceb1d908516e67bdbfffb16defa72e2e` (#568). Authored #570 register snapshot: `e33125f65a95cff4f12baf8139a7361c7d158e43`; `source_dev_sha` pins the PR snapshot and `source_dev_base_sha` records the upstream base. This snapshot does not certify a merge, accepted historical compatibility or rollout; the prior implementation/deferral receipts are retained.
+
+**Replay-order review, 2026-11-12 (#570 / C357).** The added §6 row treats chronological COMM binding as a consensus-critical hard-fork-class / category-A candidate. Previously accepted ambiguous pending-request/peek blocks may change replay verdict; no complete recorded-chain sweep is claimed. All validators must upgrade in lockstep. The loop is ungated: an unswept chain uses a coordinated new genesis; existing-chain continuation requires accepted history compatibility and coordinated activation. C357 still owes corrected proposer self-replay, a second node strictly replaying the same block, source/executable digests and the #568 recovery arms on the integrated build. This is covered by the existing `Audit:section6-categoryA` tracker obligation; all 44 obligations, 13 landed references, 13 deferrals and 18 open obligations retain their statuses.
 
 **Correction, 2026-10-31.** The built-in Decimal was removed before mainnet by issue #527. `A:bigint-decimal` now carries BigInt only, and `Release:decimal-genesis` is withdrawn by its recorded owner, because there is no decimal type left to gate.
 
 The machine-readable final-gap-matrix.json enumerates all 44 tracker/batch/release obligations with their invariant, source evidence, remaining proof, next action and acceptance. These obligations overlap; their count is not a defect count.
 
-The section6-gap-inventory.json inventory covers all 93 §6 rows, including C334, the #527 decimal removal, the activation schedule, committed bounds, fundPot and C335. 46 rows are conservative category-A candidates. Source-row hashes, line locations and source links are checked against the pinned register. Classification and source coverage do not establish historical replay or independent sign-off.
+The section6-gap-inventory.json inventory covers all 94 §6 rows, including C334, the #527 decimal removal, the activation schedule, committed bounds, fundPot and C335. 47 rows are conservative category-A candidates. Source-row hashes, line locations and source links are checked against the pinned register. Classification and source coverage do not establish historical replay or independent sign-off.
 
 The [2026-10-21 close-clause decision](https://github.com/rhovision-org/rholo/issues/51#issuecomment-6316299117) accepts a named decision owner and one-line reason without a release name. The [maintainer's recorded owner decisions](https://github.com/rhovision-org/rholo/issues/51#issuecomment-6317072399) supply 12 deferral records (11 distinct proposal rows, including the staking-interface cross-reference). The thirteenth deferred entry is `Release:decimal-genesis`, withdrawn by issue #527 under the same owner-and-reason discipline. Landed implementation and outstanding release evidence remain distinct.
 

@@ -1,0 +1,74 @@
+[
+  {
+    "experiments": "RCB-R22-RCB-R24",
+    "run": 43098851150,
+    "job": 130785016827,
+    "harness_commit": "89eb17a250e9a08b4935447a6c3086a879c8f748",
+    "source": "0a1e02362a7c34e474e068ffd47469c8d4be707a",
+    "conclusion": "success",
+    "scope": "six production signature checks; synthetic pre-state controls",
+    "raw_local_labels": "M22-M24"
+  },
+  {
+    "experiments": "RCB-R25",
+    "run": 43100598230,
+    "job": 130790678538,
+    "harness_commit": "30ddce3d3099a4ac8933fec419335407cf10622c",
+    "source": "0a1e02362a7c34e474e068ffd47469c8d4be707a",
+    "conclusion": "success",
+    "scope": "unmodified original source; exact5576/5302 and both original post-state roots, three repeats each",
+    "raw_local_labels": "M25"
+  },
+  {
+    "experiments": "RCB-R26",
+    "run": 43101149837,
+    "job": 130792669233,
+    "harness_commit": "2a249edf0c902968ae8b995beabe5f571bfb9b24",
+    "source": "0a1e02362a7c34e474e068ffd47469c8d4be707a",
+    "conclusion": "success",
+    "scope": "charge observer ON/OFF; arithmetic and validation unchanged",
+    "raw_local_labels": "M26"
+  },
+  {
+    "experiments": "RCB-R27-RCB-R28",
+    "run": 43101946226,
+    "job": 130795399464,
+    "harness_commit": "e8ccf9dfae4274d1aae101abeb2078b0dc318078",
+    "source": "0a1e02362a7c34e474e068ffd47469c8d4be707a",
+    "conclusion": "success",
+    "scope": "one-line replay binding-order intervention; original costs/states retained; strict negative controls;192 RSpace tests",
+    "raw_local_labels": "M27-M28"
+  },
+  {
+    "experiments": "RCB-R29-RCB-R30",
+    "run": 43104341321,
+    "job": 130803604188,
+    "harness_commit": "50934152e27730901be03e6e0d47ba2f2b7a5bc4",
+    "source": "87583050ceb1d908516e67bdbfffb16defa72e2e",
+    "conclusion": "failure before tests",
+    "scope": "current-source before/after regression and recovered-state verification",
+    "raw_local_labels": "M29-M30",
+    "attempts": [
+      {
+        "attempt": 1,
+        "reason": "runner not acquired",
+        "tests_executed": false
+      },
+      {
+        "attempt": 2,
+        "reason": "unfetched base in shallow checkout",
+        "tests_executed": false
+      }
+    ]
+  },
+  {
+    "experiments": "RCB-R29\u2013RCB-R30",
+    "raw_local_labels": "M29\u2013M30",
+    "run": 43108778606,
+    "job": 130818963407,
+    "harness_commit": "9d56ec4c47c786192381ac4f65544fd7081b7535",
+    "source": "87583050ceb1d908516e67bdbfffb16defa72e2e",
+    "conclusion": "success",
+    "scope": "current87583050 baseline4844/4554; historical5576/5302; same one-line correction passes strict cost/state;193 RSpace tests and cost register pass"
+  }
+]

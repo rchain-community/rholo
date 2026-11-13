@@ -76,6 +76,48 @@ async fn block_paths_reject_relaxed_mode() {
         .expect_err("relaxed play_deploys must hard-reject");
     assert!(err.contains("off-chain only"), "unexpected reason: {err}");
 
+    // The full consensus block entry point must enforce the same restriction.
+    // A standalone process_deploy/play_deploys guard does not protect block_on.
+    let pre_state = seed_vault(&relaxed).await;
+    let block_err = relaxed
+        .compute_state(
+            &pre_state,
+            std::slice::from_ref(&d),
+            &[],
+            &fixed_rand(),
+            BlockData::empty(),
+            &fringe_state(1),
+        )
+        .await;
+    let block_err = match block_err {
+        Ok(_) => panic!("relaxed compute_state must reject even a valid effectful deploy"),
+        Err(e) => e,
+    };
+    assert!(
+        block_err.contains("off-chain only"),
+        "unexpected reason: {block_err}"
+    );
+
+    let limited_err = relaxed
+        .compute_state_with_limit(
+            &pre_state,
+            std::slice::from_ref(&d),
+            &[],
+            &fixed_rand(),
+            BlockData::empty(),
+            &fringe_state(1),
+            Some(1),
+        )
+        .await;
+    let limited_err = match limited_err {
+        Ok(_) => panic!("relaxed compute_state_with_limit must reject too"),
+        Err(e) => e,
+    };
+    assert!(
+        limited_err.contains("off-chain only"),
+        "unexpected reason: {limited_err}"
+    );
+
     let sequential = build_runtime_manager_with_mode(EffectMode::Sequential).await;
     let (_, eval_result) = sequential
         .process_deploy(&d, &fixed_rand())
@@ -85,6 +127,45 @@ async fn block_paths_reject_relaxed_mode() {
         eval_result.succeeded(),
         "deploy should succeed: {:?}",
         eval_result.errors
+    );
+}
+
+/// **The cost-accounting unit itself refuses the pure relaxed schedule** (Laws 20–22).
+///
+/// `compute_state` and the public cost-accounting wrappers are different doors to the same unit;
+/// guarding only the doors lets a future caller through. The refusal is inside the unit, before its
+/// reset or any deploy work. `Sequential` stays usable and `RelaxedValidated` is covered by the
+/// validated corpus; the exploratory path is a different route (`exploratory_path_stays_open_...`).
+#[tokio::test]
+async fn cost_accounting_entry_points_reject_relaxed_mode() {
+    let d = deploy(r#"@"chan"!(42)"#);
+
+    let relaxed = build_runtime_manager_with_mode(EffectMode::Relaxed).await;
+    let pre_state = seed_vault(&relaxed).await;
+
+    let err = relaxed
+        .play_deploy_with_cost_accounting(&d, &fixed_rand())
+        .await
+        .expect_err("relaxed play_deploy_with_cost_accounting must hard-reject");
+    assert!(err.contains("off-chain only"), "unexpected reason: {err}");
+
+    let err = relaxed
+        .play_deploys_with_cost_accounting(&pre_state, std::slice::from_ref(&d), &fixed_rand())
+        .await
+        .expect_err("relaxed play_deploys_with_cost_accounting must hard-reject");
+    assert!(err.contains("off-chain only"), "unexpected reason: {err}");
+
+    let sequential = build_runtime_manager_with_mode(EffectMode::Sequential).await;
+    let pre_state = seed_vault(&sequential).await;
+    let (_, results) = sequential
+        .play_deploys_with_cost_accounting(&pre_state, std::slice::from_ref(&d), &fixed_rand())
+        .await
+        .expect("sequential cost accounting stays open");
+    assert_eq!(results.len(), 1);
+    assert!(
+        !results[0].deploy.is_failed,
+        "the sequential deploy must play, not fail: {:?}",
+        results[0].deploy
     );
 }
 

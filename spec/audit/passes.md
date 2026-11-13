@@ -12425,3 +12425,55 @@ registry, not the incident's terms or block; the original rejected bytes/trace a
 state remain unrecovered. This is not an incident reproduction and not a live or candidate-binary
 result. C357 and #564 stay open for the live/candidate operational acceptance and the §6
 compatibility/lockstep decision. No deployment is authorized.
+
+## 159. The equivocation refusal that stalled the honest nodes (C367, #575, #576)
+
+The M3-04/M3-06 witness arm (#575) ended in an honest FAIL: the fringe request and response were
+joinable end to end by peer key, anchor and fringe identity, and the reset validator logged
+`LFS state is successfully restored.` — but the arm's height convergence never completed, because
+`Block #14 … faulted at dag insert (equivocation detected: sender produced two blocks with the same
+sequence number); recorded for retry 1/8 … 5/8` repeated for eight minutes. The pack recorded the
+blocker without a diagnosis. Reading the two captures side by side gives one collision and two
+defects, one on each node.
+
+**The collision.** `tools/devnet.sh reset 3` empties validator 3's store but keeps its validator key,
+and the chain keeps its pre-reset blocks. The node left `NodeSyncing` when the LFS restore completed
+at 15:11:29.158, still fetching missing dependencies — its own pre-reset block #14 `ef7d6965…`
+(sequence 13) among them. Its proposer was licensed at 15:11:30.680 against a parent set with no
+entry for its own key newer than sequence 12, reserved sequence 13, and signed a second block #14
+`852e11dc…` at 15:11:30.917. The older block's insert lost the race by 36 ms and was refused at
+15:11:30.881; the bootstrap, holding the older branch, refused the new block at 15:11:31.049. Both
+refusals are correct: the key had genuinely equivocated on the network once the clone was broadcast.
+
+**Defect A — the honest peers stopped producing (C367).** The H-1 gate refuses an equivocation
+*before any write*, so no retry can change the outcome, but the block processor recorded the refusal
+as an ordinary retryable fault. The row then sat in the disposition ledger for eight escalating
+retries, the process-wide fault latch it feeds is what the proposer gate reads, and the start-up
+seed rebuilt the same block from the ledger after every restart. A node that had done nothing wrong
+therefore stopped proposing for as long as the row lived — in the capture, "propose withheld: the
+node is blocked and is not producing" from 15:12:37 — and a restart did not clear it. A refusal is
+now a verdict: the row is kept under `EQUIVOCATION_VERDICT_STAGE` with the retry budget spent, so
+the body stays **accounted for** (the ownership audit reads rows, and deleting it would make the
+body an orphan the audit blocks readiness over), while `outstanding()` — read by the start-up seed
+and the re-offer — excludes it, and the processor clears any latch an earlier attempt took. The log
+names height, sender and sequence, so the two sides of a collision are joinable.
+
+**Defect B — the reset node signed before its own history arrived (#576).** "LFS restored" is not
+"caught up": the proposer derived its next `seq_num` from a parent set that omitted its own newest
+block because that body was still in flight. This is the freeze recorded as undiagnosed residue in
+§38, and it is the same shape C186 fixed for a stale round snapshot — the arithmetic is right, the
+missing entry was supplied by the wipe. It needs a decision, not a patch: a sync gate that covers the
+node's own key's history, a fail-closed halt for the unsupported full-wipe-with-retained-key shape,
+or an operational rule that a rejoining validator rotates its identity. Filed as #576 with the
+evidence and the option set.
+
+**Evidence.** `spec/audit/evidence/m3-fringe-witness-20261113/` (9 files, digest-verified,
+`locality: local-devnet`, `execution_proven:false`), and the falsifier
+`casper/src/blocks/block_processor.rs::an_equivocation_verdict_accounts_for_the_body_without_owing_it`
+— a body owed after a transient fault is refused as an equivocation, and the test asserts the row is
+retained as the verdict, skipped by `outstanding()`, and absent from the latch. **No re-run of the
+arm is claimed**: it cannot pass until B is decided, and the pack's verdict stays FAIL.
+
+**Boundary.** This is a local four-validator devnet on one host; it is not the off-host M3 positive,
+not M3-00 acceptance and not a candidate-binary result. The M3 arm's instrument half passed; the join
+half remains owed. No deployment is authorized.

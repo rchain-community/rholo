@@ -20,6 +20,14 @@
 //! second row would be a second truth. Settling — either outcome — deletes the row, so the ledger
 //! is bounded by the number of blocks the node currently owes an outcome, not by chain height.
 //!
+//! **One refusal has no DAG row to be its record** (C367): the H-1 equivocation gate returns
+//! before any write, because the DAG can never hold both blocks by one sender at one sequence
+//! number. That body stays `Faulted` under [`EQUIVOCATION_VERDICT_STAGE`] with the budget spent:
+//! the row keeps it accounted for, while
+//! [`BlockDisposition::is_equivocation_verdict`] and [`BlockDispositionStore::outstanding`] keep
+//! the latch, the start-up seed and the re-offer from reading it as an obligation. It owes nothing
+//! and no retry can change it; the DAG's own offence entry (C200) is the durable evidence.
+//!
 //! **Older stores.** Startup first copies the v3 disposition ledger from its historical
 //! dagstorage location, preserving fault history and pending stages (C355). The one-time legacy
 //! body scan then adopts bodies with neither a DAG verdict nor a disposition, walking hashes and
@@ -100,6 +108,21 @@ pub enum BlockDisposition {
 }
 
 impl BlockDisposition {
+    /// **A refusal that is a verdict, not an obligation** (C367).
+    ///
+    /// The DAG's H-1 gate refuses a second block by one sender at one sequence number *before any
+    /// write*, so the body has no DAG row to be its record, and no retry can change the outcome.
+    /// It is stored under [`EQUIVOCATION_VERDICT_STAGE`] with the retry budget spent: the row keeps
+    /// the body **accounted for** (the orphan audit reads rows, not heights), while nothing owes an
+    /// outcome, so neither the fault latch nor the start-up seed may read it as an obligation.
+    pub fn is_equivocation_verdict(&self) -> bool {
+        matches!(
+            self,
+            BlockDisposition::Faulted { stage, attempts, .. }
+                if stage == EQUIVOCATION_VERDICT_STAGE && *attempts >= MAX_FAULT_RETRIES
+        )
+    }
+
     pub fn block_number(&self) -> BlockHeight {
         match self {
             BlockDisposition::Pending { block_number, .. }
@@ -121,6 +144,12 @@ impl BlockDisposition {
         }
     }
 }
+
+/// **The stage a refusal that is a verdict is stored under** (C367). The H-1 equivocation gate
+/// writes nothing to the DAG, so the ledger row is the only durable record of the refusal besides
+/// the DAG's own offence entry. The row keeps the body accounted for; `is_equivocation_verdict`
+/// marks it as owing nothing.
+pub const EQUIVOCATION_VERDICT_STAGE: &str = "equivocation";
 
 /// **The retry budget before a block is quarantined.** A fault that repeats is not transient; after
 /// this many attempts the row stays `Faulted`, the pipeline fault stays visible, and only an
@@ -681,7 +710,19 @@ impl BlockDispositionStore {
         Ok(self.store.get(&[*hash]).await?.into_iter().next().flatten())
     }
 
-    /// Every row the node still owes an outcome, oldest first by block height.
+    /// The rows that still owe an outcome, oldest first by block height — what the readiness seed
+    /// and the re-offer read. An equivocation verdict is in [`Self::unsettled`] (its row is the
+    /// body's accounting) but owes nothing, so it is not here (C367).
+    pub async fn outstanding(&self) -> Result<Vec<(BlockHash, BlockDisposition)>, String> {
+        Ok(self
+            .unsettled()
+            .await?
+            .into_iter()
+            .filter(|(_, disposition)| !disposition.is_equivocation_verdict())
+            .collect())
+    }
+
+    /// Every row the ledger holds, oldest first by block height.
     pub async fn unsettled(&self) -> Result<Vec<(BlockHash, BlockDisposition)>, String> {
         let mut rows: Vec<(BlockHash, BlockDisposition)> =
             self.store.to_map().await?.into_iter().collect();
@@ -728,6 +769,9 @@ pub const RETRY_SWEEP_INTERVAL: Duration = Duration::from_secs(15);
 /// yet in the DAG: the parent is also in the ledger and is sent earlier, so the processor's serial
 /// order inserts it first; a genuinely missing parent leaves the row `Pending` for the next start
 /// rather than spending its retry budget on a question that cannot be answered yet.
+///
+/// Reads [`BlockDispositionStore::outstanding`]: an equivocation verdict accounts for its body but
+/// owes no outcome, so a boot after one does not re-offer it or report it quarantined (C367).
 pub async fn reoffer_unsettled(
     ledger: BlockDispositionStore,
     block_store: BlockStore,
@@ -738,7 +782,7 @@ pub async fn reoffer_unsettled(
     let source = LogSource::new("casper.blocks.BlockDisposition");
     let mut report = ReofferReport::default();
     let rows = ledger
-        .unsettled()
+        .outstanding()
         .await
         .map_err(|e| format!("could not read the disposition ledger at start-up: {e}"))?;
     for (hash, disposition) in rows {

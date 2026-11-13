@@ -2653,7 +2653,10 @@ pub async fn setup_shard(
         .map_err(|e| format!("cannot open/migrate the block disposition ledger: {e}"))?;
     // Seed the outstanding-fault latch from the migrated durable ledger before admission.
     // Unknown ledger state must never be exposed as ready or willing to accept deploys.
-    match block_disposition.unsettled().await {
+    // `outstanding`, not `unsettled`: an equivocation verdict (C367) keeps its body accounted for
+    // in the ledger but owes nothing, and re-seeding it would block a healthy node's production
+    // for ever after one peer equivocated.
+    match block_disposition.outstanding().await {
         Ok(open) => rchain_casper::blocks::block_processor::seed_pipeline_faults(
             open.into_iter().map(|(hash, _)| hash),
         ),

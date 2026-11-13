@@ -1,0 +1,46 @@
+{
+  "boundary": "finite local devnet witness; not a live-testnet join and not a certification",
+  "chain_height": {
+    "n457join-bootstrap": 16,
+    "n457join-validator-1": 16,
+    "n457join-validator-2": 16
+  },
+  "bootstrap_finalized": {
+    "number": 12,
+    "hash": "4c848156668b314fcf69384c6362501ec4ad68d52700644912f4216e2bd1a7f4"
+  },
+  "reset_target": "n457join-validator-3",
+  "recovery_shape": "passive-then-activate",
+  "passive_catch_up_seconds": 17.421483039855957,
+  "recovered": {
+    "latest_block_number": 19,
+    "restored_anchor_number": 14,
+    "restored_anchor_hash": "d67ffe73623d77e9bf180a211af9fb33d16f19158109d040c08f989ee5f46a33",
+    "anchor_held_by_bootstrap": true,
+    "sync": null
+  },
+  "catch_up_seconds": 4.323278903961182,
+  "sync_failures_in_log": 0,
+  "give_ups_in_log": 0,
+  "reset_container_id_created": "522f514b57637dd10e1e59fdeef0370084f7b985ab627796ff6c2a12b300a9bc 2026-11-13T16:18:18.260460436Z",
+  "self_equivocations_in_log": 0,
+  "blocks_proposed_in_log": 4,
+  "proposed_sequences": [
+    15,
+    16,
+    17,
+    18
+  ],
+  "proposed_lines": [
+    "proposed and added block #16 (seq 15)",
+    "proposed and added block #18 (seq 16)",
+    "proposed and added block #19 (seq 17)",
+    "proposed and added block #20 (seq 18)"
+  ],
+  "manual_reset": true,
+  "non_claims": [
+    "one local four-validator devnet; a finite witness, not a universal join theorem",
+    "the chain is this build's own; the live testnet replay is #421/#429's",
+    "the reset node is staged as a passive replicator and then activated, the supported recovery (#576)"
+  ]
+}

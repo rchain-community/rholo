@@ -25,10 +25,14 @@ proposer can derive a sequence number the chain already used and sign a genuine 
 `--supported-recovery` the node is staged as a passive replicator instead (`DEVNET_RESET_PASSIVE=1`),
 allowed to restore and catch up with **no** key, and only then activated with its key from a DAG that
 holds its own history (`tools/devnet.sh activate`). The supported shape additionally requires that
-the reset node's log contains no `equivocation detected` line.
+the reset node's log contains no `equivocation detected` line. With `--unsupported-shape` the arm
+runs the key-present shape and requires the fail-closed guard: if the reset node's own key
+equivocates, it must log `this validator's key equivocated` and produce no further block; a run
+where the race does not happen and the node converges also passes, because a race that did not
+happen cannot falsify the guard.
 
 Usage: tools/n457-mature-join-arm.py [--min-height 28] [--timeout 600] [--out DIR]
-                                    [--supported-recovery]
+                                    [--supported-recovery | --unsupported-shape]
 """
 
 import argparse
@@ -38,11 +42,19 @@ import re
 import subprocess
 import sys
 import time
+from datetime import datetime
 
 PREFIX = os.environ.get("DEVNET_PREFIX", "n457join")
 CONTAINERS = [f"{PREFIX}-bootstrap"] + [f"{PREFIX}-validator-{i}" for i in (1, 2, 3)]
 RESET_TARGET = f"{PREFIX}-validator-3"
 RESET_INDEX = "3"
+# The fail-closed sentence the node logs when this validator's own key has equivocated (#576).
+HALT_LINE = "this validator's key equivocated"
+
+
+def container_log(container):
+    seen = run(["docker", "logs", container], check=False)
+    return seen.stdout + seen.stderr
 
 
 def run(cmd, check=True, env=None):
@@ -100,6 +112,50 @@ def proposal_sequences(log):
     ]
 
 
+def equivocation_refusals(log):
+    """The block processor's refusal lines — one per refused block, not one per mention.
+
+    The own-key halt sentence quotes the DAG's reason, and the proposer status quotes the halt, so
+    a bare substring count reports one offence three times. The processor's line is the event."""
+    return [
+        line
+        for line in log.splitlines()
+        if "equivocation detected" in line and "casper.blocks.BlockProcessor" in line
+    ]
+
+
+# How long after the halt an in-flight proposal may still complete. Autopropose produces roughly
+# every two seconds, so a gate that did not hold would show a block well inside this window.
+HALT_SETTLE_SECONDS = 10
+
+TS = re.compile(r"^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3})Z")
+
+
+def late_proposals_after_halt(log, settle_seconds=HALT_SETTLE_SECONDS):
+    """Proposals that **complete more than `settle_seconds` after** the key-equivocation halt.
+
+    A propose attempt already in flight when the halt is recorded completes just after it — in the
+    measured shape the second block is 107 ms after the halt, and it *started* before it. What the
+    halt must stop is production continuing: a block arriving seconds later means an attempt began
+    after the gate was armed. The settle window is what separates the two."""
+    halt_at = log.find(HALT_LINE)
+    if halt_at < 0:
+        return []
+    halt_line_start = log.rfind("\n", 0, halt_at) + 1
+    halt_match = TS.match(log[halt_line_start:])
+    if not halt_match:
+        return []
+    halt_ts = datetime.fromisoformat(halt_match.group(1))
+    late = []
+    for line in log[halt_line_start:].splitlines():
+        if "proposed and added block" not in line:
+            continue
+        stamp = TS.match(line)
+        if stamp and (datetime.fromisoformat(stamp.group(1)) - halt_ts).total_seconds() > settle_seconds:
+            late.append(line)
+    return late
+
+
 def wait_recovered(container, minimum, deadline, what):
     """Wait until a node has restored, left the sync surface, and reached `minimum`.
 
@@ -136,7 +192,16 @@ def main():
         "its key and require convergence: the supported shape (#576). Without this the node signs "
         "from the moment it starts, which is the shape the issue diagnosed.",
     )
+    parser.add_argument(
+        "--unsupported-shape",
+        action="store_true",
+        help="run the key-present-from-boot shape and require the fail-closed guard: if the reset "
+        "node's own key equivocates, it must refuse to propose with the named halt and produce no "
+        "further block; a benign run that converges without an offence also passes (#576).",
+    )
     args = parser.parse_args()
+    if args.supported_recovery and args.unsupported_shape:
+        parser.error("--supported-recovery and --unsupported-shape are different runs; pick one")
 
     missing = [c for c in CONTAINERS if docker("inspect", c, check=False).returncode != 0]
     if missing:
@@ -197,26 +262,61 @@ def main():
         run(["tools/devnet.sh", "activate", RESET_INDEX], env=reset_env)
 
     started = time.time()
-    # **The claim under test is the restore plus the follow, not equality with a moving tip.** The
-    # chain keeps producing while this runs, so the node is required to reach the height captured
-    # before the reset, leave `NodeSyncing`, and hold a finalized block the bootstrap also holds.
-    recovered, restored_anchor, last_seen = wait_recovered(
-        RESET_TARGET,
-        boot_status.get("latestBlockNumber", 0),
-        deadline,
-        "the reset node did not catch up to the bootstrap's height and finalized block",
-    )
+    recovered = {}
+    restored_anchor = {}
+    halt_observed = False
+    if args.unsupported_shape:
+        # **The property is the guard, not convergence** (#576): wait for the reset node to refuse a
+        # block by its own key — a genuine equivocation — and then for the named halt. A benign run
+        # that converges without an offence passes too: a race that did not happen cannot falsify
+        # the guard, and claiming it did would be a tuned green.
+        while time.time() < deadline:
+            seen = container_log(RESET_TARGET)
+            if "equivocation detected" in seen:
+                halt_by = min(deadline, time.time() + 120)
+                while time.time() < halt_by:
+                    if HALT_LINE in seen:
+                        halt_observed = True
+                        break
+                    time.sleep(2)
+                    seen = container_log(RESET_TARGET)
+                # Let any in-flight proposal complete, and give a broken gate time to show itself.
+                time.sleep(HALT_SETTLE_SECONDS + 2)
+                break
+            try:
+                st = status(RESET_TARGET)
+                if (
+                    st.get("latestBlockNumber", 0)
+                    >= boot_status.get("latestBlockNumber", 0)
+                    and st.get("sync") is None
+                ):
+                    recovered = st
+                    break
+            except (subprocess.CalledProcessError, json.JSONDecodeError, KeyError):
+                pass
+            time.sleep(2)
+    else:
+        # **The claim under test is the restore plus the follow, not equality with a moving tip.** The
+        # chain keeps producing while this runs, so the node is required to reach the height captured
+        # before the reset, leave `NodeSyncing`, and hold a finalized block the bootstrap also holds.
+        recovered, restored_anchor, last_seen = wait_recovered(
+            RESET_TARGET,
+            boot_status.get("latestBlockNumber", 0),
+            deadline,
+            "the reset node did not catch up to the bootstrap's height and finalized block",
+        )
     elapsed = time.time() - started
 
     # The restored anchor must be a block the bootstrap holds: a node that left `NodeSyncing` on a
     # state the bootstrap never had is not a join.
     anchor_hex = str(restored_anchor.get("blockHash"))
     held_by_bootstrap = False
-    try:
-        held = get(CONTAINERS[0], f"/api/block/{anchor_hex}")
-        held_by_bootstrap = bool(held.get("blockInfo"))
-    except (subprocess.CalledProcessError, json.JSONDecodeError):
-        held_by_bootstrap = False
+    if anchor_hex:
+        try:
+            held = get(CONTAINERS[0], f"/api/block/{anchor_hex}")
+            held_by_bootstrap = bool(held.get("blockInfo"))
+        except (subprocess.CalledProcessError, json.JSONDecodeError):
+            held_by_bootstrap = False
 
     # **A second proposal makes the sequence witness non-vacuous** (a reactivated validator must not
     # reuse or regress its own sequence). Best-effort within two minutes: one proposal already
@@ -242,7 +342,16 @@ def main():
     ).stdout.strip()
     sync_failures = combined.count("LFS state sync failed")
     give_ups = combined.count("no block finished in")
-    equivocations = combined.count("equivocation detected")
+    # **Count refusals, not the phrase**: the halt sentence quotes the DAG's reason, so a bare
+    # substring count reports one offence three times (the refusal, the halt, the proposer status).
+    equivocations = len(equivocation_refusals(combined))
+    # **The fail-closed witness** (#576): the halt sentence, and whether any proposal follows it.
+    halt_at = combined.find(HALT_LINE)
+    halt_in_log = halt_at >= 0
+    proposals_after_halt = (
+        combined[halt_at:].count("proposed and added block") if halt_in_log else 0
+    )
+    late_proposals = late_proposals_after_halt(combined)
     # **The sequence witness the reactivation test already uses**: a validator that re-signs one of
     # its own sequences shows it here even if the DAG refusal happened to be quiet.
     proposals = proposal_sequences(combined)
@@ -261,9 +370,16 @@ def main():
         },
         "reset_target": RESET_TARGET,
         "recovery_shape": (
-            "passive-then-activate" if args.supported_recovery else "key-present-from-boot"
+            "passive-then-activate"
+            if args.supported_recovery
+            else "key-present-fail-closed"
+            if args.unsupported_shape
+            else "key-present-from-boot"
         ),
         "passive_catch_up_seconds": passive_seconds,
+        "own_key_halt_in_log": halt_in_log,
+        "proposals_after_halt": proposals_after_halt,
+        "late_proposals_after_halt": late_proposals,
         "recovered": {
             "latest_block_number": recovered.get("latestBlockNumber"),
             "restored_anchor_number": restored_anchor.get("blockNumber"),
@@ -299,29 +415,58 @@ def main():
     problems = []
     if sync_failures:
         problems.append(f"the reset node logged {sync_failures} LFS sync failure(s)")
-    if recovered.get("sync") is not None:
-        problems.append("the sync surface is not cleared")
-    if not held_by_bootstrap:
-        problems.append("the restored anchor is not a block the bootstrap holds")
-    if args.supported_recovery and equivocations:
-        problems.append(
-            f"the supported shape logged {equivocations} equivocation line(s); the staging did "
-            "not keep the proposer off a sequence the chain already used (#576)"
-        )
-    if args.supported_recovery and proposed == 0:
-        problems.append(
-            "the activated validator proposed no block, so the arm does not witness it serving"
-        )
-    if args.supported_recovery and any(b <= a for a, b in zip(sequences, sequences[1:])):
-        problems.append(
-            f"the activated validator reused or regressed its own sequence: {sequences}"
-        )
+    if args.unsupported_shape:
+        # **The guard is the claim** (#576): an offence must be followed by the named halt and no
+        # further proposal; a run with no offence must have converged, or the arm measured nothing.
+        if halt_in_log:
+            # A propose attempt in flight when the halt lands completes just after it; production
+            # continuing past the settle window is the gate not holding.
+            if late_proposals:
+                problems.append(
+                    "the node produced block(s) more than "
+                    f"{HALT_SETTLE_SECONDS}s after the key-equivocation halt: {late_proposals}"
+                )
+        elif equivocations:
+            problems.append(
+                f"the node equivocated {equivocations} time(s) without the named halt"
+            )
+        elif not recovered:
+            problems.append(
+                "neither convergence nor a key-equivocation halt was observed within the deadline"
+            )
+    else:
+        if recovered.get("sync") is not None:
+            problems.append("the sync surface is not cleared")
+        if not held_by_bootstrap:
+            problems.append("the restored anchor is not a block the bootstrap holds")
+        if args.supported_recovery and equivocations:
+            problems.append(
+                f"the supported shape logged {equivocations} equivocation line(s); the staging did "
+                "not keep the proposer off a sequence the chain already used (#576)"
+            )
+        if args.supported_recovery and proposed == 0:
+            problems.append(
+                "the activated validator proposed no block, so the arm does not witness it serving"
+            )
+        if args.supported_recovery and any(
+            b <= a for a, b in zip(sequences, sequences[1:])
+        ):
+            problems.append(
+                f"the activated validator reused or regressed its own sequence: {sequences}"
+            )
+        if args.supported_recovery and halt_in_log:
+            problems.append(
+                "the supported shape halted on a key equivocation, which it must not produce"
+            )
     print(
-        f"recovered ({record['recovery_shape']}) in {elapsed:.1f}s to round "
-        f"{recovered.get('latestBlockNumber')}, anchor {restored_anchor.get('blockNumber')} "
-        f"({anchor_hex[:12]}, held by bootstrap={held_by_bootstrap}); "
+        f"({record['recovery_shape']}) in {elapsed:.1f}s: "
+        f"round={recovered.get('latestBlockNumber')}, "
+        f"anchor {restored_anchor.get('blockNumber')} "
+        f"({anchor_hex[:12] or 'none'}, held by bootstrap={held_by_bootstrap}); "
         f"sync={recovered.get('sync')}; sync failures={sync_failures}; "
-        f"self-equivocations={equivocations}; proposed={proposed}",
+        f"self-equivocations={equivocations}; halted={halt_in_log}; "
+        f"proposed={proposed}; after-halt={proposals_after_halt}; "
+        f"late-after-halt={len(late_proposals)}",
         flush=True,
     )
     if problems:

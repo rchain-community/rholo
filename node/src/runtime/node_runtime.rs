@@ -1073,6 +1073,12 @@ fn wire_block_processing_observed(
             }
         }
     };
+    // **This node's own key, for the one refusal that stops production** (#576): an equivocation
+    // against *our* key means another copy of this validator signed twice, so proposing would
+    // deepen the fork. A peer's equivocation remains a verdict (C367).
+    let own_key = parts.validator_identity_opt.as_ref().map(|identity| {
+        rchain_models::validator::Validator::from_slice(identity.public_key.bytes())
+    });
     let processor = block_processor::apply(
         processor_input_rx,
         validated_blocks_tx.clone(),
@@ -1080,6 +1086,7 @@ fn wire_block_processing_observed(
         shard_id.to_string(),
         min_phlo_price,
         max_number_of_parents,
+        own_key,
         parts.dag.clone(),
         parts.block_store.clone(),
         parts.block_disposition.clone(),
@@ -1858,6 +1865,12 @@ fn push_proposer_health(metrics: &MetricsRegistry, source: &Source, health: &Pro
         source,
         "stale_snapshot_self_equivocations",
         i64::try_from(health.stale_snapshot_self_equivocations).unwrap_or(i64::MAX),
+    );
+    // #576: the halt that never resumes — a key that has equivocated.
+    metrics.set_gauge(
+        source,
+        "key_equivocation_halted",
+        i64::from(health.key_equivocation_halted),
     );
 }
 
@@ -2668,6 +2681,41 @@ pub async fn setup_shard(
                     "block disposition ledger unreadable at startup; readiness fails closed: {e}"
                 ),
             );
+        }
+    }
+    // **A key that has equivocated does not propose again** (#576). The C367 verdict row and the
+    // refused body are durable, so the halt is reconstructed from them rather than stored again: a
+    // restart cannot silently resume a forked key. An unreadable history fails closed with its
+    // reason — "I could not check" is not "my key is clean".
+    if let Some(identity) = validator_opt.as_ref() {
+        let own = rchain_models::validator::Validator::from_slice(identity.public_key.bytes());
+        match rchain_casper::block_disposition::own_key_equivocation_verdict(
+            &block_disposition,
+            &block_store,
+            &own,
+        )
+        .await
+        {
+            Ok(reason) => {
+                if let Some(reason) = &reason {
+                    log.error(
+                        LogSource::new("node.runtime.own_key"),
+                        &format!(
+                            "{reason}; this node will not propose until the key is rotated or its \
+                             bond withdrawn"
+                        ),
+                    );
+                }
+                rchain_casper::blocks::block_processor::seed_own_key_equivocation(reason);
+            }
+            Err(e) => {
+                let reason = format!(
+                    "the history of this validator key's equivocation verdicts could not be read \
+                     at startup: {e}"
+                );
+                log.error(LogSource::new("node.runtime.own_key"), &reason);
+                rchain_casper::blocks::block_processor::seed_own_key_equivocation(Some(reason));
+            }
         }
     }
 

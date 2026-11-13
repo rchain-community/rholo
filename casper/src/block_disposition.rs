@@ -1541,6 +1541,41 @@ impl OrphanStreak {
     }
 }
 
+/// **The proof that this node's own validator key equivocated, read back from the durable verdict**
+/// (#576, C367).
+///
+/// The disposition row is the durable half of the C367 verdict and the refused body is in the block
+/// store; together they say whether the offence was against *this* validator's key. Only verdict
+/// rows are walked — one per recorded offence, not one per block — and the body is loaded only to
+/// read its sender and sequence.
+///
+/// **`Err` is not "clean".** The caller must fail closed: a node that cannot read the history of its
+/// own key's offences must not assume there are none.
+pub async fn own_key_equivocation_verdict(
+    ledger: &BlockDispositionStore,
+    block_store: &BlockStore,
+    own_key: &rchain_models::validator::Validator,
+) -> Result<Option<String>, String> {
+    for (hash, disposition) in ledger.unsettled().await? {
+        if !disposition.is_equivocation_verdict() {
+            continue;
+        }
+        let Some(block) = block_store.get(&[hash]).await?.into_iter().next().flatten() else {
+            continue;
+        };
+        if block.sender == *own_key {
+            return Ok(Some(format!(
+                "this validator's key equivocated: block #{} {} (sequence {}) was refused because \
+                 the DAG holds a different block by this key at that sequence",
+                block.block_number,
+                hash.to_hex(),
+                block.seq_num
+            )));
+        }
+    }
+    Ok(None)
+}
+
 /// Law 88a: a body is an orphan only when neither its DAG entry nor its ledger row owns it.
 /// Walk keys without decoding bodies. Equal cardinalities can still hide different identities;
 /// a raw store/DAG count is neither a positive nor a negative proof of this predicate.
@@ -2592,6 +2627,57 @@ mod tests {
                 .unwrap()
                 .len(),
             1
+        );
+    }
+
+    /// **The boot seed names this key's own offence, and only this key's** (#576): a verdict row plus
+    /// its stored body is enough to reconstruct it, and an unsettled row is not an offence.
+    #[tokio::test]
+    async fn own_key_equivocation_verdict_is_read_back_from_the_durable_rows() {
+        let own = Validator::new([0x22; 65]);
+        let mut mine = sample_block(hash(41));
+        mine.sender = own.clone();
+        let mut theirs = sample_block(hash(42));
+        theirs.sender = Validator::new([0x33; 65]);
+        let blocks = block_store::create(&InMemoryStoreManager::default())
+            .await
+            .expect("block store");
+        blocks
+            .put(&[
+                (mine.block_hash, mine.clone()),
+                (theirs.block_hash, theirs.clone()),
+            ])
+            .await
+            .expect("bodies");
+        let ledger = store().await;
+        for block in [&mine, &theirs] {
+            ledger
+                .mark_terminal_fault(
+                    block.block_hash,
+                    block.block_number,
+                    EQUIVOCATION_VERDICT_STAGE,
+                    "refused",
+                )
+                .await
+                .unwrap();
+        }
+        // A body merely owed an outcome is not an offence, even when its sender is ours.
+        ledger
+            .mark_pending(hash(43), height(4), PendingStage::Stored)
+            .await
+            .unwrap();
+
+        let found = own_key_equivocation_verdict(&ledger, &blocks, &own)
+            .await
+            .expect("the scan")
+            .expect("our key's offence");
+        assert!(found.contains(&mine.block_hash.to_hex()), "{found}");
+        assert_eq!(
+            own_key_equivocation_verdict(&ledger, &blocks, &Validator::new([0x44; 65]))
+                .await
+                .unwrap(),
+            None,
+            "another key's offence is not this key's proof"
         );
     }
 

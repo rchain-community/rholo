@@ -27,6 +27,12 @@ pub enum ProposeStatus {
     /// did not clear it. Every proposal trigger is stopped until an operator resumes. This is the
     /// loud terminal state the incident lacked.
     SelfReplayFaultHalted,
+    /// **This validator's own key has equivocated** (#576): the DAG refused a block by this key
+    /// because a different block by the same key already holds its sequence. Proposing would deepen
+    /// the fork, so every trigger refuses — **permanently**: the proof is a durable verdict, not a
+    /// transient fault, and `POST /api/v1/autopropose/resume` does not clear it. The reason names
+    /// the refused block.
+    KeyEquivocationHalted(String),
 }
 
 /// **What a proposal attempt is allowed to carry** (#564).
@@ -54,6 +60,12 @@ impl fmt::Display for ProposeStatus {
             }
             ProposeStatus::SelfReplayFaultHalted => {
                 write!(f, "Proposal halted: self-replay fault")
+            }
+            ProposeStatus::KeyEquivocationHalted(reason) => {
+                write!(
+                    f,
+                    "Proposal halted: this validator's key equivocated ({reason})"
+                )
             }
             ProposeStatus::AwaitingFinality => {
                 write!(f, "Proposal deferred: unfinalized work awaits its retry")
@@ -132,6 +144,12 @@ mod tests {
         assert_eq!(
             ProposeStatus::ProposeSuccess.to_string(),
             "Propose succeed: Valid"
+        );
+        // #576: the sentence names the refused block, and it is the phrase the arm and the
+        // operator both read.
+        assert_eq!(
+            ProposeStatus::KeyEquivocationHalted("block #14".to_string()).to_string(),
+            "Proposal halted: this validator's key equivocated (block #14)"
         );
     }
 }

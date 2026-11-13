@@ -66,6 +66,15 @@ fn log_propose_result(log: &Arc<dyn Log>, result: &(ProposeResult, Option<BlockM
                 "propose halted: a self-replay fault is latched — proposing and attesting are \
                  stopped until an operator resumes with POST /api/v1/autopropose/resume (#564)",
             ),
+            ProposeStatus::KeyEquivocationHalted(reason) => log.error(
+                source,
+                &format!(
+                    "propose halted: this validator's key equivocated ({reason}) — proposing is \
+                     stopped permanently; rotate the key or withdraw the bond, because the proof \
+                     is a durable verdict and POST /api/v1/autopropose/resume does not clear it \
+                     (#576)"
+                ),
+            ),
             ProposeStatus::ResourcePressure(state) => log.warn(
                 source,
                 &format!(

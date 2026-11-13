@@ -1525,3 +1525,154 @@ async fn the_producer_is_paid_a_share_of_the_burned_phlo_on_play_and_replay() {
         "the replay must pay the same address the same share — a disagreement here is a split"
     );
 }
+
+/// **Law 96c: concurrent forked replays agree with serial replays.** The block processor validates a
+/// batch of dependency-free blocks on one forked replay runtime per block and inserts them serially
+/// (`casper/src/blocks/block_processor.rs:536-620`). This test pins the mechanism the law names: two
+/// blocks played from one pre-state reach the same verdicts whether they are replayed in sequence on
+/// the manager's own runtime or concurrently on two `fork_replay_runtime` forks. A shared replay
+/// runtime would let one block's replay read the other's state; the fork is what makes the concurrent
+/// batch sound.
+#[tokio::test]
+async fn concurrent_forked_replays_agree_with_serial_replays() {
+    let rm = common::build_runtime_manager().await;
+    let rand = Blake2b512Random::from_init(&[0x5c; 32]);
+    let (pre, _, _) = rm
+        .compute_genesis(
+            &[],
+            &rand,
+            BlockData::empty(),
+            &PosGenesis::default(),
+            &[seeded_vault()],
+        )
+        .await
+        .expect("compute_genesis");
+
+    let block_a = BlockData {
+        block_number: rchain_shared::refined::BlockHeight::try_from(1).expect("height"),
+        sender: PublicKey::new(vec![0xa1; 65]),
+        ..BlockData::empty()
+    };
+    let block_b = BlockData {
+        block_number: rchain_shared::refined::BlockHeight::try_from(2).expect("height"),
+        sender: PublicKey::new(vec![0xb2; 65]),
+        ..BlockData::empty()
+    };
+    let rand_a = Blake2b512Random::from_init(&[0xa1; 32]);
+    let rand_b = Blake2b512Random::from_init(&[0xb2; 32]);
+
+    // Dependency-free: each block writes its own channel and neither reads the other's.
+    let (post_a, users_a, sys_a) = rm
+        .compute_state(
+            &pre,
+            &[deploy(r#"@"parallel:a"!(1)"#)],
+            &[],
+            &rand_a,
+            block_a.clone(),
+            &fringe_state(1),
+        )
+        .await
+        .expect("play a");
+    let (post_b, users_b, sys_b) = rm
+        .compute_state(
+            &pre,
+            &[deploy(r#"@"parallel:b"!(1)"#)],
+            &[],
+            &rand_b,
+            block_b.clone(),
+            &fringe_state(2),
+        )
+        .await
+        .expect("play b");
+    let processed_a: Vec<ProcessedDeploy> = users_a.into_iter().map(|r| r.deploy).collect();
+    let processed_b: Vec<ProcessedDeploy> = users_b.into_iter().map(|r| r.deploy).collect();
+    let systems_a: Vec<ProcessedSystemDeploy> = sys_a.into_iter().map(|r| r.deploy).collect();
+    let systems_b: Vec<ProcessedSystemDeploy> = sys_b.into_iter().map(|r| r.deploy).collect();
+
+    let (serial_a, _) = rm
+        .replay_compute_state(
+            &pre,
+            &processed_a,
+            &systems_a,
+            &rand_a,
+            block_a.clone(),
+            &fringe_state(1),
+            &BTreeMap::new(),
+            true,
+            &PosGenesis::default(),
+            &[],
+        )
+        .await
+        .expect("serial replay a");
+    let (serial_b, _) = rm
+        .replay_compute_state(
+            &pre,
+            &processed_b,
+            &systems_b,
+            &rand_b,
+            block_b.clone(),
+            &fringe_state(2),
+            &BTreeMap::new(),
+            true,
+            &PosGenesis::default(),
+            &[],
+        )
+        .await
+        .expect("serial replay b");
+    assert_eq!(
+        post_a, serial_a,
+        "the serial replay of a must reproduce its play"
+    );
+    assert_eq!(
+        post_b, serial_b,
+        "the serial replay of b must reproduce its play"
+    );
+
+    // The processor's per-block fork: one replay runtime per block, both seeded at the same
+    // committed pre-state. The shared arguments are bound before the join because the macro's
+    // futures borrow them across an await.
+    let empty_participation = BTreeMap::new();
+    let pos = PosGenesis::default();
+    let fringe_a = fringe_state(1);
+    let fringe_b = fringe_state(2);
+    let fork_a = rm.fork_replay_runtime(pre).await.expect("fork a");
+    let fork_b = rm.fork_replay_runtime(pre).await.expect("fork b");
+    let (concurrent_a, concurrent_b) = tokio::join!(
+        rm.replay_compute_state_with(
+            &fork_a,
+            &pre,
+            &processed_a,
+            &systems_a,
+            &rand_a,
+            block_a,
+            &fringe_a,
+            &empty_participation,
+            true,
+            &pos,
+            &[],
+        ),
+        rm.replay_compute_state_with(
+            &fork_b,
+            &pre,
+            &processed_b,
+            &systems_b,
+            &rand_b,
+            block_b,
+            &fringe_b,
+            &empty_participation,
+            true,
+            &pos,
+            &[],
+        ),
+    );
+    assert_eq!(
+        serial_a,
+        concurrent_a.expect("concurrent replay a").0,
+        "a forked concurrent replay must reach the serial verdict"
+    );
+    assert_eq!(
+        serial_b,
+        concurrent_b.expect("concurrent replay b").0,
+        "a forked concurrent replay must reach the serial verdict"
+    );
+}

@@ -1,0 +1,11 @@
+--- QKB.rho
++++ QKB-mutant.rho
+@@ -244,7 +244,7 @@
+             _ => {
+               scan!(ts, 0, [0, 0, 0, 0], 0, *avCh) | zfaNative!(ts, *zCh) |
+               for (@(v, peak) <- avCh & @(_, ph) <- zCh) {
+-                if (ts.length() >= 4 and v == [0, 0, 0, 0] and ph != 0) {
++                if (ts.length() >= 4 and true and ph != 0) {
+                   grant!(ts, *gCh) |
+                   for (@cid <- gCh; @st <- stateCh) {
+                     let @rec <- st.get("records").getOrElse(cid,

@@ -12593,6 +12593,67 @@ It states the set relation rather than the fixture identity: `resolve_conflict_s
 (`sdk/src/dag/merging.rs:926-978`), so `kept + rejected = conflict` is a control, not the general
 theorem. The fee/refund question stays retired (Law 48).
 
+## 163. Cross-shard acceptance: Laws 98–100 (#33 follow-on)
+
+The cross-shard register stopped at the protocol's *shape*: Law 26 validates a shard id at ingress,
+Law 27 proves every prepared leg reaches the one decision, Law 28 proves the leg verbs idempotent,
+and Law 29 proves the decision is a function of the votes and terminal records are absorbing. Three
+pieces of the acceptance language were not carried by any row:
+
+- **Value.** Nothing said a commit credits exactly the escrow, an abort refunds exactly it, or the
+  payer + payee + escrow total is conserved. A mint, a double payment or a commit that leaves the
+  record prepared were all compatible with 27/28.
+- **Crash ordering.** Law 29 said a terminal record is absorbing; nothing said the decision is durable
+  **before** phase two, that every drive reaches a terminal state, or that a resume does not re-prepare
+  a voted leg.
+- **Scope.** Law 26 validated the id; nothing said a leg on a shard the node does not validate opens no
+  record, that a phase is anchored at the target head (C166/C64), or that block/deploy ingress makes
+  the shard-blind DAG single-shard.
+
+This pass adds Laws 98–100 in `Rchain/CrossShardAcceptance.lean`, each clause with a positive theorem
+and a defect-shape definition:
+
+**Law 98 — value conservation.** `escrow`/`recordTotal` over the participant's own `Ledger`; the exact
+debit (`prepare_escrows_exactly`), the exact credit and refund (`commit_credits_the_payee_exactly`,
+`abort_refunds_the_payer_exactly`), conservation of every verb, and the multi-shard list induction
+(`a_committed_instance_conserves_the_totals`, `an_aborted_instance_refunds_the_leg_amounts`). The
+defects are a prepare that records without debiting, a commit that keeps the escrow, an over-credit,
+and a mixed one decision (98c). Idempotence is Law 28's and is cited, not reproved.
+
+**Law 99 — the decision before its effect and recovery closure.** `phaseTwo` is gated on
+`TxnState.IsTerminal` (an undecided record applies nothing); `drive` aborts a record still undecided
+after phase one, including the no-legs record; `resume` returns a terminal record untouched with an
+empty send list; and `prepareLoop` never sends a prepare to a shard already in the vote set. The new
+Rust witness `a_decision_that_cannot_be_written_sends_no_phase_two` fails the ledger write that would
+carry the decision and asserts the prepare deploy happened and no commit deploy did — the ordering,
+not merely the record's final value. `gateway_is_idempotent_under_txn_id` and
+`run_resumes_an_existing_non_terminal_record` pin the other two halves.
+
+**Law 100 — shard-local scope.** `openTxn` refuses a non-member or empty leg list before the durable
+open; `phaseWithHead` refuses on an unreadable head and `BornExpired` gives the port's expiry
+(`anchor + lifespan <= head`, `casper/src/validate.rs:77`), so the `valid_after = 0` fallback is a
+born-expired phase; `accepted` requires both the block's shard id and every deploy's to be the node's,
+which is what makes any list of accepted blocks one shard and Law 97's accounting per-shard; and the
+router model has no relay outcome.
+
+**C370 — a dead fault knob, not a coordinator defect.** `common::ShardFaults.head_error` and
+`reported_height` were declared and read nowhere. The case that meant to pin C64/C67 therefore ran a
+well-behaved shard, saw `Committed`, and asserted it, with a name and comment describing the permissive
+fallback the coordinator had already removed. Wiring the knobs turned the case red until it was
+rewritten to assert the real refusal: aborted, the reason names the unreadable head, no deploy reaches
+that shard, and the readable leg is anchored at its reported head. The direct unit test
+`current_height_refuses_a_head_it_cannot_read` was green throughout — which is the finding: a broken
+fixture beside a green predicate is not evidence. The new
+`recover_in_flight_refuses_a_leg_that_left_the_membership` records the `current_height` unknown-shard
+`Ok(0)` edge safely (the deploy service's `member()` gate refuses the shard, so the leg aborts); a leg
+already voted ready on a removed shard still keeps its escrow locked, a residual outside the law.
+
+**What this pass does not do.** It does not run or substitute for a live/candidate acceptance arm: there
+is no M1–M6 gate for cross-shard transactions, and #33 stays open. It does not add a relay, change the
+invoke-layer primitive (still non-atomic across shards), or close the per-shard bootstrap deferral (the
+LFS fringe exchange carries no shard id). It changes no consensus code; the only Rust changes are
+witnesses.
+
 **What this pass does not do.** It does not run M1–M6, and none of the three laws is evidence for
 them: a proved invariant is not a measured capacity, an off-host join, a multi-host finality run, the
 historical 840→841 witness, or an independent sign-off. It does not touch cross-shard transactions

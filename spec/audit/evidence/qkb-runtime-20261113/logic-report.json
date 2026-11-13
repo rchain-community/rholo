@@ -1,0 +1,489 @@
+{
+  "binary_sha256": "2cffda31f4d7d03cb2e7644340449d153da40e9e5db39f5b4c407791c6504201",
+  "cases": [
+    {
+      "block": "5045ca8ba85fc583840f634cc0f0b685078cef2af7b4df815cd60d34dbd2151f",
+      "deploy": "3045022100c29fd3c4a9ef86f8aa83109a9a38077207c9a4900299ff5eabb50f4e737f206a02200a72e8b51a752cfa21139a05aa0a82364a9a8aa80ed77d67a6477824707d3df7",
+      "id": "logic-only-0",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "7d0bfc0ccff8b1dec1a4ee2d989785fd561e0a5aeb098504971f7fed93fbe126",
+      "deploy": "3044022032ab59e45e78cbd418590ad3dd2788b884e8c0712248859fe136efcafd26bf2a02207b4c960d4a8aab87447222be7ad559f0ae368890336d39476568dc793d06b69d",
+      "id": "logic-only-1",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "63c12278abb37d911e7463ac3f680505d06f4238fe6c3fd81d79b43c98ae9380",
+      "deploy": "304402206081beb6acfdbf2ab0c2c58acfbac60d152aec0d019dd9b28e420acc4689b46002205249fa01f051638cb36846451d2fd9c4f93d2eae30b09b41df68c13090e20db2",
+      "id": "logic-only-2",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "4f5cafa353709bf378bd072e635a6ab5a502bfcded859c56f00e2287fdee03fb",
+      "deploy": "3044022051e7c310337a59c6d407bfb97d1a2fda81c03c6bc59e33001e3019ce164ad89e0220633533c2a2630f1ebaacf0410220fafb1b35115655e964c6eebebfad2178a6dd",
+      "id": "logic-only-3",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "00e9740afea60bdbac7228b310266148bd349e79e6e4d92ef8f4586a1fe86d6a",
+      "deploy": "3045022100f1b0859d5cf2fa45313dc396a12699636c3c061e9783e9702a9146fe3f99f16d02203e2d32643784315c9ead301403f13cd0aa9d58164158534d2361c0ca1a3c4444",
+      "id": "logic-only-4",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "67495743157451016dc6a150d11389bd9015f355de444dee758bd718ffb9d76e",
+      "deploy": "304402204973692282ef0566832e51b19ae48376a70f9aaec5fdbc16fbf6c50d1523539a02203b3fd31576dfe94bb69a4fa8e6812129bba6f7f709e7dcbe89f93f7410dbea87",
+      "id": "logic-only-5",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "e160814d7dfe2280774852acf59b279468f8acf390d0c10d886cf1fde5efc919",
+      "deploy": "304402205651cb67e03c58bde32b80cd1e35aae498b7efa4059d4312517a87105fd9661a02203ba8e0619e56df35dad5252dfaef73760f1a96313c7e71789436ae3dbc658ccf",
+      "id": "logic-only-6",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "822938df70439234b2620a5030d21c1048ef6a7afd983a4bd3f5cc848b2e4c05",
+      "deploy": "3045022100c6d149225cc09aac070c599ae103ab343518a6cf63815ba532d9ee6496f4eb4d022051730d4e550d7c415fad177ac2a8713ba0d000a2c1d184ef3c2ebd03e60d016d",
+      "id": "logic-only-7",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "fb98ba1e44b0816879e1315f0493423b37898c27124a527d078dc800c42fc312",
+      "deploy": "304402207f6c5adee0943d80b5a5f3bea0cee7c623787c08520f6e0b1cbe3b58817e2b8902205a2664750e3f5c712e0ac8f42a7f5b74d89c17a901c3e2682caf7cd5b181a546",
+      "id": "logic-only-8",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "00623fcce0f3541d762ebd3cdcaebf1ab8684c83abb711d030499c9c6d1d3fde",
+      "deploy": "30440220581ca2896f23451459d5637f3a477adb8180c517e486bc0a9320ef0b0772567602203d96a4cf8439d3d232ef65e1d26e13338c7b4cc8116f093a8722140f60c4f286",
+      "id": "logic-only-9",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "bb9ffb9e907cf8a4c4a80e5172ed3550e5f2ac2e622ab03af824ad8d6e732412",
+      "deploy": "304402205a3671ddc4048289d4546229200805fa6286de102c1ba16b2741edb448618c11022011220c6b0f6e956c8b03eb0f1e33848d7e16934850e34cc3a81542767c0351b9",
+      "id": "logic-only-10",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "5d5821dcf196220aabf44e0e3033bd6eb2cfb9e772597f2e521864131250af59",
+      "deploy": "304402203b8e72b6ae5c4b416e57df6b34c6c2a17ff2c9c057c7bd31f6fd911a662d343502203fb70be694a2e05c490d5bbb827894ce967ddfd941ce569c36f91446d2235351",
+      "id": "logic-only-11",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "2414a84fc77fc527f65f5ac18b21b9524539f4999e41479a03cb9fce0170005b",
+      "deploy": "304502210088b4ff35b5dfcf4f41ac22b6ec2f2a5826e86067db8cc02108bb9e3b8d65a35d022008c61d80fb3a38f366d9c14b1ebf6f6be0df9dc02e8912771533b84535d63136",
+      "id": "logic-only-12",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "c8672001872cd0ab0c4a735c4bd482da0ca9aa12669e77c9147fc6915b40ccc5",
+      "deploy": "3045022100bb3aca17b1dd9428504dea1e27a8aaccab5e66f2fa36aa2f4c5a7312f787ca08022075e3b4d50bb7ba80aa0b33b1110168df16195cdd2077d32e072f368292b9ee41",
+      "id": "logic-only-13",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "295f0a8833b13965e561c05cec0360c51ec8108bb9adae8a20be53976cfe037a",
+      "deploy": "3045022100ee5a8148bf7e49cd23587d3b0bfb9cf92f472086946194dcc6ffcd409686fe69022075d908d1fa39ab5a55f0a5616b27da34656d0633439e3003c3ea52d565846997",
+      "id": "logic-only-14",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "f330eeacff24805e26c3352273052d8c84b1eb1fb60c14a2ba177ccd7f92e699",
+      "deploy": "304402203e0395e0d62b33530938796a1b98331316807b19c75e78cfe78775173fe8bbba02200af47bb396f5434a2be8c41e1d07637f719a765d8d308a2e90ed9a37314577b9",
+      "id": "logic-only-15",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "7901de3d6114f172df02dc526d8cb6830ec090d0e464b4947534aafdf809ff0e",
+      "deploy": "30450221008fbf8f12b0ece88d76afff225f559d1915b6492dd7f362a1fbcb054e6ff9e273022072fe85f614226d0273699a11d4e5fa9e77c0bd04dfcaacfbd528c07d43eea6f1",
+      "id": "logic-only-16",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "093180d32bb26819e1b2023f55c9b7e86629b56357b843e8a9181df951567fbd",
+      "deploy": "30450221009d05818de379836eccaea0e959b3490e4229a486cba7c1477b79430de4988137022049150ed30c515267bb9b154f6f989e171a7b4c4fbee0877913c9627c433d39d3",
+      "id": "logic-only-17",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "3853e3a07274de742c9ab67995aba267ba90951970ce9e26072169c8a851c66b",
+      "deploy": "3045022100ee5c1a00dd09c7568abd9d8f90b265712f362807e539a7ad1642e20cd3c4dd6502205a5caea8d7ced5f3ada197a87bfbefe0ee076c399a8d2b4f58be5e6d9a1c3d33",
+      "id": "logic-only-18",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "9abecb421bc1a464f14a6ba0129ad049237a7e24fe16844822a03297ab24318e",
+      "deploy": "3045022100f402ece47413d1034cc70d86893837da7d938d62ee6d02defa3f240e73192d150220649cdf48d7639edc5b124d5b6811f8296100e864e1a147d5f0df60cfd0d358b7",
+      "id": "logic-only-19",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "20b9bca36b6ea30876b65b2666c1cc93d5f71680266f3de2993983c50315b4c8",
+      "deploy": "30450221009141db951bb0df1d41beb2d99e88cce634c5a64e23224a969d740d4702ab8f1302202296944ad5effee0688732e2b65512dfe742243a6d14885f2ef458f13832864c",
+      "id": "logic-only-20",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "99e95510a79611d1c1c988cc098e5e112c3313b61d71c4a38e7a573c0eb814e7",
+      "deploy": "304402205e6db9574d95ac7459d0e4611f01839693747ac5f54dc108d32f4118ac799192022043ba8fefb96032f756506c3a90dfc36ee09ddcf0df6ade0dc8c2fdfc25ec71c6",
+      "id": "logic-only-21",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "64226165329f266b0cc82f0621951aa63a41573eab48b2b0d32fbedc2eac34e8",
+      "deploy": "3045022100ed0a04480232c5409867d6a62f2900d73dedd33afcfaf81e9f59e886ab02dae9022008e65f2d273eee96a422c5eb99623cf2286ddffcb704c92b725fcbae92490a64",
+      "id": "logic-only-22",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "e5fc4bffe6100a46c06631409b79677539b9bec28286d73b21b6f7d7d57ed9df",
+      "deploy": "3045022100839522c9187f46e9f8038ddd600f5d51224b71894edbc26f8b5dc36262fdf846022036360e9e3fc5c099d0b5f8fc5baabfce5528f33a911d04184d0db70127a6994c",
+      "id": "logic-only-23",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "30b3226b5a0a456144f51bf090e7e8f77683537767973f8246eb631a17bd5bdc",
+      "deploy": "304402206eac7f0fa958196e72ddd28d798caddde93df1747facd4b6fda4ae04361938db022004431a2fc8fc585f5d96e5e666f716248be0cf46589fc15e07bca8dff7fa944d",
+      "id": "logic-only-24",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "acbb61af3160e2ca2fac0fd0f6e76e37db929ad6ed1b9d3bb0bfcdb9f94653d6",
+      "deploy": "30440220670a57db499717cbe9c33dcd7f10a85e6aa2affe5d8ac0cc7e0af37578fd8b0902200470c6b120bd7d25988e7d1360ff1a403deff19c4d8b94c81052d22a25b814f4",
+      "id": "logic-only-25",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "efd08093f5022afd52cb228f6d63f9c6f81f7c8212055424c23940354102945e",
+      "deploy": "3045022100ed85c54fa322e50869609c672b526f7ec4f7b99a9b9c4d504323b2b327afc7de022050dc2de00ee4bc55b88c6c0ca5a184cda63b6f38a50879dd849e6b0a2dab74fb",
+      "id": "logic-only-26",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "13c751d6a5c282a4c066666026c8e93e647df9d7b44f23d4e52441949534d626",
+      "deploy": "304402202f01306e0277a94dd58a26d6dab812b1a40ea4c14edd45d04f3d8b69a2256da0022075254dc999f18fe764fe66b73d6d23af713ae0a57a22fa27361399cdda3f6d66",
+      "id": "logic-only-27",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "35792802a5dd653c8e887517c249a1b1c1872c281e86726def6429efaaefa355",
+      "deploy": "304402202160103bb38722339582bda616b30479ffd1cafb0f17494faa2bcea2357e494f02204e32c53d3d6a776344afb4ed0b166092e8cfd506edec14522f21a06922f1cb57",
+      "id": "logic-only-28",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "1e0b33f63a02aecea52013820675490a11f880f21021d9240df3023270251147",
+      "deploy": "304502210094cc340e479cc3bd3965d358dc8887f75d82bd7f4cd1d3a3c2b3e55ee2db175d02206ddf5a565d49fa0547929580c2f5db7d79de7f22a88647b8abb5fa503cbd60f9",
+      "id": "logic-only-29",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "bc0d5120618112f84b76df140cd8263e04f55ce3d6f8a03c5d933b24e8c3a27a",
+      "deploy": "3045022100895b31b6dde228b86b4cf856a8bb87bdb204331e51c02f528e15788ed3b1731902204c51628df6b7bec15b1f6b7142288225d5ab43f200fd3b177096d4ed559c9620",
+      "id": "logic-only-30",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "ba62e02a3a50bae53d5ee0b2c8153ceca0f0d4d57008eaa75b90d175307ff5a3",
+      "deploy": "3044022009a568a997e1f1a083344e30de63e9cf652037820247d5b04012365697dbbce8022075cd88acc275612c6a0cde784c4da16cb6d9e910c289bddb0d923cd40d5c9c4c",
+      "id": "logic-only-31",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "7d0f924d025a9e630d39f93ce2f0644e700e7c388585fd9dd3db232a350adf4e",
+      "deploy": "304402206383e290fd4b8c0445cecf6df11895d1d29ceca0e211a685cd1fb131da3fe13702202b9993c46861c203e1b2c9f23e1d460ea0fe0e7ab9e7ec6079249dad30a046dd",
+      "id": "logic-only-32",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "6ec2e528e7ee0f68d1baa08c1789edb032329944a9fe75f4adbe03f2c40a6bea",
+      "deploy": "304402207847dcee814a5485fb17ad4e5e2e675f99d4517186da96b01c10419ae4b99bf70220300e2fd1382142691a5ade3fc0a4f3a66ed5b2550edbf816551fb61c4e208c71",
+      "id": "logic-only-33",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "8da5d0aecbf81a7107d3ea76c9a5b4c68b496ea0ae9df9e982858be5e4aaa3b4",
+      "deploy": "3045022100e20693fa8098578ee86fff188c0b10032946d9556575db73132d73b40d1a234b02204f82d8386643f945a27b6e373d8108237e04c6e6ebee298d3ca0c973a89ecfd5",
+      "id": "logic-only-34",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "9e84320955b9b86d6608e17a4ab01a0e670dee4c97ea2301a248ed7d2c2a7878",
+      "deploy": "3044022010160bfe0c132e21faf10fda167870b0034c286d410147a38d0e4b0c6d31ee51022045615558b402af8c51c3f6d064c05e4e7e200ae0b589ed053d016e2a2719b68c",
+      "id": "logic-only-35",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "7fa7c628e0c2debbdd681b98a05c12ae5606800ea90a3d9fbcebc79beff5f21e",
+      "deploy": "3045022100a042937caed3ba711de551917f2f9e278f11f8fddabf7b7defe2966bb871729c022058e77794ebb2a085a80f86e5c944cf13e7b9c7cf531ef851e7e293368d201853",
+      "id": "logic-only-36",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "5aef17dbb5f79c1dbc6961093ccc6991ff6416b9e0a372f35b5b89e75fca00aa",
+      "deploy": "304402205955a5f07be8a48c6de9ae560360b70c9d1bc42e54daffc79667372ab845bb9f022021d69d46abe60605d9ed66c6651fcdec6bb9f4ae5ebb4afef9e8e8f86de16cd7",
+      "id": "logic-only-37",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "51def1928531b303a8dc4fe0fd0a1d4a9ba39d4754e9b81d4164c3c6d8d43d9c",
+      "deploy": "3045022100d288c1189c9bc02caac0734318178cc94384c3cf9d452c540d115893a9f79c8a0220765eac58d15a318c2af2b07f0058a403985fdcd58ea1fce223ead79df547c6e6",
+      "id": "logic-only-38",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "e68e79df21837234a395ba8e7c664f67fc8db88fc7184822bd6519f1bd31dff1",
+      "deploy": "3045022100ff2d280ed50565cc4e2dddcc6e48c0bb9401fe01ebc55e45da5214dfdbea0f76022022a45bf33961b9be046f13fa3bde70226f43fd05a50fafb218f7a799be938e63",
+      "id": "logic-only-39",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "32b5d0d48fadcae0939e91e08958303a94fd18876f6fab66145fc8cfd6763b3a",
+      "deploy": "3044022016e5ecab4ac991aa544ea6bc5e6b242154b02ac597d04c07627ceca303cb76e9022077bcba4b832d5d3946bb5bdab4897f943eb28fab31a4377085493f02276e8b0e",
+      "id": "logic-only-40",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "78ae40f381fc80ffd4ae3c827b1d523e76d9dbd5aabc22a7bcdac53e624f1c0c",
+      "deploy": "3045022100c9f6051ea6a180f4a392ed45f710394ca2e2e8d32aa51bed3ae67564f3edd58902205c5596a87544ad89980fb131e3efa5e5075b6b3fe952a90ba18ad17a908aa1cd",
+      "id": "logic-only-41",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "dfe43a9bd2cb9749663a58fa81b27241bd47451b9707e48458016c01f5333370",
+      "deploy": "3044022012e34ab8a50a92120539c8c153e1154fb5408f82c330a6897b8f9e94a4d7a3eb0220230c0594c24fe249486f0b9bf81796dbcc38514cda37737e5ba0ce69890e97d8",
+      "id": "logic-only-42",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "fefeb37e2199c83e2e1e79cc1ce16fb8919643ab31d07ee0bbc640f496c53644",
+      "deploy": "3045022100a842b0a5d2613258b8822ebb3f1d7a94ad9abea8357986547f22b5f183d34d8f0220197ea4b48920df835f60f60e3e6fe3b3d19a19a6d85cf2ba5a7528419d172ac5",
+      "id": "logic-only-43",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "370c4ded7a0195f6ce682be40b8782d1390cdccaf2f80dcd5b965e2c5656987f",
+      "deploy": "30450221008faa9b3097aeb2848318aedcadb0ae10ac01c3ac34db5d3e5c885e5ab9bc6f5e0220126af3ad8281198745491639ee88c9ccbf0b172592df5d42fb704720e12b4491",
+      "id": "logic-only-44",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "24afd14cf045e0992052e35022a62750f34e2c15e3ff260377f0bd7302f84ce0",
+      "deploy": "3045022100c8fca6fcd3fd7db492222d9e77573a72be7b3ab7ac67b718f48be14ca91a9a97022040352a99a1563496014fd2436be2e3885087b80134e64f49e2ab41291728e7d3",
+      "id": "logic-only-45",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "541b3ef1d18c2a842a658842bc5cae3ecdf2803fc60f813cbc0368ed6dc18225",
+      "deploy": "3045022100a8d590e5cbdc5b35cd6eecfe7da2e6ff168fe3302ae516978868220d3292abfe022023a6e6a7a54dcd1da1489536ccfa4cdb29010c2b34f55333071af56931c97ba6",
+      "id": "logic-only-46",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "0476c7d97e5cad1f5dc03a2ad535f07282ed243bd32f77562305a15d7907b8af",
+      "deploy": "30440220757c9fc7a9f81ba1565c2d72491e9fdcca4a5b51e731aa710b4cc3d7e49f5645022000f45f57a83fc6ae5f413e3988cce5111c9b35a4713931ab226b25dc33c95b27",
+      "id": "logic-only-47",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "a722d66bfa7071fdd49900511e653c6ccb2bedf5ec4f2ea285f41d7f9b39f7b2",
+      "deploy": "304502210082e013c46ce4332d7292bd161ca277dde18a934da30438cc4ff4f5ad2e37de7402201e63115d53fa0b0f947f2b49e79baa9fc970f5098991d4097df6cdaaa61f9860",
+      "id": "logic-only-48",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "446b8cb7643ed4375c6957af556c377bec086e5089f8c6cad0702ba3193ff668",
+      "deploy": "3045022100bf2978502545b504075c7bd006ac6170098178d2187d00a43e0f53e6191305640220447bce2b50863f80e79dd76684d762b9fd1c7fd132906f9ebea461b97088357e",
+      "id": "logic-only-49",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "5d2a28633d69e9f6b457d70e2ae1a5aab0010e135bfdab5163dcab7ea0256d41",
+      "deploy": "3045022100bcadab2ca743d89f7271ec21be51047c4038bf04217af100740513630efc3206022024632c4f673e0331e3268d02f87aec007428161cc0f78edd878547b40295fab7",
+      "id": "logic-only-50",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "cd7a3a9c7dc56cb36c20524d646901c64c7fb322cd8a54167e0209f97f2a0a1f",
+      "deploy": "3045022100c154fbf2dc461f87fdf1542ec3df1cdfc92da4a49bc25a884d781d61c89c984102207acdc7a071162c8ec96a18d689e7289c10b2c001809a805bb1d296b71ac53831",
+      "id": "logic-only-51",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "b8cb5a3ff7c65dc7ad24813487fc2aa348252669738031a88f12e2edd45349bc",
+      "deploy": "304402200fd938c236d2682e26b7796dffbf5af80114c5ddc6e68494a2868a0c7cc00c490220772b379902d46dfcf230e5446af13aed4a9f07299f227f578ca28a4e3caaa504",
+      "id": "logic-only-52",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "14c6fea9de3e46abe4cd5eb5346b6e5aeec20b0bad39ed51b5ed3d2ae0f2a59d",
+      "deploy": "304402201b978a74bce66f36a554befc8c215fa9c2ec00ce196a54aecfc245837f0099e8022058bc54e25475b9331e692a666838382f70b04ad7f4b38420e95e9dc03b9649d6",
+      "id": "logic-only-53",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "fd9c0f3c26ccff6d5ae84b62fc7f7707abba18a83b93047f0bcf78f9996d66d7",
+      "deploy": "304402206d48c094a9811b61b922fc0850de2e02673ef8942a1d1537f12276a36ebd490002200a3fa7c19ae0b73b4b0afa8597d43adb19574723c0af2be969ae48e5e7f12a32",
+      "id": "logic-only-54",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "a291385602f8ba8927514f94c59fd2bc661889f52b6e31ae0aa0a39137ffb6ae",
+      "deploy": "30450221008f7d2d6e3271d8ed35c0500c42be39e08f8854dacb543f173a4c877ea26959210220395061a84a1abf6478d62aa8461e16f389a903d7cea65c0b6d3cad7255fe5866",
+      "id": "logic-only-55",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "dfb5fc3ba7c6f1ab817d6cd2495c5e749bdb074b1a1a688fd2ef11ab346c6233",
+      "deploy": "30440220663e9556ceb26f8a85639e16b4ff112549d29b5702bda7b3a35f49f44d8c180c02201635ce3f1bd680c49db66fb73f8abdd4322df210c6f850c0e11da61c2b404b66",
+      "id": "logic-only-56",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "846fc499bd2bb415fd89f94be06ee4830a666f0eff46662614aea88520814270",
+      "deploy": "3045022100bea35135ce09243272b922324087ebffffe1580cdd408725ec22bddc0d5db56f02202a2e264e15c21a13591d0aa4b21e5dcfc3ad8eae235b85a534cc93ecedb64456",
+      "id": "logic-only-57",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "9d7dbdc0d2c661a8584e273a000c971c013beaead62a972553a48ae4ba6c87bf",
+      "deploy": "3045022100e0ca66c2efad349a50471ded5a08e444c1115c4f84f5560b21d9179a20d3d13302203d045e49b74cb2b72a475d22d9584053f3d572e261369c46a275ba92c29341cf",
+      "id": "logic-only-58",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "9de1c56222c04d807522c3d5ec40494af941052cf12ff8920035db86366aef96",
+      "deploy": "3044022061a415f898c187caea404f31841970f7c40f4c33e10bb83beccad2fac2b4b9270220749811bbc246b02f49298f90ab05525ac752d44f36ff4587ac34b83c54bf376c",
+      "id": "logic-only-59",
+      "operation": "logic-vector-batch",
+      "pass": true
+    },
+    {
+      "block": "dbb831393500797337b2452eeb6013e8d6f8f9da126ef23bbec3b2e0c66a79d5",
+      "deploy": "3045022100e5ca2480343257a363d87c67f3976899da178af7cdf1381410c97edd0a659ce902200f1d7cde2ffad4a701a5970be76955338aad013e03ac37eb238d97126a367059",
+      "id": "logic-only-60",
+      "operation": "logic-vector-batch",
+      "pass": true
+    }
+  ],
+  "contract_sha256": "b56ffce181ad8f238a11622bfae6ea6c3355783c3f8bfaec6222b8e67ee6c1e7",
+  "finished_utc": "2026-11-13T17:35:40.524400+00:00",
+  "funded_fixture_addresses": [
+    "11112VYAt8rUGNRRZX3eJdgagaAhtWTK8Js7F7X5iqddMVqyDTtYau,1000000000000",
+    "11112mqV5U8NhfgMQLytw5tqP7i42jnhgT35ho4F1thmKxKdWwohLY,1000000000000"
+  ],
+  "initial_status": {
+    "acceptsDeploys": true,
+    "address": "cbe1429073fbcd3ede0565f721fb190b53ac9d5f",
+    "autopropose": false,
+    "degraded": "normal",
+    "devMode": true,
+    "latestBlockNumber": 1,
+    "manualPropose": true,
+    "minPhloPrice": 1,
+    "networkId": "testnet",
+    "nodes": 0,
+    "peers": 0,
+    "pool": {
+      "bytes": 0,
+      "deploys": 0,
+      "maxBytes": 67108864,
+      "maxDeploys": 10000
+    },
+    "proposeOnDeploy": false,
+    "proposer": true,
+    "shardId": "/root",
+    "version": {
+      "api": "1",
+      "node": "rholo node 0.1.0 (79e550400114b32a0292b9103cb5e83c6e1e1c72)"
+    }
+  },
+  "publication": {
+    "block": "24c911db51d29074288eaec70e679849b0fcab6bed77398943c0646823e2ba25",
+    "deploy": "3045022100f6e671ccd8fedfbe1c699b9f335bab7814cc775497a34ad993f118aa8a59f6d0022043f34dc33fc2d6996e7f64c484bbd5157b0580e36bf9a1efa5567ef066cd0868",
+    "uri": "rho:id:d8yxo7pe8t7i8um14317qu1dxpgccmzeefjcrskxw8araxo4yczy"
+  },
+  "publications": {
+    "install": {
+      "block": "24c911db51d29074288eaec70e679849b0fcab6bed77398943c0646823e2ba25",
+      "deploy": "3045022100f6e671ccd8fedfbe1c699b9f335bab7814cc775497a34ad993f118aa8a59f6d0022043f34dc33fc2d6996e7f64c484bbd5157b0580e36bf9a1efa5567ef066cd0868",
+      "uri": "rho:id:d8yxo7pe8t7i8um14317qu1dxpgccmzeefjcrskxw8araxo4yczy"
+    }
+  },
+  "python_reference": "a-j PASS",
+  "qlf_source": "7667443c7feb14efeb01aa50b86171be0cd38f0a",
+  "result": "PASS",
+  "runtime_source": "79e550400114b32a0292b9103cb5e83c6e1e1c72",
+  "runtime_vectors": {
+    "logic_batch_size": 16,
+    "logic_comparisons": 968,
+    "proposition_pairs": 484
+  },
+  "scope": "isolated-single-validator-loopback",
+  "started_utc": "2026-11-13T17:31:24.352428+00:00",
+  "suite": "logic",
+  "version": "rnode 0.1.0 (79e550400114b32a0292b9103cb5e83c6e1e1c72)"
+}

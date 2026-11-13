@@ -1,0 +1,142 @@
+{
+  "binary_sha256": "2cffda31f4d7d03cb2e7644340449d153da40e9e5db39f5b4c407791c6504201",
+  "cases": [
+    {
+      "block": "c20822f0c8777a01d48a6a48446ed24422cd13b385d7c6b2587b7a800006a3eb",
+      "deploy": "30440220038c8042146da6f5ca5eb349ebd63bf11650f9ca9f557f16d2d709f8025499c7022061e4e744687ffad2c0c2e973ab8e91d41e4c2b72447f6238561317bb56c5b097",
+      "id": "unknown-ways",
+      "operation": "ways",
+      "pass": true
+    },
+    {
+      "block": "4f4027d434642156d70ebe970750173952d092d1ee5b775ab75ec0e51c53c877",
+      "deploy": "304402201acf3521ae9c68586713d0c56c34176c404a0d852b181cbee4fc4f83dfdd7eb302207fe55d2799cff4c370c3d0e33db4ac68da49aa2a3978d10a9acb9426aa53409c",
+      "id": "closed-assert",
+      "operation": "assert",
+      "pass": true
+    },
+    {
+      "block": "a69c506827ae5d5f6358e8d0dde5175911d4cd8f3e6427b2948489194d6120d0",
+      "deploy": "304402205312b650eb3738dd82ba31822b10d5145391aa1ff7a69e05de73ec069f754cf90220487f8a373e5c80a16bdd61279d1e04afd8e3198fd23a6683c3641708f34a73f6",
+      "id": "repeat-0",
+      "operation": "assert",
+      "pass": true
+    },
+    {
+      "block": "4e91383bab281797a833090547a47143a33c7a4780731e3d50171106b1daf5a3",
+      "deploy": "3044022054baf37a4a0f5b72fce2d7d936bfbc61549b378f6672aeb910ea4a5f436bc36702204d6e4d140a2375442e49bb22acb63de52d84426a924ad30d7b24c4bd4eba1564",
+      "id": "repeat-1",
+      "operation": "assert",
+      "pass": true
+    },
+    {
+      "block": "c17de04e343b3f8e27e090e1b3403257b0092e9c0748b67af019a2283ce373bf",
+      "deploy": "3044022076e1d99d40954813986e8efca813dbba6855f798b4983c36cc639d5bbdcb447a0220204408de28c050c52ce10398122e8eec0515517fd75994d3d9b97f23bd79cabf",
+      "id": "repeat-2",
+      "operation": "assert",
+      "pass": true
+    },
+    {
+      "block": "766d3ae734ffeb64b9d9d69f55bdd9615226c7bb0ac6845b4db38a18f4a0bd2b",
+      "deploy": "3045022100e6fe6e2299da3a9dd5c242748aa6b9d064c53544ec632916c0595fd189f625aa022064c3c1a504b4324995f4fdaebc5431b9927813b76935274ee98b286f9468850b",
+      "id": "repeat-3",
+      "operation": "assert",
+      "pass": true
+    },
+    {
+      "block": "de1b9f19692e672a07a11ffd83392733b59b66d0b25badd3c89653d70527e7e7",
+      "deploy": "3045022100b77fd2cb5016fac84e545cae97217068b011981341fccb1acf1d0dadcdbdc06802206eaf34c55eec25ebb9cdcef2d8b4aad8d18499fb0161b6d189de46a98bfc2460",
+      "id": "second-signer",
+      "operation": "assert",
+      "pass": true
+    },
+    {
+      "block": "ee740949d4db1dd5fe48d5407563131b55691b99a7de203b77f18cfecb366eb9",
+      "deploy": "3044022011a114787aa70676a00e33d1dc4dbe90648220c9e3ea489c5d5219ee4ece6b2f022024e0302cf77184dfd93065f9367ffc910b995ff50adb75a53c2ec7206b5003d2",
+      "id": "second-way",
+      "operation": "assert",
+      "pass": true
+    },
+    {
+      "block": "a3cb9ce766975048858714bcb5111345aaa5cecb0a159abf4b1cc31c34995eb0",
+      "deploy": "3045022100bed8d37f7db6be46a59bcd4536e3d365122e079b66a353f6ec3f51f1dc3c5237022049a003bf6137b972d56f268f4dd9eecccffeb660aafad88a92d2976ad7f4bb59",
+      "id": "ways-two",
+      "operation": "ways",
+      "pass": true
+    },
+    {
+      "block": "ccc376c89d75f0f09dad008456ac5b95548e0837541a9ea68d70a992226eff28",
+      "deploy": "3045022100f586396d5bec31c1c96fea3c274c06396300515936ffd0bfda289ef262aae44f02201b24da93562fef1e119aad71eeb5b6ddcd38ce69586cbbb4dda240c7a7ea21f2",
+      "id": "holders-two",
+      "operation": "redundancy",
+      "pass": true
+    },
+    {
+      "block": "7d066f2dd0754e7a654ff12f9af602c19691eed74dd01378912826c191504b08",
+      "deploy": "3045022100efa35affbfb4498368975ef4785962b917aad371c9ff3b3d49e512c3ada3f028022064aaa8bc19c68b7c54bdd4d5dfa3488427ad5aa45140127001193841dd41ee44",
+      "id": "first-cascade",
+      "operation": "first",
+      "pass": true
+    },
+    {
+      "block": "979dd7ba0fe9c78e1159aa2b2e5da41bb6338cc8ffe817e7ac980cbb5e4afd73",
+      "deploy": "3045022100b5bd4804e190f81765e512d7e1bc9e7ceca8500383a8e78cf2d078442a1cbb5e02207310570e97031c363e9cc17a253a7f395be57040b0e0bf8b7507f88117893cba",
+      "id": "aggregate-counterexample",
+      "operation": "assert",
+      "pass": false
+    }
+  ],
+  "contract_sha256": "e188842ffe23b8f7235d128d20b5e8302223c0292f1095c5c55d1e9eb853550e",
+  "error": "AssertionError: aggregate-counterexample: runtime/reference mismatch: {'expr': [{'ExprMap': {'data': {'id': {'ExprUri': {'data': 'rho:id:8hyn6nqumcf8b8j5aecjbeqid8yxyegjekcm1qtoh3desabk91fo'}}, 'ok': {'ExprBool': {'data': True}}, 'redundancy': {'ExprInt': {'data': 1}}, 'ways': {'ExprInt': {'data': 1}}}}}], 'block': {'version': 1, 'shardId': '/root', 'blockHash': '979dd7ba0fe9c78e1159aa2b2e5da41bb6338cc8ffe817e7ac980cbb5e4afd73', 'blockNumber': 13, 'sender': '04f700a417754b775d95421973bdbdadb2d23c8a5af46f1829b1431f5c136e549e8a0d61aa0c793f1a614f8e437711c7758473c6ceb0859ac7e9e07911ca66b5c4', 'seqNum': 13, 'preStateHash': '371ac5bccfe0b72721695cdcf113715825e681ead8846ad1a6f35f304d03d2f7', 'postStateHash': '566deebb26583ce1bcb5284c9b0b90eea4e43ed72567414d703b009e4e630569', 'justifications': ['7d066f2dd0754e7a654ff12f9af602c19691eed74dd01378912826c191504b08'], 'bonds': [{'validator': '04f700a417754b775d95421973bdbdadb2d23c8a5af46f1829b1431f5c136e549e8a0d61aa0c793f1a614f8e437711c7758473c6ceb0859ac7e9e07911ca66b5c4', 'stake': 100}], 'sigAlgorithm': 'secp256k1', 'sig': '3045022100d5a745f676976e713ef85138d56d023a73eb54f6de676cfe88dc8f654965becc02207464ad26d73e9c8860e3b1e5c49e9703ae146666ae47c502e7e9be3f1b0bab0b', 'blockSize': '18081', 'deployCount': 1, 'rejectedDeploys': [], 'timestamp': 1794591358830}, 'replySource': 'out'}",
+  "finished_utc": "2026-11-13T17:35:59.833502+00:00",
+  "funded_fixture_addresses": [
+    "11112VYAt8rUGNRRZX3eJdgagaAhtWTK8Js7F7X5iqddMVqyDTtYau,1000000000000",
+    "11112mqV5U8NhfgMQLytw5tqP7i42jnhgT35ho4F1thmKxKdWwohLY,1000000000000"
+  ],
+  "initial_status": {
+    "acceptsDeploys": true,
+    "address": "85dc71216def346294d1416455b47fdc7a8806a5",
+    "autopropose": false,
+    "degraded": "normal",
+    "devMode": true,
+    "latestBlockNumber": 1,
+    "manualPropose": true,
+    "minPhloPrice": 1,
+    "networkId": "testnet",
+    "nodes": 0,
+    "peers": 0,
+    "pool": {
+      "bytes": 0,
+      "deploys": 0,
+      "maxBytes": 67108864,
+      "maxDeploys": 10000
+    },
+    "proposeOnDeploy": false,
+    "proposer": true,
+    "shardId": "/root",
+    "version": {
+      "api": "1",
+      "node": "rholo node 0.1.0 (79e550400114b32a0292b9103cb5e83c6e1e1c72)"
+    }
+  },
+  "publication": {
+    "block": "ac3c0e8a110393d1d4b834e07e0288e009e83400584c9ef56b596df1e4e3a46c",
+    "deploy": "3044022076c88a7a1644b15b216a7aa2e139ee8bb4928d99613c9d1c42bcb66081a8ea0502204f245d3a6f35356df90bf2fec77573b749dd36dde93057204c8090849b467070",
+    "uri": "rho:id:d8yxo7pe8t7i8um14317qu1dxpgccmzeefjcrskxw8araxo4yczy"
+  },
+  "publications": {
+    "install": {
+      "block": "ac3c0e8a110393d1d4b834e07e0288e009e83400584c9ef56b596df1e4e3a46c",
+      "deploy": "3044022076c88a7a1644b15b216a7aa2e139ee8bb4928d99613c9d1c42bcb66081a8ea0502204f245d3a6f35356df90bf2fec77573b749dd36dde93057204c8090849b467070",
+      "uri": "rho:id:d8yxo7pe8t7i8um14317qu1dxpgccmzeefjcrskxw8araxo4yczy"
+    }
+  },
+  "python_reference": "a-j PASS",
+  "qlf_source": "7667443c7feb14efeb01aa50b86171be0cd38f0a",
+  "result": "FAIL",
+  "runtime_source": "79e550400114b32a0292b9103cb5e83c6e1e1c72",
+  "scope": "isolated-single-validator-loopback",
+  "started_utc": "2026-11-13T17:35:40.753576+00:00",
+  "suite": "functional",
+  "version": "rnode 0.1.0 (79e550400114b32a0292b9103cb5e83c6e1e1c72)"
+}

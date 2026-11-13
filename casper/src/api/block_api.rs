@@ -356,6 +356,14 @@ pub struct ProposerHealth {
     pub self_replay_fault_halted: bool,
     /// The reason behind [`Self::self_replay_fault_halted`], when it is set.
     pub self_replay_fault_reason: Option<String>,
+    /// **This validator's own key has equivocated** (#576): a block by this key was refused because
+    /// a different block by the same key already held its sequence. Proposing is stopped
+    /// **permanently** — the proof is a durable verdict, and the operator resume does not clear it;
+    /// the key is rotated or the bond withdrawn.
+    pub key_equivocation_halted: bool,
+    /// The refused block behind [`Self::key_equivocation_halted`], as the sentence the operator
+    /// needs, when it is set.
+    pub key_equivocation_reason: Option<String>,
     /// The shard's autopropose timer has stopped. The value is sticky — a later success does **not**
     /// clear it — and two things restart it: the process (the halt is durable, re-seeded at boot) and
     /// the operator's `POST /api/v1/autopropose/resume`. Not the same as production having stopped:
@@ -566,6 +574,11 @@ impl ProposeHealth {
         // **The self-replay fault is a halt too** (#564): an operator resume clears it and wakes the
         // parked timer, or the one way out would leave the shard stopped.
         self.self_validation_refusal.clear_self_replay_halted();
+        // **The key-equivocation halt is deliberately not cleared here** (#576). It is not a
+        // transient fault: a durable verdict records that this key signed twice, and resuming it
+        // would put a forked key back into production. The operator's exit is a rotated key or a
+        // withdrawn bond, not this route. A resume that silently did nothing about it would also be
+        // the "reported but not obeyed" defect, so the status surface names it separately.
         self.halt_durable.store(true, Ordering::Relaxed);
         *self.halt_record.lock().unpoison() = None;
         // `notify_one`, not `notify_waiters`: a permit is *stored* when nobody is parked, so a clear
@@ -604,10 +617,14 @@ impl ProposeHealth {
     /// It parks on the notify rather than returning an error, so the operator's
     /// `POST /api/v1/autopropose/resume` resumes this shard **in-process**.
     pub async fn park_while_halted(&self) {
-        // **Both halts park here** (#564): the autopropose timer's own and the self-replay fault's.
-        // A timer that ticks through the fault would be the same "reported but not obeyed" defect
-        // one level up, and the resume is the single wake for both.
-        while self.timer_halted() || self.self_validation_refusal.self_replay_halted() {
+        // **Every halt parks here** (#564, #576): the autopropose timer's own, the self-replay
+        // fault's, and a key that has equivocated. A timer that ticks through a halt would be the
+        // same "reported but not obeyed" defect one level up. The resume wakes the first two; the
+        // third has no wake by design, so its park is terminal for this key.
+        while self.timer_halted()
+            || self.self_validation_refusal.self_replay_halted()
+            || crate::blocks::block_processor::own_key_equivocation().is_some()
+        {
             self.resume.notified().await;
         }
     }
@@ -626,12 +643,16 @@ impl ProposeHealth {
     /// All three values as one observation, so a reader cannot see a count from one instant and a flag
     /// from another.
     pub fn snapshot(&self) -> ProposerHealth {
+        // One read, so the flag and its sentence cannot disagree (#576).
+        let key_equivocation = crate::blocks::block_processor::own_key_equivocation();
         ProposerHealth {
             consecutive_self_validation_failures: self.failures.load(Ordering::Relaxed),
             self_validation_refusal: self.self_validation_refusal.snapshot(),
             pool_quarantined: self.self_validation_refusal.quarantined(),
             self_replay_fault_halted: self.self_validation_refusal.self_replay_halted(),
             self_replay_fault_reason: self.self_validation_refusal.self_replay_halt_reason(),
+            key_equivocation_halted: key_equivocation.is_some(),
+            key_equivocation_reason: key_equivocation,
             autopropose_timer_halted: self.timer_halted.load(Ordering::Relaxed),
             autopropose_halt: HaltStatus {
                 at: self.halt_record.lock().unpoison().as_ref().map(|r| r.at_ms),

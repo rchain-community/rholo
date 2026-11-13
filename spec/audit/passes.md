@@ -12477,3 +12477,78 @@ arm is claimed**: it cannot pass until B is decided, and the pack's verdict stay
 **Boundary.** This is a local four-validator devnet on one host; it is not the off-host M3 positive,
 not M3-00 acceptance and not a candidate-binary result. The M3 arm's instrument half passed; the join
 half remains owed. No deployment is authorized.
+
+## 160. The supported recovery has two halves, and the arm could not see a two-digit sequence (C368, #576)
+
+#575's FAIL left a question the issue could not answer on its own: can a reset validator rejoin at
+all, or only in the shape that forked? The tooling said yes — `DEVNET_RESET_PASSIVE=1` stages the
+node without its signing key — but nothing ever gave the key back, so the supported recovery was a
+documented half. The arm that would have witnessed it also contained an instrument defect that would
+have hidden a failure.
+
+**The instrument.** `tools/n457-mature-join-arm.py` parsed `proposed and added block #N (seq S)` with
+one capture group and unpacked `(_, seq)` in the comprehension, so `findall`'s string "15" split into
+"1" and "5" and the sequence witness read 5. A strictly-increasing list of single characters is still
+increasing, so nothing failed — the arm reported a green sequence check over numbers it had never
+seen. Caught while reconciling the JSON against the captured log, after a raw-line field was added
+beside the parsed pairs; `proposal_sequences` now returns `(block, seq)` pairs,
+`tests/test_n457_mature_join.py` asserts a two-digit sequence stays whole, and the arm records
+`proposed_lines`, the activated container's id and creation time, and one `activated.log` from which
+every count in the record is read.
+
+**The missing half.** `tools/devnet.sh activate <i>` restarts a passively-staged validator with its
+key: the same volume, ports and flags, adding `--validator-private-key-path`, and it refuses a
+container that is absent or already carries the key. The arm's `--supported-recovery` runs the pair —
+staging, catch-up, activation, convergence — and fails on any `equivocation detected` line, on no
+proposal, or on a reused or regressed own sequence. The operator page now says that a rebuild from a
+key and an empty store is not a rebuild from backup, and gives the staged order.
+
+**The witness.** `spec/audit/evidence/n576-passive-join-20261113/` (13 files, digest-verified,
+`locality: local-devnet`, `execution_proven:false`): the passive replica caught up in 17.4 s
+(`LFS state is successfully restored.` at 16:18:14.246Z), activation reached round 19 in 4.3 s with
+`sync: null` and anchor #14 `d67ffe73…` held by the bootstrap, **0** equivocations, and four
+proposals at sequences **15, 16, 17, 18** — starting from the restored own history rather than at 13.
+Two earlier development runs of the same arm reached the same outcome and are not packed.
+
+**What stays open.** The unsupported shape — key present from boot — still signs a second block at a
+used sequence; #575's capture is that fork. A fail-closed guard or an operational rule for it is
+#576's, and this pass does not claim it. The M3 instrument half (#575) and this join half are
+`local-devnet`; the off-host positive remains Jim's envelope.
+
+**Boundary.** One local four-validator devnet on one host; not the off-host M3 positive, not M3-00
+acceptance and not a candidate-binary result. No deployment is authorized.
+
+## 161. A key that equivocated stops proposing (C369, #576)
+
+C367 made an equivocation refusal a verdict so that one peer's offence could not stop an honest
+node. That left the *offending* node's own behaviour open: when the refused block was by the node's
+own key, nothing turned the proof into a stop, and the reset validator in §159's capture kept
+proposing into the fork. #576's second acceptance clause is exactly this.
+
+**The stop.** The block processor is given the node key. An H-1 refusal whose sender is that key
+records a permanent halt, and the proposer's top gate refuses every trigger with
+`KeyEquivocationHalted`, naming the refused block. A peer's refusal is unchanged — a verdict, not a
+stop (C367). The log sentence is one phrase everywhere, `this validator's key equivocated`, so the
+operator, the status surface and the arm read the same fact.
+
+**Durable by derivation.** The halt is not a stored flag: the C367 verdict row and the refused body
+are durable, so `own_key_equivocation_verdict` reads them at startup — one verdict row per offence,
+the body only for its sender — and seeds the halt. A restart therefore cannot silently resume a
+forked key, and an unreadable history fails closed with its reason rather than reading as clean. The
+operator resume deliberately does not clear it; the key is rotated or the bond withdrawn. The
+per-shard status carries `keyEquivocationHalted` with its sentence, and a metric carries the gauge.
+
+**The witness.** `spec/audit/evidence/n576-key-equivocation-guard-20261113/` (12 files,
+digest-verified, `local-devnet`, `execution_proven:false`): the supported arm is the regression
+control — passive catch-up 19.6 s, activation to round 19 in 4.3 s, anchor held, no halt, proposals
+at 15–16; the unsupported arm produces **one** refusal, the named halt, and **no block more than
+10 s afterwards**. Its second proposal completed 107 ms after the halt: that attempt was already in
+flight, which is why the arm's predicate is a settle window rather than line order, and why the
+predicate has its own unit test.
+
+**What this closes.** Both of #576's acceptance clauses are met on `local-devnet`: the supported
+reset converges without self-equivocation, and the unsupported shape refuses to propose with a
+named, operator-visible state. What it does **not** do: heal the fork (the guard stops the node; the
+operator rotates the key or withdraws the bond), or substitute for the supported procedure when the
+operator has a choice. The M3 off-host positive and candidate-binary acceptance remain the
+envelope's, and no run here is mainnet evidence. No deployment is authorized.

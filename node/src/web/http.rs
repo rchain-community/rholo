@@ -1673,6 +1673,8 @@ pub const OPENAPI_JSON: &str = r##"{
           "poolQuarantined": { "type": "integer", "format": "int64" },
           "selfReplayFaultHalted": { "type": "boolean", "description": "The node-level self-replay rung latched: the attestation fallback also failed, so proposing and attesting are stopped until POST /api/v1/autopropose/resume clears it (#564)" },
           "selfReplayFaultReason": { "type": "string", "nullable": true, "description": "The sentence behind selfReplayFaultHalted, null when the latch is clear" },
+          "keyEquivocationHalted": { "type": "boolean", "description": "This validator's own key equivocated: a block by this key was refused because a different block by the same key already held its sequence. Proposing is stopped permanently — POST /api/v1/autopropose/resume does NOT clear this, because the proof is a durable verdict, not a transient fault; the key is rotated or the bond withdrawn (#576)" },
+          "keyEquivocationReason": { "type": "string", "nullable": true, "description": "The refused block behind keyEquivocationHalted, null when the halt is clear" },
           "autoproposeTimerHalted": { "type": "boolean" },
           "autoproposeTimerHaltEpisodes": { "type": "integer", "format": "int64" },
           "autoproposeHalt": { "$ref": "#/components/schemas/HaltStatusDto" },

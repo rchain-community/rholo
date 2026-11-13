@@ -1,0 +1,4 @@
+chain at {'n457join-bootstrap': 19, 'n457join-validator-1': 19, 'n457join-validator-2': 19}; bootstrap finalized 14 (eb7ecf79c610)
+== reset n457join-validator-3 (empty store, --bootstrap)
+(key-present-fail-closed) in 31.0s: round=None, anchor None (None, held by bootstrap=False); sync=None; sync failures=0; self-equivocations=1; halted=True; proposed=2; after-halt=1; late-after-halt=0
+ok: evidence at target/n576-arms/guarded/mature-join.json

@@ -1,0 +1,94 @@
+{
+  "arms": [],
+  "binary_sha256": "sha256:855e3af79240f995ea901270d8c1b9644fdc921402694b05e985400e581e3e96",
+  "execution_proven": false,
+  "files": [
+    {
+      "bytes": 203625,
+      "kind": "log",
+      "path": "raw/bootstrap.log",
+      "sha256": "2daf805164c9c30a75c3497298855871e662e7049ca3684a2656a6edae541e10"
+    },
+    {
+      "bytes": 0,
+      "kind": "log",
+      "path": "raw/down.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 69378,
+      "kind": "log",
+      "path": "raw/guarded/activated.log",
+      "sha256": "6d373b6e02be32b21973852b416036e261f00722385d21a01bd70a551fbb591d"
+    },
+    {
+      "bytes": 1528,
+      "kind": "json",
+      "path": "raw/guarded/mature-join.json",
+      "sha256": "9569dc6bfa91beeb021ae1f1927c42ed682b2f2570dac3bf46744f858575745e"
+    },
+    {
+      "bytes": 446,
+      "kind": "log",
+      "path": "raw/guarded-arm.log",
+      "sha256": "ea86e8000dfaa984a0c50b2fe657a5eafb36e7f0caec83fb9e553aef217c51cd"
+    },
+    {
+      "bytes": 2646,
+      "kind": "md",
+      "path": "raw/readout.md",
+      "sha256": "a3284e607ff48a6c14896ea1b717d7ba28a0c5f0d66e4cf81a3140ac600c4bea"
+    },
+    {
+      "bytes": 8066,
+      "kind": "log",
+      "path": "raw/supported/activated.log",
+      "sha256": "a462db4f326c9d9eae0e509c8e8f36238d5b35f684a9c556895c62152c96285c"
+    },
+    {
+      "bytes": 1581,
+      "kind": "json",
+      "path": "raw/supported/mature-join.json",
+      "sha256": "d7ef0ae41e49cce0769e8f3f41fa1a6d11bfb78a35cf95070ea4a9a93481cace"
+    },
+    {
+      "bytes": 53870,
+      "kind": "log",
+      "path": "raw/supported/passive.log",
+      "sha256": "0fd1dca858b3d5cd98f6cf1b2a2bfde21ffe838c56442f9a522b518779e3a7aa"
+    },
+    {
+      "bytes": 522,
+      "kind": "log",
+      "path": "raw/supported-arm.log",
+      "sha256": "f697f138226eaa1c9bf0bacf5b7024c29c44344db7305376b0b630534ab34445"
+    },
+    {
+      "bytes": 1636,
+      "kind": "log",
+      "path": "raw/up.log",
+      "sha256": "ff179d357fa282d1cf524ae7a4cd98e752e9529e8fd37e0e3e43d75fb718b003"
+    },
+    {
+      "bytes": 69378,
+      "kind": "log",
+      "path": "raw/validator-3.log",
+      "sha256": "c8844057f92b2c2f00157f25a9a82e88420b706366d1a598d580a454a857ffef"
+    }
+  ],
+  "gate_id": "n576-fail-closed-guard",
+  "locality": "local-devnet",
+  "packer": {
+    "packaged_at": "2026-11-13T16:52:01+00:00",
+    "tool": "evidence-pack",
+    "version": 1
+  },
+  "redactions": [],
+  "run": {
+    "attempt": null,
+    "url": null
+  },
+  "schema": 1,
+  "source_sha": "b01674566edb6fc64d1149ff7f68e3342fa7d537",
+  "verdict": "PASS"
+}

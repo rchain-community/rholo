@@ -1,0 +1,362 @@
+2026-11-13T16:51:06.329Z INFO  [coop.rchain.node.runtime.NodeRuntime] trying to open ports using UPnP....
+2026-11-13T16:51:06.329Z INFO  [coop.rchain.node.runtime.NodeRuntime] INFO - No gateway devices found
+2026-11-13T16:51:06.329Z INFO  [coop.rchain.node.runtime.NodeRuntime] No need to open any port
+2026-11-13T16:51:06.369Z INFO  [operator-risk] validator operator risk notice: an invalid block or proven equivocation can cost a stated share of your bond; an absent validator is not currently slashed but forfeits income and can stall finality, and enough silence stops the >2/3 quorum. Read TERMS.md.
+2026-11-13T16:51:06.369Z INFO  [resource-preflight] host resources: 29347 MiB available, cgroup v2, data dir 137708 MiB free, 1 rnode process(es), 24 CPU(s), 0 persisted block(s)
+2026-11-13T16:51:06.369Z WARN  [resource-preflight] no CPU quota is set for the node's cgroup; a busy host can starve it
+2026-11-13T16:51:06.448Z INFO  [casper.engine.NodeLaunch] Starting from bootstrap node, syncing LFS...
+2026-11-13T16:51:06.448Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is not-running and is not producing (resource fallback,                      unit C)
+replay complete — starting listeners; the API answers once they are up
+2026-11-13T16:51:06.489Z INFO  [casper.protocol.CommUtil] LFS fringe request 1/10 sent to peer 0000f6f9353689325f7eada4f20fba0d8665704c (anchor latest); awaiting admitted reply
+2026-11-13T16:51:06.495Z INFO  [casper.engine.NodeSyncing] Received finalized fringe from bootstrap node (0d2a6967b5d2d0d72b3f11861cf67c61a93681044a5d1a50cfb924c6841f279a) 7b5314c2ebeb5f07c06f7c158da4984dbd8e71a33da832f1721c49c320b38614 90150ba6bcf76cfb4e66a670c88ada41fbbfc4773901320401bb74cd769cb27b e4ceba6fe294163cbe1335a717bf02738f567fc6b6e2b26c3707bb45430c40a4 fdf21407b8d4e8d1ec65bd6a13fe87f102d381ae6c82938db0002bd4bdbd391e.
+2026-11-13T16:51:06.495Z INFO  [casper.protocol.CommUtil] LFS fringe reply admitted for peer 0000f6f9353689325f7eada4f20fba0d8665704c (anchor latest) on attempt 1/10
+2026-11-13T16:51:06.504Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([13, 42, 105, 103, 181, 210, 208, 215, 43, 63, 17, 134, 28, 246, 124, 97, 169, 54, 129, 4, 74, 93, 26, 80, 207, 185, 36, 198, 132, 31, 39, 154])), None)]
+2026-11-13T16:51:06.586Z INFO  [casper.engine.NodeSyncing] BlockMessage received #15 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:06.656Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:06.692Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path []
+2026-11-13T16:51:06.696Z INFO  [casper.engine.NodeSyncing] BlockMessage received #15 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:06.737Z INFO  [casper.engine.NodeSyncing] BlockMessage received #15 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:06.778Z INFO  [casper.engine.NodeSyncing] BlockMessage received #14 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:06.778Z INFO  [casper.engine.LfsBlockRequester] Latest blocks downloaded.
+2026-11-13T16:51:06.819Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 0, data: 0) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:06.865Z INFO  [casper.engine.NodeSyncing] BlockMessage received #13 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:06.906Z INFO  [casper.engine.NodeSyncing] BlockMessage received #13 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:06.947Z INFO  [casper.engine.NodeSyncing] BlockMessage received #13 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:06.988Z INFO  [casper.engine.NodeSyncing] BlockMessage received #14 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:07.029Z INFO  [casper.engine.NodeSyncing] BlockMessage received #14 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:07.070Z INFO  [casper.engine.NodeSyncing] BlockMessage received #14 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:07.112Z INFO  [casper.engine.NodeSyncing] BlockMessage received #13 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:07.153Z INFO  [casper.engine.NodeSyncing] BlockMessage received #12 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:07.194Z INFO  [casper.engine.NodeSyncing] BlockMessage received #12 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:07.235Z INFO  [casper.engine.NodeSyncing] BlockMessage received #12 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:07.276Z INFO  [casper.engine.NodeSyncing] BlockMessage received #12 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:07.336Z INFO  [casper.engine.NodeSyncing] BlockMessage received #11 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:07.378Z INFO  [casper.engine.NodeSyncing] BlockMessage received #11 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:07.419Z INFO  [casper.engine.NodeSyncing] BlockMessage received #11 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:07.463Z INFO  [casper.engine.NodeSyncing] BlockMessage received #11 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:07.507Z INFO  [casper.engine.NodeSyncing] BlockMessage received #10 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:07.549Z INFO  [casper.engine.NodeSyncing] BlockMessage received #10 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:07.591Z INFO  [casper.engine.NodeSyncing] BlockMessage received #10 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:07.633Z INFO  [casper.engine.NodeSyncing] BlockMessage received #10 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:07.678Z INFO  [casper.engine.NodeSyncing] BlockMessage received #9 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:07.721Z INFO  [casper.engine.NodeSyncing] BlockMessage received #9 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:07.764Z INFO  [casper.engine.NodeSyncing] BlockMessage received #9 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:07.805Z INFO  [casper.engine.NodeSyncing] BlockMessage received #9 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:07.856Z INFO  [casper.engine.NodeSyncing] BlockMessage received #8 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:07.898Z INFO  [casper.engine.NodeSyncing] BlockMessage received #8 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:07.939Z INFO  [casper.engine.NodeSyncing] BlockMessage received #8 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:07.980Z INFO  [casper.engine.NodeSyncing] BlockMessage received #8 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:08.028Z INFO  [casper.engine.NodeSyncing] BlockMessage received #7 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:08.070Z INFO  [casper.engine.NodeSyncing] BlockMessage received #7 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:08.111Z INFO  [casper.engine.NodeSyncing] BlockMessage received #7 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:08.153Z INFO  [casper.engine.NodeSyncing] BlockMessage received #7 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:08.197Z INFO  [casper.engine.NodeSyncing] BlockMessage received #6 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:08.239Z INFO  [casper.engine.NodeSyncing] BlockMessage received #6 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:08.280Z INFO  [casper.engine.NodeSyncing] BlockMessage received #6 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:08.322Z INFO  [casper.engine.NodeSyncing] BlockMessage received #6 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:08.370Z INFO  [casper.engine.NodeSyncing] BlockMessage received #5 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:08.412Z INFO  [casper.engine.NodeSyncing] BlockMessage received #5 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:08.449Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is not-running and is not producing (resource fallback,                      unit C)
+2026-11-13T16:51:08.454Z INFO  [casper.engine.NodeSyncing] BlockMessage received #5 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:08.496Z INFO  [casper.engine.NodeSyncing] BlockMessage received #5 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:08.549Z INFO  [casper.engine.NodeSyncing] BlockMessage received #4 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:08.591Z INFO  [casper.engine.NodeSyncing] BlockMessage received #4 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:08.633Z INFO  [casper.engine.NodeSyncing] BlockMessage received #4 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:08.675Z INFO  [casper.engine.NodeSyncing] BlockMessage received #4 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:08.720Z INFO  [casper.engine.NodeSyncing] BlockMessage received #3 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:08.761Z INFO  [casper.engine.NodeSyncing] BlockMessage received #3 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:08.803Z INFO  [casper.engine.NodeSyncing] BlockMessage received #3 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:08.844Z INFO  [casper.engine.NodeSyncing] BlockMessage received #3 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:08.896Z INFO  [casper.engine.NodeSyncing] BlockMessage received #2 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:08.937Z INFO  [casper.engine.NodeSyncing] BlockMessage received #2 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:08.979Z INFO  [casper.engine.NodeSyncing] BlockMessage received #2 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:09.020Z INFO  [casper.engine.NodeSyncing] BlockMessage received #2 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:09.072Z INFO  [casper.engine.NodeSyncing] BlockMessage received #1 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:09.113Z INFO  [casper.engine.NodeSyncing] BlockMessage received #1 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:09.154Z INFO  [casper.engine.NodeSyncing] BlockMessage received #1 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:09.196Z INFO  [casper.engine.NodeSyncing] BlockMessage received #1 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:09.253Z INFO  [casper.engine.NodeSyncing] BlockMessage received #0 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:09.273Z INFO  [casper.engine.NodeSyncing] Requesting tuple-space data for 42 approved block state roots.
+2026-11-13T16:51:09.581Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([0, 129, 232, 0, 3, 204, 115, 87, 209, 66, 240, 35, 212, 230, 46, 220, 121, 214, 92, 53, 54, 110, 55, 248, 90, 54, 231, 95, 14, 44, 224, 194])), None)]
+2026-11-13T16:51:09.623Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([5, 92, 143, 152, 211, 225, 124, 126, 245, 66, 36, 183, 55, 142, 228, 57, 113, 197, 19, 59, 13, 175, 27, 242, 209, 109, 245, 28, 198, 170, 135, 129])), None)]
+2026-11-13T16:51:09.641Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:09.667Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([9, 115, 50, 102, 131, 110, 123, 141, 186, 240, 115, 81, 114, 94, 114, 155, 66, 213, 28, 197, 29, 5, 19, 125, 102, 69, 225, 179, 53, 236, 181, 61])), None)]
+2026-11-13T16:51:09.682Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:09.708Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([14, 87, 81, 192, 38, 229, 67, 178, 232, 171, 46, 176, 96, 153, 218, 161, 209, 229, 223, 71, 119, 143, 119, 135, 250, 171, 69, 205, 241, 47, 227, 168])), None)]
+2026-11-13T16:51:09.725Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:09.749Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([16, 193, 143, 110, 72, 242, 152, 196, 49, 82, 87, 102, 199, 116, 192, 247, 50, 139, 42, 93, 178, 78, 146, 12, 213, 96, 213, 86, 218, 202, 172, 232])), None)]
+2026-11-13T16:51:09.790Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 0, data: 0) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:09.790Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([21, 48, 255, 72, 111, 244, 57, 105, 13, 12, 131, 51, 51, 146, 22, 250, 241, 182, 80, 89, 187, 19, 39, 62, 174, 21, 103, 255, 54, 247, 119, 202])), None)]
+2026-11-13T16:51:09.818Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:09.831Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([24, 117, 206, 181, 240, 213, 246, 65, 250, 61, 141, 14, 73, 12, 121, 172, 118, 172, 145, 177, 43, 109, 177, 30, 243, 75, 67, 74, 214, 205, 23, 105])), None)]
+2026-11-13T16:51:09.862Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:09.872Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([34, 49, 82, 43, 96, 198, 251, 115, 251, 232, 94, 214, 112, 86, 163, 201, 250, 152, 71, 145, 125, 214, 231, 104, 121, 25, 230, 108, 129, 189, 206, 135])), None)]
+2026-11-13T16:51:09.913Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([36, 59, 113, 76, 241, 122, 250, 182, 213, 0, 79, 230, 159, 243, 4, 11, 19, 136, 243, 179, 63, 5, 10, 64, 254, 4, 78, 217, 80, 33, 153, 98])), None)]
+2026-11-13T16:51:09.954Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([53, 142, 179, 31, 201, 197, 97, 241, 146, 220, 195, 153, 140, 48, 105, 98, 176, 231, 175, 2, 223, 242, 247, 184, 81, 0, 146, 171, 223, 99, 89, 128])), None)]
+2026-11-13T16:51:09.971Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:09.995Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([74, 6, 20, 51, 62, 35, 81, 85, 102, 35, 148, 51, 70, 158, 160, 31, 75, 167, 203, 69, 119, 66, 232, 142, 40, 201, 198, 16, 36, 40, 61, 134])), None)]
+2026-11-13T16:51:10.005Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:10.036Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([90, 115, 41, 13, 109, 109, 105, 245, 254, 66, 145, 84, 98, 60, 169, 29, 168, 242, 38, 128, 208, 64, 1, 23, 3, 91, 143, 184, 238, 85, 97, 27])), None)]
+2026-11-13T16:51:10.077Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([91, 189, 179, 139, 38, 211, 115, 184, 117, 42, 60, 85, 206, 73, 144, 194, 162, 142, 213, 62, 207, 73, 160, 199, 29, 84, 133, 237, 11, 237, 161, 171])), None)]
+2026-11-13T16:51:10.112Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:10.118Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([101, 11, 80, 20, 155, 228, 48, 28, 185, 96, 112, 210, 83, 240, 133, 206, 78, 254, 177, 65, 148, 20, 228, 12, 103, 84, 156, 102, 138, 164, 188, 101])), None)]
+2026-11-13T16:51:10.139Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:10.159Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([102, 127, 25, 67, 116, 170, 135, 23, 72, 88, 198, 242, 2, 132, 75, 130, 105, 245, 34, 77, 30, 74, 186, 23, 195, 51, 220, 155, 223, 52, 18, 14])), None)]
+2026-11-13T16:51:10.164Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:10.190Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:10.200Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([112, 99, 126, 107, 131, 166, 100, 87, 77, 213, 186, 119, 58, 16, 179, 210, 196, 188, 7, 164, 113, 220, 51, 208, 141, 84, 119, 142, 235, 182, 241, 163])), None)]
+2026-11-13T16:51:10.241Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([113, 214, 251, 160, 99, 90, 48, 11, 70, 107, 12, 11, 126, 234, 173, 17, 227, 156, 121, 75, 95, 66, 66, 89, 167, 60, 79, 79, 175, 162, 155, 226])), None)]
+2026-11-13T16:51:10.257Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:10.275Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:10.282Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([113, 237, 13, 65, 46, 228, 97, 51, 236, 219, 111, 52, 54, 62, 163, 194, 178, 93, 70, 166, 148, 86, 118, 233, 179, 160, 177, 138, 7, 25, 216, 255])), None)]
+2026-11-13T16:51:10.295Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:10.311Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:10.323Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([114, 101, 160, 222, 182, 189, 1, 33, 234, 143, 191, 26, 139, 130, 121, 212, 44, 97, 167, 98, 134, 207, 251, 230, 95, 78, 144, 110, 173, 87, 184, 226])), None)]
+2026-11-13T16:51:10.364Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([118, 58, 5, 215, 83, 246, 227, 191, 24, 81, 101, 192, 210, 167, 16, 200, 240, 18, 62, 244, 154, 206, 216, 45, 140, 196, 176, 10, 28, 2, 115, 137])), None)]
+2026-11-13T16:51:10.368Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:10.395Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:10.405Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([133, 90, 50, 35, 4, 17, 196, 80, 243, 187, 213, 120, 69, 72, 210, 73, 48, 121, 144, 41, 56, 166, 187, 3, 223, 244, 122, 180, 59, 225, 205, 105])), None)]
+2026-11-13T16:51:10.422Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:10.443Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:10.447Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([135, 44, 146, 101, 205, 74, 95, 252, 11, 85, 187, 157, 76, 178, 234, 36, 50, 113, 157, 226, 5, 171, 14, 126, 240, 65, 67, 110, 35, 83, 182, 178])), None)]
+2026-11-13T16:51:10.448Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is not-running and is not producing (resource fallback,                      unit C)
+2026-11-13T16:51:10.488Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([137, 84, 164, 18, 165, 225, 166, 226, 118, 117, 182, 53, 69, 104, 172, 50, 54, 154, 251, 12, 135, 103, 181, 62, 65, 149, 159, 12, 0, 188, 10, 152])), None)]
+2026-11-13T16:51:10.513Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:10.529Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([141, 29, 87, 134, 239, 214, 63, 79, 51, 13, 2, 74, 160, 232, 146, 17, 157, 120, 160, 68, 148, 201, 4, 204, 66, 37, 102, 212, 246, 47, 48, 182])), None)]
+2026-11-13T16:51:10.539Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:10.570Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([152, 164, 133, 38, 123, 37, 66, 110, 254, 35, 175, 94, 205, 164, 94, 249, 184, 188, 159, 244, 46, 158, 229, 184, 4, 117, 223, 171, 208, 181, 219, 189])), None)]
+2026-11-13T16:51:10.605Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:10.611Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([154, 147, 226, 234, 173, 16, 41, 26, 200, 44, 234, 27, 191, 207, 65, 122, 26, 66, 189, 178, 233, 32, 85, 229, 136, 200, 230, 127, 189, 109, 196, 55])), None)]
+2026-11-13T16:51:10.631Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:10.652Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([157, 182, 243, 29, 63, 73, 52, 172, 110, 135, 204, 136, 212, 29, 97, 186, 203, 172, 192, 228, 75, 51, 191, 127, 138, 107, 47, 104, 67, 237, 236, 171])), None)]
+2026-11-13T16:51:10.658Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:10.685Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:10.693Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([167, 191, 246, 36, 178, 34, 201, 30, 196, 72, 184, 118, 235, 33, 111, 42, 143, 252, 112, 74, 97, 95, 218, 47, 79, 90, 109, 132, 115, 17, 210, 128])), None)]
+2026-11-13T16:51:10.734Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([169, 213, 13, 67, 241, 194, 197, 44, 111, 199, 15, 91, 224, 180, 16, 147, 138, 118, 147, 178, 11, 170, 58, 204, 194, 135, 13, 193, 230, 56, 34, 168])), None)]
+2026-11-13T16:51:10.760Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:10.775Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([191, 178, 83, 167, 121, 77, 247, 92, 230, 160, 22, 172, 159, 23, 182, 242, 35, 178, 20, 73, 128, 161, 236, 199, 172, 176, 82, 224, 96, 175, 36, 34])), None)]
+2026-11-13T16:51:10.786Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:10.812Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:10.817Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([195, 253, 238, 206, 252, 226, 132, 95, 82, 7, 58, 59, 20, 70, 226, 96, 117, 17, 151, 78, 3, 7, 182, 254, 166, 137, 62, 236, 170, 97, 17, 63])), None)]
+2026-11-13T16:51:10.859Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([201, 207, 66, 29, 145, 47, 128, 212, 221, 182, 225, 16, 204, 178, 210, 213, 51, 74, 78, 179, 125, 102, 230, 178, 157, 42, 66, 92, 141, 164, 46, 255])), None)]
+2026-11-13T16:51:10.884Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:10.900Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([202, 210, 200, 247, 202, 201, 248, 240, 219, 163, 62, 141, 161, 237, 191, 3, 66, 15, 16, 91, 213, 125, 251, 36, 240, 160, 84, 146, 132, 83, 237, 156])), None)]
+2026-11-13T16:51:10.904Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:10.931Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:10.942Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([204, 228, 14, 114, 32, 117, 37, 124, 111, 9, 145, 97, 2, 46, 87, 200, 88, 66, 5, 235, 205, 247, 133, 81, 162, 107, 186, 18, 151, 94, 100, 156])), None)]
+2026-11-13T16:51:10.984Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([210, 142, 15, 217, 235, 183, 190, 203, 111, 155, 6, 198, 198, 64, 191, 137, 191, 70, 215, 239, 190, 172, 203, 110, 228, 212, 126, 74, 126, 220, 8, 195])), None)]
+2026-11-13T16:51:10.991Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:11.025Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([213, 31, 71, 231, 205, 185, 80, 91, 107, 108, 185, 5, 32, 32, 231, 247, 142, 122, 189, 64, 65, 223, 62, 221, 28, 78, 148, 205, 206, 127, 210, 196])), None)]
+2026-11-13T16:51:11.050Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:11.066Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([213, 235, 87, 176, 100, 2, 55, 236, 24, 71, 112, 252, 168, 199, 159, 146, 40, 20, 69, 242, 64, 230, 34, 41, 16, 225, 237, 101, 123, 63, 139, 42])), None)]
+2026-11-13T16:51:11.071Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:11.108Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([214, 164, 176, 172, 234, 102, 175, 164, 182, 218, 174, 154, 203, 211, 117, 67, 14, 176, 20, 13, 95, 254, 79, 90, 62, 121, 103, 151, 208, 32, 105, 24])), None)]
+2026-11-13T16:51:11.138Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:11.149Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([215, 132, 99, 204, 221, 69, 118, 70, 150, 212, 54, 58, 84, 168, 136, 20, 174, 8, 31, 113, 194, 211, 137, 26, 86, 72, 64, 105, 105, 173, 227, 69])), None)]
+2026-11-13T16:51:11.159Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:11.191Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([219, 117, 244, 176, 20, 118, 103, 254, 62, 236, 139, 192, 17, 85, 76, 171, 111, 198, 112, 56, 104, 185, 230, 255, 249, 239, 148, 123, 185, 135, 204, 232])), None)]
+2026-11-13T16:51:11.225Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:11.233Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([224, 166, 219, 122, 47, 4, 121, 7, 27, 23, 228, 191, 184, 33, 236, 255, 5, 184, 215, 145, 21, 36, 143, 27, 172, 25, 27, 94, 107, 160, 73, 238])), None)]
+2026-11-13T16:51:11.248Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:11.274Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([249, 165, 116, 140, 172, 166, 64, 211, 111, 8, 183, 157, 131, 198, 129, 54, 224, 132, 175, 109, 78, 99, 215, 98, 152, 101, 23, 109, 219, 128, 133, 23])), None)]
+2026-11-13T16:51:11.316Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path []
+2026-11-13T16:51:11.392Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:11.422Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:11.491Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:11.532Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 0, data: 0) from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T16:51:12.345Z WARN  [casper.interpreter.validate] finality did not advance at tip 0: a layer exists but its supporting stake is not a supermajority — 0 of 400 (0 full partition(s) among 0 candidate(s) of a 1-sender partition)
+[pos] close_block 1 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T16:51:12.402Z WARN  [casper.interpreter.validate] a finality-stall episode was counted but not recorded: this DAG storage has no durable-records store attached, so this shard's health counters would be forgotten by the next process — this shard will under-report its stall history in the next process
+[pos] close_block 1 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T16:51:12.448Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is not-running and is not producing (resource fallback,                      unit C)
+[pos] close_block 1 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 1 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T16:51:12.539Z WARN  [casper.interpreter.validate] finality did not advance at tip 1: a layer exists but its supporting stake is not a supermajority — 0 of 400 (0 full partition(s) among 0 candidate(s) of a 4-sender partition)
+[pos] close_block 2 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 2 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 2 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T16:51:12.669Z WARN  [casper.interpreter.validate] a finality-stall episode was counted but not recorded: this DAG storage has no durable-records store attached, so this shard's health counters would be forgotten by the next process — this shard will under-report its stall history in the next process
+[pos] close_block 2 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T16:51:12.714Z WARN  [casper.interpreter.validate] finality did not advance at tip 2: a layer exists but its supporting stake is not a supermajority — 0 of 400 (0 full partition(s) among 4 candidate(s) of a 4-sender partition)
+[pos] close_block 3 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 3 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 3 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 3 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+["#define $Kudos", `rho:id:9spnmtw9g3qdi1kpxcbgbuyuukbkryp1wfdwsy6iunb9g44icrjy`]
+"begin"
+["#define $Inbox", `rho:id:3spfkanxkeq3d1s6wdbjz5gpy4oio5uzd9hnsmfbukjeakyiubky`]
+["#define $Directory", `rho:id:zcn8i36nea5u7sgkkuoh38nomzcg9gpfi4qs3c5ou7bmp6ygasio`]
+["#define $Issue", `rho:id:netuaaypr6ryw3ab5yk8e7fjhqx1gfxnnkm9mdif7wswmgkegfxo`]
+["#define $Ballot", `rho:id:kuhtaexp36f3rjygs8t5oosxfhx7m6kuy9iwi3ew5jz63fppbroy`]
+`rho:id:kuhtaexp36f3rjygs8t5oosxfhx7m6kuy9iwi3ew5jz63fppbroy`
+"starting"
+["#define $Chat", `rho:id:twqdgghs4dz3sd8ronngpg1kdwrtikq8pdgmjzd7z9d1k5kt1poy`]
+"request"
+["#define $Group", `rho:id:s9hd3eoq1trqjsbeay3j1ihsue6zfz6tauy1wyii3zwj1pkh7r3o`]
+["MCAread", bundle+ {   Unforgeable(0x7ab62ea39c23346344dedf8aa6548802c0432374b6a4a4d81a357a6ec284915e) }]
+["GetMe", ("published", "11112VYAt8rUGNRRZX3eJdgagaAhtWTK8Js7F7X5iqddMVqyDTtYau/GetMe", 0), "SendThem", ("published", "11112VYAt8rUGNRRZX3eJdgagaAhtWTK8Js7F7X5iqddMVqyDTtYau/SendThem", 0)]
+["getting deployer rev address"]
+["got pub key", "04f700a417754b775d95421973bdbdadb2d23c8a5af46f1829b1431f5c136e549e8a0d61aa0c793f1a614f8e437711c7758473c6ceb0859ac7e9e07911ca66b5c4".hexToBytes()]
+["got revaddr", {"deployer REV address" : "11112VYAt8rUGNRRZX3eJdgagaAhtWTK8Js7F7X5iqddMVqyDTtYau", "deployerId" : DeployerId(0x04f700a417754b775d95421973bdbdadb2d23c8a5af46f1829b1431f5c136e549e8a0d61aa0c793f1a614f8e437711c7758473c6ceb0859ac7e9e07911ca66b5c4), "pubKeyBytes" : "04f700a417754b775d95421973bdbdadb2d23c8a5af46f1829b1431f5c136e549e8a0d61aa0c793f1a614f8e437711c7758473c6ceb0859ac7e9e07911ca66b5c4".hexToBytes()}]
+["getMe", "11112VYAt8rUGNRRZX3eJdgagaAhtWTK8Js7F7X5iqddMVqyDTtYau", "everyone size", 0]
+["creating your stuff", "11112VYAt8rUGNRRZX3eJdgagaAhtWTK8Js7F7X5iqddMVqyDTtYau"]
+["inbox creation", bundle+ {   Unforgeable(0x109d074f7ca037d43d4a42c063c37bf3a6980cb86a5ed9c242e23ec27277d088) }, "dir creation", bundle+ {   Unforgeable(0x74206e9f2a2fd1d16e885372201da64ffc57070d693c85556af5cb2811852e94) }]
+["read", bundle+ {   Unforgeable(0x9c3e3fa972dc564a5fed48f03053fb0376f6d9bc91d745f33cfdc1710d55c10b) }, "write", bundle+ {   Unforgeable(0x67945f3348c4e24133e4ac67f8cdbf94600c1dedeba8820d27c50fc01cfa9662) }, "peek", bundle+ {   Unforgeable(0xdd2e50727b44423dbb4fb121bbd77046322b47fff7f310d5562600e92172edb1) }, "dirMap", {"grant" : bundle+ {   Unforgeable(0x930d5e796b482da0445c99179ca84aaeb5712c0b4f986b15dbb9f34c1835b2a1) }, "read" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "write" : bundle+ {   Unforgeable(0xb2eacb8ed80f56f0a20860e77f960e22be12aeba0b087f33047cd9b4d37a66ef) }}]
+["creating you", "11112VYAt8rUGNRRZX3eJdgagaAhtWTK8Js7F7X5iqddMVqyDTtYau", "with your stuff", {"claimed" : false, "dictionary" : {"grant" : bundle+ {   Unforgeable(0x930d5e796b482da0445c99179ca84aaeb5712c0b4f986b15dbb9f34c1835b2a1) }, "read" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "write" : bundle+ {   Unforgeable(0xb2eacb8ed80f56f0a20860e77f960e22be12aeba0b087f33047cd9b4d37a66ef) }}, "inbox" : {"URI" : `rho:id:1dowt16ek6squ9iycd3iyz8gtzn8wfp8wzef59qtwuyqz5z5cgby`, "dict" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "inbox" : bundle+ {   Unforgeable(0x67945f3348c4e24133e4ac67f8cdbf94600c1dedeba8820d27c50fc01cfa9662) }, "peek" : bundle+ {   Unforgeable(0xdd2e50727b44423dbb4fb121bbd77046322b47fff7f310d5562600e92172edb1) }, "receive" : bundle+ {   Unforgeable(0x9c3e3fa972dc564a5fed48f03053fb0376f6d9bc91d745f33cfdc1710d55c10b) }}}]
+["Inbox returning", bundle+ {   Unforgeable(0x9c3e3fa972dc564a5fed48f03053fb0376f6d9bc91d745f33cfdc1710d55c10b) }, bundle+ {   Unforgeable(0x67945f3348c4e24133e4ac67f8cdbf94600c1dedeba8820d27c50fc01cfa9662) }, bundle+ {   Unforgeable(0xdd2e50727b44423dbb4fb121bbd77046322b47fff7f310d5562600e92172edb1) }]
+["you don't exist", "11112VYAt8rUGNRRZX3eJdgagaAhtWTK8Js7F7X5iqddMVqyDTtYau"]
+["your inserted stuff", {"claimed" : false, "dictionary" : {"grant" : bundle+ {   Unforgeable(0x930d5e796b482da0445c99179ca84aaeb5712c0b4f986b15dbb9f34c1835b2a1) }, "read" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "write" : bundle+ {   Unforgeable(0xb2eacb8ed80f56f0a20860e77f960e22be12aeba0b087f33047cd9b4d37a66ef) }}, "inbox" : {"URI" : `rho:id:1dowt16ek6squ9iycd3iyz8gtzn8wfp8wzef59qtwuyqz5z5cgby`, "dict" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "inbox" : bundle+ {   Unforgeable(0x67945f3348c4e24133e4ac67f8cdbf94600c1dedeba8820d27c50fc01cfa9662) }, "peek" : bundle+ {   Unforgeable(0xdd2e50727b44423dbb4fb121bbd77046322b47fff7f310d5562600e92172edb1) }, "receive" : bundle+ {   Unforgeable(0x9c3e3fa972dc564a5fed48f03053fb0376f6d9bc91d745f33cfdc1710d55c10b) }}}, "everyone size", 1]
+["inbox", {"URI" : `rho:id:1dowt16ek6squ9iycd3iyz8gtzn8wfp8wzef59qtwuyqz5z5cgby`, "dict" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "inbox" : bundle+ {   Unforgeable(0x67945f3348c4e24133e4ac67f8cdbf94600c1dedeba8820d27c50fc01cfa9662) }, "peek" : bundle+ {   Unforgeable(0xdd2e50727b44423dbb4fb121bbd77046322b47fff7f310d5562600e92172edb1) }, "receive" : bundle+ {   Unforgeable(0x9c3e3fa972dc564a5fed48f03053fb0376f6d9bc91d745f33cfdc1710d55c10b) }}]
+["x", {"claimed" : false, "dictionary" : {"grant" : bundle+ {   Unforgeable(0x930d5e796b482da0445c99179ca84aaeb5712c0b4f986b15dbb9f34c1835b2a1) }, "read" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "write" : bundle+ {   Unforgeable(0xb2eacb8ed80f56f0a20860e77f960e22be12aeba0b087f33047cd9b4d37a66ef) }}, "inbox" : {"URI" : `rho:id:1dowt16ek6squ9iycd3iyz8gtzn8wfp8wzef59qtwuyqz5z5cgby`, "dict" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "inbox" : bundle+ {   Unforgeable(0x67945f3348c4e24133e4ac67f8cdbf94600c1dedeba8820d27c50fc01cfa9662) }, "peek" : bundle+ {   Unforgeable(0xdd2e50727b44423dbb4fb121bbd77046322b47fff7f310d5562600e92172edb1) }, "receive" : bundle+ {   Unforgeable(0x9c3e3fa972dc564a5fed48f03053fb0376f6d9bc91d745f33cfdc1710d55c10b) }}}]
+["writing inbox and dictionary for bootstrap", {"URI" : `rho:id:1dowt16ek6squ9iycd3iyz8gtzn8wfp8wzef59qtwuyqz5z5cgby`, "dict" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "inbox" : bundle+ {   Unforgeable(0x67945f3348c4e24133e4ac67f8cdbf94600c1dedeba8820d27c50fc01cfa9662) }, "peek" : bundle+ {   Unforgeable(0xdd2e50727b44423dbb4fb121bbd77046322b47fff7f310d5562600e92172edb1) }, "receive" : bundle+ {   Unforgeable(0x9c3e3fa972dc564a5fed48f03053fb0376f6d9bc91d745f33cfdc1710d55c10b) }}, {"grant" : bundle+ {   Unforgeable(0x930d5e796b482da0445c99179ca84aaeb5712c0b4f986b15dbb9f34c1835b2a1) }, "read" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "write" : bundle+ {   Unforgeable(0xb2eacb8ed80f56f0a20860e77f960e22be12aeba0b087f33047cd9b4d37a66ef) }}]
+["everyone size", 0]
+[pos] close_block 4 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 4 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 4 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 4 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 5 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T16:51:14.448Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is not-running and is not producing (resource fallback,                      unit C)
+[pos] close_block 5 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 5 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 5 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 6 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 6 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 6 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 6 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 7 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 7 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 7 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 7 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 8 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 8 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 8 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 8 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 9 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 9 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 9 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 9 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 10 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 10 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 10 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 10 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 11 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 11 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 11 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 11 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 12 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 12 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 12 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 12 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 13 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 13 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 13 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 13 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T16:51:16.448Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is not-running and is not producing (resource fallback,                      unit C)
+[pos] close_block 14 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 14 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 14 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 14 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 15 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 15 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 15 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T16:51:16.927Z INFO  [casper.engine.RecoveryReplay] Independently replayed 60 recovery blocks; all supplied fringe claims match.
+2026-11-13T16:51:18.162Z INFO  [casper.engine.NodeSyncing] LFS state is successfully restored.
+2026-11-13T16:51:18.167Z INFO  [casper.engine.NodeLaunch] republished CURRENT_ROOT at the latest accepted block d68778302654f0fb2f2a397bb5816d8521215b9eb62150613eac39847df53137
+2026-11-13T16:51:18.176Z INFO  [casper.blocks.BlockDisposition] start-up disposition audit: 0 unsettled block(s) re-offered, 0 skipped for missing parents, 0 already inserted, 0 quarantined, 0 unreadable
+2026-11-13T16:51:18.176Z INFO  [casper.engine.NodeLaunch] start-up disposition audit: 0 pre-ledger body/bodies adopted, 0 re-offered, 0 skipped for missing parents, 0 still pending when the drain closed
+2026-11-13T16:51:18.176Z INFO  [casper.engine.NodeLaunch] Making a transition to Running state.
+2026-11-13T16:51:18.218Z INFO  [casper.protocol.CommUtil] Requested fork tip from peers
+2026-11-13T16:51:18.258Z INFO  [casper.blocks.BlockRetriever] Adding e266b790ef73371161d652b7bb22347fa5adf788a27c61af2a8a403f516d4a08 hash to RequestedBlocks because of HasBlockMessageReceived.
+2026-11-13T16:51:18.299Z INFO  [casper.blocks.BlockRetriever] Adding e0d6c032f8e56f0b8322d5f2bc660ba6f151a8cef517d733d5043cbd7b0a0af4 hash to RequestedBlocks because of HasBlockMessageReceived.
+2026-11-13T16:51:18.340Z INFO  [casper.blocks.BlockRetriever] Adding f08c1b0bd90f85e26390c313ce9a0db4caabb1b22106265815db72cad4cb3f8e hash to RequestedBlocks because of HasBlockMessageReceived.
+2026-11-13T16:51:18.381Z INFO  [casper.blocks.BlockRetriever] Adding 526d27327fbe34174e4a834a936fa9914300f2cd71b16f551dcb0552bce2f3cc hash to RequestedBlocks because of HasBlockMessageReceived.
+2026-11-13T16:51:18.428Z INFO  [casper.blocks.BlockRetriever] Block e266b790ef73371161d652b7bb22347fa5adf788a27c61af2a8a403f516d4a08 marked as received.
+2026-11-13T16:51:18.428Z INFO  [casper.blocks.BlockRetriever] Adding 2416fff80abf46ed76403f564b1c76b33d059ad29e940e92f731f4ba620ca668 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T16:51:18.470Z INFO  [casper.blocks.BlockRetriever] Adding 3751e07ed3583efdca1d153bfa0df41e6db145956682ac0d250ba7f98a991736 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T16:51:18.507Z WARN  [casper.engine.NodeRunning] There is another node rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404 proposing using the same private key as you. Or did you restart your node?
+2026-11-13T16:51:18.511Z INFO  [casper.blocks.BlockRetriever] Adding e89004b545dee7062e1f2af41c6b5e1c88ce6dfef153e4c3604f083ec5f0df3d hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T16:51:18.559Z INFO  [casper.blocks.BlockRetriever] Block e0d6c032f8e56f0b8322d5f2bc660ba6f151a8cef517d733d5043cbd7b0a0af4 marked as received.
+2026-11-13T16:51:18.559Z INFO  [casper.blocks.BlockRetriever] Adding 86bf5f129d717ab6c9b7e089a63b0bcfb84c9640088aeca25afb9388c747e2ee hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T16:51:18.601Z INFO  [casper.blocks.BlockRetriever] Adding e14172ba5b4896670ad181dbd7f70cabd3de35dc9bb1c6f74932f453d5273478 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T16:51:18.608Z INFO  [casper.blocks.BlockRetriever] Block f08c1b0bd90f85e26390c313ce9a0db4caabb1b22106265815db72cad4cb3f8e marked as received.
+2026-11-13T16:51:18.608Z INFO  [casper.blocks.BlockRetriever] Adding 0186f37b1dd52af806d1ad68b3d54c5532d92f446b3684426af66e2e50a0937c hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T16:51:18.649Z INFO  [casper.blocks.BlockRetriever] Adding 0cb9b879117f475a9f115d806acf7600098da323d39ca12a0704e5dc9f1a48f2 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T16:51:18.650Z INFO  [casper.blocks.BlockRetriever] Adding b47bf86c0b6c6dba82ffa64af5210074e2b332537422ee41d962a5a2843ff6b7 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T16:51:18.691Z INFO  [casper.blocks.BlockRetriever] Adding e67ce52324c9d5436d668cd363868a42f884181ca8a500cef1855b62a82009e1 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T16:51:18.744Z INFO  [casper.blocks.BlockRetriever] Block 526d27327fbe34174e4a834a936fa9914300f2cd71b16f551dcb0552bce2f3cc marked as received.
+2026-11-13T16:51:18.744Z INFO  [casper.blocks.BlockRetriever] Adding cb32033ca02d2c85d46b784b5a0724e98816a4d7ac69208e8e472d4e677debec hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T16:51:18.789Z INFO  [casper.blocks.BlockRetriever] Block 2416fff80abf46ed76403f564b1c76b33d059ad29e940e92f731f4ba620ca668 marked as received.
+2026-11-13T16:51:18.885Z INFO  [casper.blocks.BlockRetriever] Block 3751e07ed3583efdca1d153bfa0df41e6db145956682ac0d250ba7f98a991736 marked as received.
+2026-11-13T16:51:18.968Z INFO  [casper.blocks.BlockRetriever] Block e89004b545dee7062e1f2af41c6b5e1c88ce6dfef153e4c3604f083ec5f0df3d marked as received.
+2026-11-13T16:51:19.051Z INFO  [casper.blocks.BlockRetriever] Block 86bf5f129d717ab6c9b7e089a63b0bcfb84c9640088aeca25afb9388c747e2ee marked as received.
+2026-11-13T16:51:19.175Z INFO  [casper.blocks.BlockRetriever] Block e14172ba5b4896670ad181dbd7f70cabd3de35dc9bb1c6f74932f453d5273478 marked as received.
+2026-11-13T16:51:19.213Z WARN  [casper.engine.NodeRunning] There is another node rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404 proposing using the same private key as you. Or did you restart your node?
+2026-11-13T16:51:19.217Z INFO  [casper.blocks.BlockRetriever] Block 0186f37b1dd52af806d1ad68b3d54c5532d92f446b3684426af66e2e50a0937c marked as received.
+2026-11-13T16:51:19.217Z INFO  [casper.blocks.BlockRetriever] Adding 75003c72ce85482c35c4da22993a80f8ae7656f1f8a47857982b3a7f6491328a hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T16:51:19.263Z INFO  [casper.blocks.BlockRetriever] Block 0cb9b879117f475a9f115d806acf7600098da323d39ca12a0704e5dc9f1a48f2 marked as received.
+2026-11-13T16:51:19.263Z INFO  [casper.blocks.BlockRetriever] Adding 8e6d644dfdcd26dcfb7f0a72b9ee8951fec8713237646a5eb1457696b801590a hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T16:51:19.310Z INFO  [casper.blocks.BlockRetriever] Block b47bf86c0b6c6dba82ffa64af5210074e2b332537422ee41d962a5a2843ff6b7 marked as received.
+2026-11-13T16:51:19.310Z INFO  [casper.blocks.BlockRetriever] Adding 0c9bead98e2fa7868612f214d205feb6a87e518eeb6b8889cf9f1e5acb0f6ae7 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T16:51:19.356Z INFO  [casper.blocks.BlockRetriever] Block e67ce52324c9d5436d668cd363868a42f884181ca8a500cef1855b62a82009e1 marked as received.
+2026-11-13T16:51:19.357Z INFO  [casper.blocks.BlockRetriever] Adding 5e380cadfa6086b31dc45927948a33693074cd12ef34371731d41a9b3bceb12b hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T16:51:19.402Z INFO  [casper.blocks.BlockRetriever] Block cb32033ca02d2c85d46b784b5a0724e98816a4d7ac69208e8e472d4e677debec marked as received.
+2026-11-13T16:51:19.592Z INFO  [casper.blocks.BlockRetriever] Block 75003c72ce85482c35c4da22993a80f8ae7656f1f8a47857982b3a7f6491328a marked as received.
+2026-11-13T16:51:19.634Z INFO  [casper.blocks.BlockRetriever] Block 8e6d644dfdcd26dcfb7f0a72b9ee8951fec8713237646a5eb1457696b801590a marked as received.
+2026-11-13T16:51:19.637Z WARN  [casper.interpreter.validate] merge search: 104 merges · widest scope 18 chains / 0 conflict pairs / 0 asymmetric · most states expanded on one merge 19 · width buckets [56, 48, 0, 0, 0] · cost buckets [104, 0, 0, 0, 0]
+[pos] close_block 15 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T16:51:19.677Z INFO  [casper.blocks.BlockRetriever] Block 0c9bead98e2fa7868612f214d205feb6a87e518eeb6b8889cf9f1e5acb0f6ae7 marked as received.
+2026-11-13T16:51:19.722Z INFO  [casper.blocks.BlockRetriever] Block 5e380cadfa6086b31dc45927948a33693074cd12ef34371731d41a9b3bceb12b marked as received.
+2026-11-13T16:51:19.735Z INFO  [casper.protocol.CommUtil] Block hash 75003c72ce85482c35c4da22993a80f8ae7656f1f8a47857982b3a7f6491328a: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-13T16:51:19.736Z INFO  [casper.blocks.Proposer] attestation at tip 15: licensed — nothing_to_finalize=false new_state_transition=true quorum_reachable=true cadence_due=false paced=true round=[04d8b6c3 04dbe32c 04ea3ce0 04f700a4] blocked_attempts=0 escape=false
+No pooled deploys; injecting dummy deploy for block #16
+[deploy] deployer=04f700a417754b77 ok cost=3 
+[pos] close_block 16 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 16 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T16:51:19.855Z INFO  [casper.protocol.CommUtil] Block hash 0186f37b1dd52af806d1ad68b3d54c5532d92f446b3684426af66e2e50a0937c: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+[pos] close_block 16 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 16 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T16:51:19.892Z WARN  [casper.blocks.Proposer] Self-created block #16 (seq 15) collided with this node's own already-synced block — a stale parent-set snapshot, not a validation failure. Re-deriving next round (AUDIT §48).
+[pos] close_block 16 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 16 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T16:51:19.996Z INFO  [casper.protocol.CommUtil] Block hash 0c9bead98e2fa7868612f214d205feb6a87e518eeb6b8889cf9f1e5acb0f6ae7: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-13T16:51:19.997Z INFO  [casper.protocol.CommUtil] Block hash 8e6d644dfdcd26dcfb7f0a72b9ee8951fec8713237646a5eb1457696b801590a: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-13T16:51:20.046Z WARN  [casper.interpreter.validate] finality did not advance at tip 16: a layer exists but its supporting stake is not a supermajority — 100 of 400 (1 full partition(s) among 4 candidate(s) of a 4-sender partition)
+2026-11-13T16:51:20.053Z INFO  [casper.protocol.CommUtil] Block hash 5e380cadfa6086b31dc45927948a33693074cd12ef34371731d41a9b3bceb12b: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+[pos] c201: pre_state=e4b6b8991deb12aaeba912d05d16de16ef82a86c65a59e86c4c170249643c946 bonded=4 recorded=1 admitted=["04ea3ce04abbe780205eb5f94a82889600630ca73bd31e7a336efb6700e24c515b900dea427d3e0c0fc74a8a6d5e173331433f00df2de4b7f953c2922297c2c08e"] justifications=4 fringe=091fedfb rejected=0 parents=["0186f37b@16", "0c9bead9@16", "5e380cad@16", "8e6d644d@16"]
+[pos] slashing 1 bonded validator(s) whose block failed validation here (tier and share): 04ea3ce0 Malicious/10000bps (equivocation evidence)
+[deploy] deployer=04f700a417754b77 ok cost=3 
+[pos] close_block 17 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 17 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 17 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T16:51:20.179Z INFO  [casper.protocol.CommUtil] Block hash b47bf86c0b6c6dba82ffa64af5210074e2b332537422ee41d962a5a2843ff6b7: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-13T16:51:20.179Z INFO  [casper.protocol.CommUtil] Block hash 0cb9b879117f475a9f115d806acf7600098da323d39ca12a0704e5dc9f1a48f2: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+[pos] close_block 17 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 17 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T16:51:20.265Z INFO  [casper.protocol.CommUtil] Block hash e5b7ff1d367175dc0dc7956e7fad44df4a4918e69c30b883669d6a81d8391fb8: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-13T16:51:20.265Z INFO  [casper.protocol.CommUtil] Block hash e67ce52324c9d5436d668cd363868a42f884181ca8a500cef1855b62a82009e1: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-13T16:51:20.265Z INFO  [coop.rchain.node.instances.ProposerInstance] proposed and added block #17 (seq 16)
+2026-11-13T16:51:20.298Z INFO  [coop.rchain.node.runtime.BlockIndex] block indexing: 2250 blocks indexed, 1 replay fallbacks (1145 ms, 0 not persisted), index cache 29 entries, 40 pruned, cap 64, 0 capacity evicted
+[pos] c201: pre_state=c4156675dc51b80daf1a8b3b4466662678d50782c31bd0479921d5e55703234d bonded=3 recorded=1 admitted=[] justifications=4 fringe=091fedfb rejected=0 parents=["0cb9b879@17", "b47bf86c@17", "e5b7ff1d@17", "e67ce523@17"]
+No pooled deploys; injecting dummy deploy for block #18
+[deploy] deployer=04f700a417754b77 ok cost=3 
+[pos] close_block 18 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T16:51:20.348Z INFO  [casper.engine.NodeRunning] Received request for block e5b7ff1d367175dc0dc7956e7fad44df4a4918e69c30b883669d6a81d8391fb8 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404. Response sent.
+[pos] close_block 18 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 18 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 18 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 18 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T16:51:20.506Z INFO  [casper.protocol.CommUtil] Block hash 86bf5f129d717ab6c9b7e089a63b0bcfb84c9640088aeca25afb9388c747e2ee: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-13T16:51:20.506Z INFO  [casper.protocol.CommUtil] Block hash 2416fff80abf46ed76403f564b1c76b33d059ad29e940e92f731f4ba620ca668: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+[pos] close_block 18 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T16:51:20.529Z ERROR [casper.blocks.BlockProcessor] this validator's key equivocated: block #18 f08c1b0bd90f85e26390c313ce9a0db4caabb1b22106265815db72cad4cb3f8e (sequence 16) was refused because the DAG holds a different block by this key at that sequence, so another copy of this validator has signed twice (equivocation detected: sender produced two blocks with the same sequence number); every proposal trigger now refuses until the key is rotated or its bond withdrawn — POST /api/v1/autopropose/resume does not clear this, because the proof is a verdict, not a transient fault
+2026-11-13T16:51:20.571Z INFO  [casper.protocol.CommUtil] Block hash ab199e240f4abbf4e05a81df8cc459d430a4d674dba0a96855895e5dc05147f9: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-13T16:51:20.571Z INFO  [casper.protocol.CommUtil] Block hash e89004b545dee7062e1f2af41c6b5e1c88ce6dfef153e4c3604f083ec5f0df3d: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-13T16:51:20.571Z INFO  [coop.rchain.node.instances.ProposerInstance] proposed and added block #18 (seq 17)
+2026-11-13T16:51:20.572Z ERROR [coop.rchain.node.instances.ProposerInstance] propose halted: this validator's key equivocated (this validator's key equivocated: block #18 f08c1b0bd90f85e26390c313ce9a0db4caabb1b22106265815db72cad4cb3f8e (sequence 16) was refused because the DAG holds a different block by this key at that sequence, so another copy of this validator has signed twice (equivocation detected: sender produced two blocks with the same sequence number)) — proposing is stopped permanently; rotate the key or withdraw the bond, because the proof is a durable verdict and POST /api/v1/autopropose/resume does not clear it (#576)
+2026-11-13T16:51:20.653Z INFO  [casper.engine.NodeRunning] Received request for block ab199e240f4abbf4e05a81df8cc459d430a4d674dba0a96855895e5dc05147f9 from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404. Response sent.
+2026-11-13T16:51:32.593Z INFO  [casper.blocks.BlockRetriever] Adding 46e74d5ff52e07fad9b6b4c68ad232b4fe858109446fab5b089629d417b31fd6 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T16:51:32.693Z INFO  [casper.blocks.BlockRetriever] Adding faac72ffd3eaa3ae0e03e94a78c37d5a0d0420bfc50423ffda96eb97030ec906 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T16:51:32.744Z INFO  [casper.blocks.BlockRetriever] Block 46e74d5ff52e07fad9b6b4c68ad232b4fe858109446fab5b089629d417b31fd6 marked as received.
+2026-11-13T16:51:32.776Z INFO  [casper.blocks.BlockRetriever] Adding dba017875b7942451a02c5e83abf3ee288fe96877e1f81f1c4dc20d52c1cca6a hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T16:51:32.825Z INFO  [casper.blocks.BlockRetriever] Block faac72ffd3eaa3ae0e03e94a78c37d5a0d0420bfc50423ffda96eb97030ec906 marked as received.
+2026-11-13T16:51:32.908Z INFO  [casper.blocks.BlockRetriever] Block dba017875b7942451a02c5e83abf3ee288fe96877e1f81f1c4dc20d52c1cca6a marked as received.

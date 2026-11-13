@@ -1,0 +1,50 @@
+2026-11-13T16:50:59.480Z INFO  [coop.rchain.node.runtime.NodeRuntime] trying to open ports using UPnP....
+2026-11-13T16:50:59.481Z INFO  [coop.rchain.node.runtime.NodeRuntime] INFO - No gateway devices found
+2026-11-13T16:50:59.481Z INFO  [coop.rchain.node.runtime.NodeRuntime] No need to open any port
+2026-11-13T16:50:59.485Z INFO  [operator-risk] validator operator risk notice: an invalid block or proven equivocation can cost a stated share of your bond; an absent validator is not currently slashed but forfeits income and can stall finality, and enough silence stops the >2/3 quorum. Read TERMS.md.
+2026-11-13T16:50:59.485Z INFO  [resource-preflight] host resources: 29276 MiB available, cgroup v2, data dir 137706 MiB free, 1 rnode process(es), 24 CPU(s), 61 persisted block(s)
+2026-11-13T16:50:59.485Z WARN  [resource-preflight] no CPU quota is set for the node's cgroup; a busy host can starve it
+2026-11-13T16:50:59.493Z INFO  [casper.engine.NodeLaunch] Reconnecting to existing network...
+replay complete — starting listeners; the API answers once they are up
+2026-11-13T16:50:59.504Z INFO  [casper.engine.NodeLaunch] republished CURRENT_ROOT at the latest accepted block d68778302654f0fb2f2a397bb5816d8521215b9eb62150613eac39847df53137
+2026-11-13T16:50:59.513Z INFO  [coop.rchain.node.runtime.DeployerIndex] /root: deployer index backfilled from 61 stored blocks
+2026-11-13T16:50:59.520Z INFO  [casper.blocks.BlockDisposition] block 0cb9b879117f475a9f115d806acf7600098da323d39ca12a0704e5dc9f1a48f2 still waits on a justification not in the DAG; keeping its pending/Stored disposition for a later attempt
+2026-11-13T16:50:59.520Z INFO  [casper.blocks.BlockDisposition] block b47bf86c0b6c6dba82ffa64af5210074e2b332537422ee41d962a5a2843ff6b7 still waits on a justification not in the DAG; keeping its pending/Stored disposition for a later attempt
+2026-11-13T16:50:59.520Z INFO  [casper.blocks.BlockDisposition] block e67ce52324c9d5436d668cd363868a42f884181ca8a500cef1855b62a82009e1 still waits on a justification not in the DAG; keeping its pending/Stored disposition for a later attempt
+2026-11-13T16:50:59.520Z INFO  [casper.blocks.BlockDisposition] start-up disposition audit: 3 unsettled block(s) re-offered, 3 skipped for missing parents, 0 already inserted, 0 quarantined, 0 unreadable
+[pos] close_block 16 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T16:50:59.644Z INFO  [casper.protocol.CommUtil] Block hash 0c9bead98e2fa7868612f214d205feb6a87e518eeb6b8889cf9f1e5acb0f6ae7: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+[pos] close_block 16 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 16 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T16:50:59.759Z INFO  [casper.protocol.CommUtil] Block hash 8e6d644dfdcd26dcfb7f0a72b9ee8951fec8713237646a5eb1457696b801590a: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-13T16:50:59.759Z INFO  [casper.protocol.CommUtil] Block hash 5e380cadfa6086b31dc45927948a33693074cd12ef34371731d41a9b3bceb12b: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-13T16:50:59.923Z INFO  [casper.engine.NodeLaunch] start-up disposition audit: 0 pre-ledger body/bodies adopted, 3 re-offered, 3 skipped for missing parents, 0 still pending when the drain closed
+2026-11-13T16:50:59.923Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T16:50:59.923Z INFO  [casper.engine.NodeLaunch] Making a transition to Running state.
+2026-11-13T16:50:59.964Z INFO  [casper.protocol.CommUtil] Requested fork tip from peers
+2026-11-13T16:51:00.007Z WARN  [casper.interpreter.validate] finality did not advance at tip 16: a layer exists but its supporting stake is not a supermajority — 100 of 400 (1 full partition(s) among 4 candidate(s) of a 4-sender partition)
+[pos] close_block 17 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T16:51:00.060Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T16:51:00.060Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T16:51:00.102Z INFO  [casper.protocol.CommUtil] Block hash b47bf86c0b6c6dba82ffa64af5210074e2b332537422ee41d962a5a2843ff6b7: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+[pos] close_block 17 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T16:51:00.132Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T16:51:00.132Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T16:51:00.173Z INFO  [casper.protocol.CommUtil] Block hash e67ce52324c9d5436d668cd363868a42f884181ca8a500cef1855b62a82009e1: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+[pos] close_block 17 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T16:51:00.228Z INFO  [casper.blocks.Proposer] attestation at tip 17: licensed — nothing_to_finalize=false new_state_transition=true quorum_reachable=true cadence_due=false paced=true round=[04d8b6c3 04dbe32c 04ea3ce0 04f700a4] blocked_attempts=0 escape=false
+No pooled deploys; injecting dummy deploy for block #16
+[deploy] deployer=04f700a417754b77 ok cost=3 
+2026-11-13T16:51:00.248Z INFO  [casper.protocol.CommUtil] Block hash 0cb9b879117f475a9f115d806acf7600098da323d39ca12a0704e5dc9f1a48f2: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+[pos] close_block 16 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 16 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T16:51:00.412Z INFO  [casper.protocol.CommUtil] Block hash 0186f37b1dd52af806d1ad68b3d54c5532d92f446b3684426af66e2e50a0937c: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-13T16:51:00.412Z INFO  [coop.rchain.node.instances.ProposerInstance] proposed and added block #16 (seq 15)
+No pooled deploys; injecting dummy deploy for block #18
+[deploy] deployer=04f700a417754b77 ok cost=3 
+[pos] close_block 18 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T16:51:00.494Z INFO  [casper.engine.NodeRunning] Received request for block 0186f37b1dd52af806d1ad68b3d54c5532d92f446b3684426af66e2e50a0937c from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404. Response sent.
+[pos] close_block 18 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T16:51:00.662Z INFO  [casper.protocol.CommUtil] Block hash f08c1b0bd90f85e26390c313ce9a0db4caabb1b22106265815db72cad4cb3f8e: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-13T16:51:00.662Z INFO  [coop.rchain.node.instances.ProposerInstance] proposed and added block #18 (seq 16)
+2026-11-13T16:51:00.744Z INFO  [casper.engine.NodeRunning] Received request for block f08c1b0bd90f85e26390c313ce9a0db4caabb1b22106265815db72cad4cb3f8e from rnode://0000f6f9353689325f7eada4f20fba0d8665704c@n457join-bootstrap?protocol=40400&discovery=40404. Response sent.

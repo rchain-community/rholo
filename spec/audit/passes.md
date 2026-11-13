@@ -12378,10 +12378,11 @@ isolated fork run also executed the full workspace suite and pinned Clippy/forma
 checks; see [receipts](evidence/n564-reset-inventory/README.md). The receipts
 predate the #568/#570 merges; the merged-tree verification is recorded below.
 
-**Merged-tree verification.** Rebased onto `dev` at the current head and re-run there: the
-targeted reset integration suite (including the three C366 cases), the register emitter check and
-the audit-status check. The receipts' source pin is updated to the merge head in the evidence
-README.
+**Merged-tree verification.** Merged with `dev` at `dfc2e1fea` (merge commit `d62f93b9c`) and
+re-run there: the targeted reset integration suite (16 tests, including the three C366 cases), the
+register emitter check, audit-status, fmt and the CI-equivalent Clippy. A merged-tree verification
+section in the evidence README records the commands and results; the original pinned source and
+negative-control receipts are unchanged.
 
 **Reconciliation.** The preceding §156 records the #568 three-arm injected devnet
 drill, and the RC-B continuation above records #570; this inventory fix is

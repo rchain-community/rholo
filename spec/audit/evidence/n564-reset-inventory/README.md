@@ -43,6 +43,26 @@ was restored and checked before the successful full workspace run.
 identity, settings and results. The full logs are in the linked run and its
 artifact. Ignored tests are not claimed as executed.
 
+## Merged-tree verification (2026-11-13)
+
+The branch was merged with `dev` at `dfc2e1fea` (the #555 merge, containing #568,
+#570, #569 and #571) at merge commit `d62f93b9c`, and the changed surface was
+re-run on that tree. This is a merged-tree rerun of the same tests, not a second
+independent verification; the original pinned receipts above are unchanged.
+
+| Check | Observed result |
+|---|---|
+| `cargo test --locked -p rchain-casper --test reset` | **16 passed**, including the three C366 cases |
+| `tools/emit-findings-register.sh --check` | ok — 401 rows: 0 todo, 6 in progress, 395 done |
+| `tools/audit-status.sh --quiet` | `TODO 0`, all 89 T1 modules read |
+| `cargo fmt --all -- --check` | success |
+| CI-equivalent workspace Clippy (`-D warnings`, workflow debt list) | success |
+
+The merge conflicted only in `spec/audit/passes.md` (this pass and the #570 RC-B
+continuation); the resolution keeps both. No production code changed during the
+merge beyond the merge itself.
+
+
 ## What the reset tests establish
 
 - `a_self_replay_reset_refuses_a_dag_block_whose_body_is_missing`: the real reset

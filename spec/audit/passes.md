@@ -12648,6 +12648,13 @@ fixture beside a green predicate is not evidence. The new
 `Ok(0)` edge safely (the deploy service's `member()` gate refuses the shard, so the leg aborts); a leg
 already voted ready on a removed shard still keeps its escrow locked, a residual outside the law.
 
+**Incidental, C371 — the own-key halt tests raced.** CI caught a pre-existing test race on the new
+branch: the C367 peer-equivocation case and the C369 own-key case both write the process-global halt,
+and the peer case could clear it and then assert "no halt" while the own-key case latched it. The
+latch's global scope is required in production (it stops this process's proposer), so the fix is a
+test-only mutex around both bodies; a single-test run was green and the full-suite run was the signal.
+This is a test-race fix, not a production defect.
+
 **What this pass does not do.** It does not run or substitute for a live/candidate acceptance arm: there
 is no M1–M6 gate for cross-shard transactions, and #33 stays open. It does not add a relay, change the
 invoke-layer primitive (still non-atomic across shards), or close the per-shard bootstrap deferral (the

@@ -24,6 +24,8 @@ use rchain_block_storage::dag::codecs::{
     BlockHashCodec, BlockMetadataCodec, SignedDeployDataCodec,
 };
 use rchain_block_storage::dag::dag_storage::{BlockDagStorage, DeployId};
+use rchain_block_storage::dag::message_state::DagMessageState;
+use rchain_block_storage::work_seen::{self, WorkSeenStore};
 use rchain_casper::api::block_api::{BlockApi, ProposeHealth, ProposerHealth};
 use rchain_casper::api::block_api_impl::{
     BlockApiImpl, NetworkStatus, NetworkStatusFn, ProposeFunction,
@@ -92,6 +94,7 @@ use rchain_shared::base16;
 use rchain_shared::lmdb::LmdbDirStoreManager;
 use rchain_shared::log::{Log, LogSource};
 use rchain_shared::metrics::{Metrics, Source};
+use rchain_shared::refined::BlockHeight;
 use rchain_shared::refined::{Port, ShardId};
 use rchain_shared::store_manager::database;
 use rchain_shared::typed_store::{BytesCodec, Codec, KeyValueTypedStore};
@@ -794,6 +797,10 @@ pub struct ShardParts {
     pub phase: NodePhaseCell,
     pub runtime_manager: Arc<RuntimeManager>,
     pub approved_store: ApprovedStore,
+    /// **When this shard's proposer first saw each piece of unfinalised work** (#583). Local and
+    /// non-consensus: it ages the prompt-attestation licence, so an advancing fringe cannot renew
+    /// the same work.
+    pub work_seen: WorkSeenStore,
     /// This shard's store manager, over its own data directory ([`shard_data_dir`]).
     pub store_manager: LmdbDirStoreManager,
     pub validator_identity_opt: Option<ValidatorIdentity>,
@@ -941,12 +948,17 @@ fn wire_block_processing_observed(
     let mut validated_blocks_rx = validated_blocks_rx;
     let mut observer = queue_observer("validated");
     if autopropose_tap.is_some() {
-        validated_blocks_rx = tap_validated_blocks(validated_blocks_rx, autopropose_tap, observer);
+        validated_blocks_rx =
+            tap_validated_blocks(validated_blocks_rx, autopropose_tap, observer, None);
         observer = queue_observer("autopropose");
     }
     if attest_on_new_blocks.is_some() {
-        validated_blocks_rx =
-            tap_validated_blocks(validated_blocks_rx, attest_on_new_blocks, observer);
+        validated_blocks_rx = tap_validated_blocks(
+            validated_blocks_rx,
+            attest_on_new_blocks,
+            observer,
+            Some(parts.dag.clone()),
+        );
         observer = queue_observer("attestation");
     }
 
@@ -2348,6 +2360,7 @@ async fn setup_shard_runtime(
             dummy_deploy_opt,
             parts.dag.clone(),
             parts.block_store.clone(),
+            parts.work_seen.clone(),
             parts.runtime_manager.clone(),
             block_index,
             propose_effect,
@@ -2580,6 +2593,7 @@ pub async fn setup_shard(
     // Block store + DAG storage.
     let block_store = block_store::create(&store_manager).await?;
     let approved_store = approved_store::create(&store_manager).await?;
+    let work_seen = work_seen::create(&store_manager).await?;
     let block_metadata_kv: Arc<dyn KeyValueTypedStore<BlockHash, BlockMetadata>> = Arc::new(
         database(
             &store_manager,
@@ -2975,6 +2989,7 @@ pub async fn setup_shard(
         phase,
         runtime_manager,
         approved_store,
+        work_seen,
         store_manager,
         validator_identity_opt: validator_opt,
         proposer: proposer_parts,
@@ -3829,6 +3844,7 @@ fn tap_validated_blocks(
     rx: mpsc::Receiver<BlockMessage>,
     tap: Option<Arc<dyn Fn(&BlockMessage) + Send + Sync>>,
     observer: Option<block_receiver::QueueObserver>,
+    dag: Option<Arc<dyn BlockDagStorage>>,
 ) -> mpsc::Receiver<BlockMessage> {
     let Some(tap) = tap else {
         return rx;
@@ -3843,8 +3859,19 @@ fn tap_validated_blocks(
         move |block| {
             let tap = tap.clone();
             let tap_tx = tap_tx.clone();
+            let dag = dag.clone();
             async move {
-                tap(&block);
+                // Only the attestation tap carries a DAG: history the chain already covers is not a
+                // round to answer (#583). The block is forwarded either way — only the callback is
+                // skipped.
+                match dag {
+                    Some(dag) => {
+                        if attest_tap_gate(dag.as_ref(), &block).await {
+                            tap(&block);
+                        }
+                    }
+                    None => tap(&block),
+                }
                 chan::send(&tap_tx, block).await;
             }
         },
@@ -3887,6 +3914,49 @@ const ATTEST_MAX_CLOCK_SKEW_MS: i64 = ATTEST_MAX_BLOCK_AGE_MS;
 fn attest_is_live(block_ms: i64, now_ms: i64) -> bool {
     block_ms <= now_ms.saturating_add(ATTEST_MAX_CLOCK_SKEW_MS)
         && now_ms.saturating_sub(block_ms) <= ATTEST_MAX_BLOCK_AGE_MS
+}
+
+/// Whether a validated block is **history the node's current round has already closed over**.
+///
+/// **The chain-state freshness test, not a clock** (#583). The timestamp window answers "is this
+/// block stamped like a live round?", which a new block at an old height can satisfy when its
+/// proposer stamped it recently — and a restart cannot settle the question on its own, because the
+/// per-sender `answered` map is process-local.
+///
+/// The membership form (`latest_msgs`' `seen` contains the hash) cannot answer it: the validated
+/// stream runs *after* `dag.insert` (block_processor.rs), so the block is its own latest message, and
+/// `Message.seen` includes its own id (`casper/src/dag.rs:95`). An earlier message's `seen` is an
+/// immutable snapshot taken before this block existed, so no older message can name it either.
+///
+/// What does answer it is the block's **position against the last closed round boundary**: strictly
+/// below `round_height`, with every justification in that boundary's causal past. A late,
+/// *uncovered* side-branch block is below the boundary but its parents are not in the boundary's
+/// past, so it is not history and still reaches the timestamp window and `attest_warranted` — that is
+/// the C211/C214 rejoin path, kept alive. `>` rather than `>=` is deliberate: the insert can itself
+/// close a round boundary on the block, so a fresh tip block may sit exactly at `round_height`.
+///
+/// On a node with no boundary yet there is nothing to compare against, so the timestamp window
+/// remains the only signal there, by design (#223). Nothing here touches block validity or the
+/// consensus meaning of `timestamp` (#528).
+fn attested_history(
+    block_number: BlockHeight,
+    justifications: &[BlockHash],
+    state: &DagMessageState<BlockHash, rchain_models::validator::Validator>,
+) -> bool {
+    // U1 harness: today's behaviour — no block is ever treated as history. The next commit makes
+    // this the closed-round test the doc comment describes.
+    let _ = (block_number, justifications, state);
+    false
+}
+
+/// Whether the attest tap should answer `block` — it is not history the node's chain already covers.
+async fn attest_tap_gate(dag: &dyn BlockDagStorage, block: &BlockMessage) -> bool {
+    let representation = dag.get_representation().await;
+    !attested_history(
+        block.block_number,
+        &block.justifications,
+        &representation.dag_message_state,
+    )
 }
 
 /// Whether a validated block is a reason for this node to attest: any block from someone else.
@@ -4410,6 +4480,94 @@ mod attest_warranted_tests {
             answered, 7,
             "when the height keeps advancing, every block is a reason to attest"
         );
+    }
+}
+
+#[cfg(test)]
+mod attest_tap_gate_tests {
+    use super::{attest_is_live, attested_history};
+    use rchain_block_storage::dag::finalizer::Message;
+    use rchain_block_storage::dag::message_state::DagMessageState;
+    use rchain_models::block_hash::BlockHash;
+    use rchain_models::validator::Validator;
+    use rchain_shared::refined::{BlockHeight, SeqNum};
+    use std::collections::{BTreeMap, BTreeSet};
+    use std::sync::Arc;
+
+    fn h(n: i64) -> BlockHeight {
+        BlockHeight::try_from(n).expect("height")
+    }
+
+    fn hash(byte: u8) -> BlockHash {
+        BlockHash::from_slice(&[byte; 32])
+    }
+
+    fn validator(byte: u8) -> Validator {
+        Validator::from_slice(&[byte; 65])
+    }
+
+    /// A DAG state whose last closed round boundary sits at `round_height` and whose one boundary
+    /// message has already seen every hash in `covered` (plus itself, as `Message.seen` does).
+    fn state_with_closed_round(
+        round_height: i64,
+        covered: &[u8],
+    ) -> DagMessageState<BlockHash, Validator> {
+        let boundary = Message {
+            id: hash(200),
+            height: h(round_height),
+            sender: validator(9),
+            sender_seq: SeqNum::zero(),
+            bonds_map: BTreeMap::new(),
+            parents: BTreeSet::new(),
+            fringe: BTreeSet::new(),
+            seen: Arc::new(
+                covered
+                    .iter()
+                    .map(|byte| hash(*byte))
+                    .chain(std::iter::once(hash(200)))
+                    .collect(),
+            ),
+        };
+        DagMessageState {
+            latest_msgs: BTreeMap::new(),
+            msg_map: BTreeMap::new(),
+            round_parents: BTreeMap::from([(validator(9), boundary)]),
+            round_height: h(round_height),
+        }
+    }
+
+    /// **The replay residual, refused by chain state** (#583 A). A new block at an old height whose
+    /// parents the closed round already covers is history; the timestamp window is not the only
+    /// freshness input, and a restart cannot make it new again. The positive control is the late,
+    /// *uncovered* side-branch block, which must keep reaching the timestamp window and the
+    /// per-sender gate (the C211/C214 path).
+    #[test]
+    fn a_block_below_the_closed_round_is_history() {
+        let state = state_with_closed_round(30, &[9]);
+        assert!(
+            attest_is_live(1_000_000, 1_000_000),
+            "the timestamp window alone would call this block live"
+        );
+        assert!(
+            attested_history(h(10), &[hash(9)], &state),
+            "a block strictly below the closed round, with its parent covered, is history"
+        );
+
+        assert!(
+            !attested_history(h(10), &[hash(8)], &state),
+            "an uncovered late block below the round is not history"
+        );
+
+        // The insert can itself close the boundary on a fresh tip block, so `>=` must not be
+        // treated as history.
+        assert!(!attested_history(h(30), &[hash(9)], &state));
+
+        // Nothing is history before the first boundary.
+        assert!(!attested_history(
+            h(10),
+            &[hash(9)],
+            &DagMessageState::empty()
+        ));
     }
 }
 

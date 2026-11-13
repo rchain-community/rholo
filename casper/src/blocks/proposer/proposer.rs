@@ -18,7 +18,9 @@ use rchain_block_storage::dag::dag_storage::{
     SELF_REPLAY_IDS_MAX, SELF_REPLAY_RECORD_VERSION,
 };
 use rchain_block_storage::dag::liveness;
+use rchain_block_storage::dag::representation::DagRepresentation;
 use rchain_block_storage::syntax::put_block;
+use rchain_block_storage::work_seen::WorkSeenStore;
 use rchain_crypto::private_key::PrivateKey;
 use rchain_crypto::signatures::secp256k1::Secp256k1;
 use rchain_crypto::signatures::signed::Signed;
@@ -1374,6 +1376,9 @@ impl Proposer {
         dummy_deploy_opt: Option<(PrivateKey, String)>,
         dag: Arc<dyn BlockDagStorage>,
         block_store: BlockStore,
+        // **The local first-seen record for unfinalised work** (#583). Aged from observation, not
+        // from the advancing fringe, so the prompt-attestation licence cannot be renewed for ever.
+        work_seen: WorkSeenStore,
         runtime: Arc<RuntimeManager>,
         block_index: F,
         propose_effect: Arc<dyn Fn(&BlockMessage) -> BoxFuture<()> + Send + Sync>,
@@ -1459,6 +1464,9 @@ impl Proposer {
             // Independent monotonic retry for a quiet chain with unfinalized work.
             // It belongs to this shard/proposer, not a process-global clock.
             let quiet_retry_since: Arc<Mutex<Option<Instant>>> = Arc::new(Mutex::new(None));
+            // The finalized hash whose work-seen rows were last pruned: the sweep runs only when
+            // finality advances, so the local map stays bounded by the unfinalized region (#583).
+            let work_seen_pruned: Arc<Mutex<Option<BlockHash>>> = Arc::new(Mutex::new(None));
             Arc::new(
                 move |vi: &ValidatorIdentity,
                       source: ProposeSource,
@@ -1473,6 +1481,8 @@ impl Proposer {
                     let blocked_since_advance = blocked_since_advance.clone();
                     let blocked_since = blocked_since.clone();
                     let quiet_retry_since = quiet_retry_since.clone();
+                    let work_seen = work_seen.clone();
+                    let work_seen_pruned = work_seen_pruned.clone();
                     let dummy_deploy_opt = dummy_deploy_opt.clone();
                     let log = log.clone();
                     let health = health.clone();
@@ -1483,6 +1493,7 @@ impl Proposer {
                             runtime.as_ref(),
                             dag.as_ref(),
                             &block_store,
+                            &work_seen,
                             block_index.as_ref(),
                             &vi,
                             &shard_id,
@@ -1498,6 +1509,7 @@ impl Proposer {
                             mode,
                             &health,
                             &self_replay,
+                            &work_seen_pruned,
                             batch_limit,
                         )
                         .await
@@ -2102,6 +2114,7 @@ async fn create_block<'a, F, Fut>(
     runtime: &'a RuntimeManager,
     dag: &'a dyn BlockDagStorage,
     block_store: &'a BlockStore,
+    work_seen: &WorkSeenStore,
     block_index: &'a F,
     validator_identity: &ValidatorIdentity,
     shard_id: &str,
@@ -2117,6 +2130,7 @@ async fn create_block<'a, F, Fut>(
     mode: ProposalMode,
     health: &ShardHealth,
     self_replay: &Mutex<SelfReplayTracker>,
+    work_seen_pruned: &Mutex<Option<BlockHash>>,
     batch_limit: Option<usize>,
 ) -> Result<BlockCreatorResult, String>
 where
@@ -2418,7 +2432,7 @@ where
     // ledgers on empty attestations cannot keep a quiet chain running.
     let mut finalized_rejections = None;
 
-    let mut oldest_unfinalized: Option<BlockHeight> = None;
+    let mut oldest_work: Option<(BlockHash, BlockHeight)> = None;
     for (height, h) in &conflict_set {
         if let Some(b) = get_block(block_store, h).await? {
             if b.state.system_deploys.is_empty()
@@ -2438,7 +2452,7 @@ where
                 &b,
                 finalized_rejections.as_ref().unwrap_or(&BTreeSet::new()),
             ) {
-                oldest_unfinalized = Some(*height);
+                oldest_work = Some((h.clone(), *height));
                 break;
             }
         }
@@ -2492,8 +2506,12 @@ where
         .iter()
         .filter_map(|h| dag_repr.dag_message_state.msg_map.get(h).map(|m| m.height))
         .max();
-    let (nothing_to_finalize, new_state_transition) =
-        attestation_inputs(work_age_floor(oldest_unfinalized, fringe_top), tip);
+    // **The licence is aged from this node's first observation of the work, not from the moving
+    // fringe** (#583). `fringe_top` is passed only by the U1 harness, which still implements the
+    // old floor; the fix reads `work_seen` and ignores it.
+    let licence_age = work_licence_age(work_seen, oldest_work.as_ref(), tip, fringe_top, log).await;
+    let (nothing_to_finalize, new_state_transition) = attestation_inputs(licence_age, tip);
+    prune_work_seen(work_seen, dag_repr.as_ref(), work_seen_pruned, log).await;
     // The live weight set: the one liveness rule, shared with the finalizer through `liveness` (#70
     // increment 2). It decides who counts as *moving*; the quorum itself stays measured against the
     // whole bonded map below, so a minority cannot attest its way to a supermajority.
@@ -4741,6 +4759,44 @@ fn work_age_floor(
     })
 }
 
+/// **The height the prompt-attestation licence is aged from** (#583): this node's first observation
+/// of the oldest unfinalised work.
+///
+/// The value is the tip height recorded when the work first entered `conflict_set`, and it is never
+/// rewritten while that work is unfinalised. An advancing fringe therefore cannot renew it, and the
+/// store is durable, so a restart cannot either. An absent row is a first observation; a read or
+/// write error is **fail-closed** (`tip − horizon − 1`), which withholds promptness only — the
+/// cadence path still attests when a quorum is reachable (W-N9-01). The work's own height is not a
+/// substitute: #223's returning validator observed its boundary work twenty-three heights late and
+/// had to be licensed immediately.
+async fn work_licence_age(
+    work_seen: &WorkSeenStore,
+    oldest_work: Option<&(BlockHash, BlockHeight)>,
+    tip: BlockHeight,
+    fringe_top: Option<BlockHeight>,
+    log: &Arc<dyn Log>,
+) -> Option<BlockHeight> {
+    // U1 harness: today's behaviour — the work's own height, raised to the fringe when the work lies
+    // below it. The next commit reads `work_seen` and deletes the fringe floor.
+    let _ = (work_seen, tip, log);
+    let oldest = oldest_work.map(|(_, height)| *height);
+    work_age_floor(oldest, fringe_top)
+}
+
+/// Delete first-seen rows for work at or below the last finalized block.
+///
+/// The sweep runs only when finality advances, so the map stays bounded by the unfinalized region.
+/// Work below finality cannot re-enter the unfinalized region without a safety violation, so dropping
+/// its row cannot renew a licence.
+async fn prune_work_seen(
+    _work_seen: &WorkSeenStore,
+    _dag_repr: &DagRepresentation,
+    _last_pruned: &Mutex<Option<BlockHash>>,
+    _log: &Arc<dyn Log>,
+) {
+    // U1 harness: no sweep until the store is wired.
+}
+
 /// The guard's inputs and its decision, for the diagnostic line.
 struct AttestationDecision<'a> {
     nothing_to_finalize: bool,
@@ -5812,6 +5868,104 @@ mod active_validator_tests {
         assert!(
             !is_active_validator(&dag, &stranger).await.unwrap(),
             "and a validator in no block's set is still not active"
+        );
+    }
+}
+
+/// **The #583 falsifier: work is licensed from its first observation, not from the moving fringe.**
+///
+/// The #223 live shape is the positive control: work first seen at tip 33 is licensed at once and at
+/// the horizon boundary. Advancing the tip past one horizon from that observation — with the fringe
+/// still three heights behind — must end the licence, and re-observing the same work at a later tip
+/// must not renew it.
+#[cfg(test)]
+mod attestation_age_tests {
+    use super::{attestation_inputs, work_licence_age, ATTESTATION_HORIZON};
+    use rchain_block_storage::work_seen::{self, WorkSeenStore};
+    use rchain_models::block_hash::BlockHash;
+    use rchain_shared::log::{Log, NopLog};
+    use rchain_shared::refined::BlockHeight;
+    use rchain_shared::store_manager::InMemoryStoreManager;
+    use std::sync::Arc;
+
+    fn h(n: i64) -> BlockHeight {
+        BlockHeight::try_from(n).expect("height")
+    }
+
+    fn hash(byte: u8) -> BlockHash {
+        BlockHash::from_slice(&[byte; 32])
+    }
+
+    async fn licence(
+        store: &WorkSeenStore,
+        work: &(BlockHash, BlockHeight),
+        tip: BlockHeight,
+        fringe: Option<BlockHeight>,
+        log: &Arc<dyn Log>,
+    ) -> (bool, bool) {
+        attestation_inputs(
+            work_licence_age(store, Some(work), tip, fringe, log).await,
+            tip,
+        )
+    }
+
+    #[tokio::test]
+    async fn late_work_is_licensed_from_its_first_observation_and_expires_at_the_horizon() {
+        let store = work_seen::create(&InMemoryStoreManager::default())
+            .await
+            .expect("open the work-seen store");
+        let log: Arc<dyn Log> = Arc::new(NopLog);
+        // The #223 live shape: the work is at its own height 10, and this node first saw it at tip
+        // 33 with the fringe at 30. The store is the record.
+        let work = (hash(1), h(10));
+        store
+            .put(&[(work.0.clone(), 33)])
+            .await
+            .expect("record the first sighting");
+
+        assert_eq!(
+            licence(&store, &work, h(33), Some(h(30)), &log).await,
+            (false, true),
+            "work first seen at 33 is licensed immediately"
+        );
+        assert_eq!(
+            licence(
+                &store,
+                &work,
+                h(33 + ATTESTATION_HORIZON),
+                Some(h(30 + ATTESTATION_HORIZON)),
+                &log
+            )
+            .await,
+            (false, true),
+            "and at the horizon boundary"
+        );
+
+        // Past one horizon from the observation the licence ends, however the fringe moves: that is
+        // the renewal the fringe floor granted (W-N9-07).
+        for tip in [33 + ATTESTATION_HORIZON + 1, 97, 997] {
+            assert_eq!(
+                licence(&store, &work, h(tip), Some(h(tip - 3)), &log).await,
+                (false, false),
+                "work first seen at 33 is still licensed at tip {tip}"
+            );
+        }
+        // Re-observing the same work at a later tip does not rewrite the first-seen height.
+        assert_eq!(
+            licence(&store, &work, h(1000), Some(h(997)), &log).await,
+            (false, false)
+        );
+
+        // The positive control: different work first seen at 49 is licensed at 49, even though its
+        // own height is 10. This is the C211/C214 late-work path, kept alive within its window.
+        let fresh = (hash(2), h(10));
+        store
+            .put(&[(fresh.0.clone(), 49)])
+            .await
+            .expect("record the fresh sighting");
+        assert_eq!(
+            licence(&store, &fresh, h(49), Some(h(46)), &log).await,
+            (false, true)
         );
     }
 }

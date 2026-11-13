@@ -7,14 +7,16 @@
 //! identity order-independent). The finalizer core is pure and generic (`M: Ord`, `S: Ord`), so it
 //! has no async or serialization dependencies.
 //!
-//! The store glue (`BlockStore`/`ApprovedStore`) lives in [`block_store`]/[`approved_store`]; the
-//! concrete `BlockDagStorage` implementation lives in the `casper` crate (`BlockDagKeyValueStorage`).
+//! The store glue (`BlockStore`/`ApprovedStore`/`WorkSeenStore`) lives in
+//! [`block_store`]/[`approved_store`]/[`work_seen`]; the concrete `BlockDagStorage` implementation
+//! lives in the `casper` crate (`BlockDagKeyValueStorage`).
 
 pub mod approved_store;
 pub mod block_store;
 pub mod dag;
 pub mod errors;
 pub mod syntax;
+pub mod work_seen;
 
 #[cfg(test)]
 mod property_tests;

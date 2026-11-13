@@ -1,0 +1,13 @@
+{
+  "observed_at_utc": "2026-11-13T18:13:27.543329+00:00",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json",
+    "access-control-expose-headers": "*",
+    "access-control-allow-origin": "*",
+    "content-length": "2199",
+    "connection": "close",
+    "date": "Fri, 13 Nov 2026 18:13:27 GMT"
+  },
+  "path": "/api/v1/block/c01651a6e945509a573cdf4b80298e34c82fe6da74c88f5a231ab1d7d8542768"
+}

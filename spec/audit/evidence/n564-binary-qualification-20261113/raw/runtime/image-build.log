@@ -1,0 +1,186 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 245B done
+#1 DONE 0.0s
+
+#2 [auth] library/ubuntu:pull token for registry-1.docker.io
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/ubuntu:24.04
+#3 DONE 0.5s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2B done
+#4 DONE 0.0s
+
+#5 [1/3] FROM docker.io/library/ubuntu:24.04@sha256:2198e4c65076e9cb0b3d695219df667c0e3b0072da64ca3c2648aca17dcecaf5
+#5 resolve docker.io/library/ubuntu:24.04@sha256:2198e4c65076e9cb0b3d695219df667c0e3b0072da64ca3c2648aca17dcecaf5 done
+#5 sha256:77eb101c607d6e3d4f5ad0c8a02c2136c689b98aba1f359e6502ba517e5c57ec 424B / 424B done
+#5 sha256:7da97f743f397971f35dd21cd2d19a7da070a150e0cfa3eda559e71891ec7533 2.05kB / 2.05kB done
+#5 sha256:26538842dfbfed820e62531e047bc6cfd3359a7e0a52f59c1a951ccc6ca787fe 20.97MB / 29.79MB 0.1s
+#5 sha256:2198e4c65076e9cb0b3d695219df667c0e3b0072da64ca3c2648aca17dcecaf5 6.69kB / 6.69kB done
+#5 sha256:26538842dfbfed820e62531e047bc6cfd3359a7e0a52f59c1a951ccc6ca787fe 29.79MB / 29.79MB 0.1s done
+#5 extracting sha256:26538842dfbfed820e62531e047bc6cfd3359a7e0a52f59c1a951ccc6ca787fe
+#5 ...
+
+#6 [internal] load build context
+#6 transferring context: 104.60MB 0.4s done
+#6 DONE 0.4s
+
+#5 [1/3] FROM docker.io/library/ubuntu:24.04@sha256:2198e4c65076e9cb0b3d695219df667c0e3b0072da64ca3c2648aca17dcecaf5
+#5 extracting sha256:26538842dfbfed820e62531e047bc6cfd3359a7e0a52f59c1a951ccc6ca787fe 1.0s done
+#5 DONE 1.2s
+
+#7 [2/3] RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl libssl3 libgcc-s1 && rm -rf /var/lib/apt/lists/*
+#7 0.315 Get:1 http://security.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+#7 0.477 Get:2 http://security.ubuntu.com/ubuntu noble-security/universe amd64 Packages [1557 kB]
+#7 0.506 Get:3 http://archive.ubuntu.com/ubuntu noble InRelease [256 kB]
+#7 0.612 Get:4 http://security.ubuntu.com/ubuntu noble-security/restricted amd64 Packages [2211 kB]
+#7 0.643 Get:5 http://security.ubuntu.com/ubuntu noble-security/multiverse amd64 Packages [55.6 kB]
+#7 0.644 Get:6 http://security.ubuntu.com/ubuntu noble-security/main amd64 Packages [1471 kB]
+#7 1.180 Get:7 http://archive.ubuntu.com/ubuntu noble-updates InRelease [126 kB]
+#7 1.346 Get:8 http://archive.ubuntu.com/ubuntu noble-backports InRelease [126 kB]
+#7 1.514 Get:9 http://archive.ubuntu.com/ubuntu noble/multiverse amd64 Packages [331 kB]
+#7 1.633 Get:10 http://archive.ubuntu.com/ubuntu noble/restricted amd64 Packages [117 kB]
+#7 1.896 Get:11 http://archive.ubuntu.com/ubuntu noble/universe amd64 Packages [19.3 MB]
+#7 2.349 Get:12 http://archive.ubuntu.com/ubuntu noble/main amd64 Packages [1808 kB]
+#7 2.362 Get:13 http://archive.ubuntu.com/ubuntu noble-updates/universe amd64 Packages [2179 kB]
+#7 2.379 Get:14 http://archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Packages [2324 kB]
+#7 2.394 Get:15 http://archive.ubuntu.com/ubuntu noble-updates/multiverse amd64 Packages [61.7 kB]
+#7 2.396 Get:16 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages [1792 kB]
+#7 2.406 Get:17 http://archive.ubuntu.com/ubuntu noble-backports/universe amd64 Packages [36.0 kB]
+#7 2.407 Get:18 http://archive.ubuntu.com/ubuntu noble-backports/multiverse amd64 Packages [669 B]
+#7 2.407 Get:19 http://archive.ubuntu.com/ubuntu noble-backports/main amd64 Packages [49.0 kB]
+#7 3.236 Fetched 33.9 MB in 3s (11.1 MB/s)
+#7 3.236 Reading package lists...
+#7 4.101 Reading package lists...
+#7 4.933 Building dependency tree...
+#7 5.128 Reading state information...
+#7 5.305 libssl3t64 is already the newest version (3.0.13-0ubuntu3.16).
+#7 5.305 libgcc-s1 is already the newest version (14.2.0-4ubuntu2~24.04.1).
+#7 5.305 The following additional packages will be installed:
+#7 5.305   libbrotli1 libcurl4t64 libgssapi-krb5-2 libk5crypto3 libkeyutils1 libkrb5-3
+#7 5.305   libkrb5support0 libldap2 libnghttp2-14 libpsl5t64 librtmp1 libsasl2-2
+#7 5.306   libsasl2-modules-db libssh-4 openssl
+#7 5.307 Suggested packages:
+#7 5.307   krb5-doc krb5-user
+#7 5.307 Recommended packages:
+#7 5.307   krb5-locales libldap-common publicsuffix libsasl2-modules
+#7 5.355 The following NEW packages will be installed:
+#7 5.355   ca-certificates curl libbrotli1 libcurl4t64 libgssapi-krb5-2 libk5crypto3
+#7 5.356   libkeyutils1 libkrb5-3 libkrb5support0 libldap2 libnghttp2-14 libpsl5t64
+#7 5.356   librtmp1 libsasl2-2 libsasl2-modules-db libssh-4 openssl
+#7 5.569 0 upgraded, 17 newly installed, 0 to remove and 3 not upgraded.
+#7 5.569 Need to get 3313 kB of archives.
+#7 5.569 After this operation, 8279 kB of additional disk space will be used.
+#7 5.569 Get:1 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 openssl amd64 3.0.13-0ubuntu3.16 [1004 kB]
+#7 6.285 Get:2 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 ca-certificates all 20260816ubuntu0.24.04.2 [140 kB]
+#7 6.296 Get:3 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libkrb5support0 amd64 1.20.1-6ubuntu2.10 [34.9 kB]
+#7 6.298 Get:4 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libk5crypto3 amd64 1.20.1-6ubuntu2.10 [81.9 kB]
+#7 6.310 Get:5 http://archive.ubuntu.com/ubuntu noble/main amd64 libkeyutils1 amd64 1.6.3-3build1 [9490 B]
+#7 6.310 Get:6 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libkrb5-3 amd64 1.20.1-6ubuntu2.10 [348 kB]
+#7 6.335 Get:7 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libgssapi-krb5-2 amd64 1.20.1-6ubuntu2.10 [143 kB]
+#7 6.344 Get:8 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libnghttp2-14 amd64 1.59.0-1ubuntu0.4 [74.6 kB]
+#7 6.349 Get:9 http://archive.ubuntu.com/ubuntu noble/main amd64 libpsl5t64 amd64 0.21.2-1.1build1 [57.1 kB]
+#7 6.353 Get:10 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libbrotli1 amd64 1.1.0-2ubuntu0.1 [331 kB]
+#7 6.395 Get:11 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libsasl2-modules-db amd64 2.1.28+dfsg1-5ubuntu3.1 [20.4 kB]
+#7 6.473 Get:12 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libsasl2-2 amd64 2.1.28+dfsg1-5ubuntu3.1 [53.2 kB]
+#7 6.475 Get:13 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libldap2 amd64 2.6.10+dfsg-0ubuntu0.24.04.1 [198 kB]
+#7 6.481 Get:14 http://archive.ubuntu.com/ubuntu noble/main amd64 librtmp1 amd64 2.4+20151223.gitfa8646d.1-2build7 [56.3 kB]
+#7 6.483 Get:15 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libssh-4 amd64 0.10.6-2ubuntu0.5 [191 kB]
+#7 6.489 Get:16 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libcurl4t64 amd64 8.5.0-2ubuntu10.16 [344 kB]
+#7 6.500 Get:17 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 curl amd64 8.5.0-2ubuntu10.16 [226 kB]
+#7 6.614 debconf: delaying package configuration, since apt-utils is not installed
+#7 6.650 Fetched 3313 kB in 1s (2912 kB/s)
+#7 6.663 Selecting previously unselected package openssl.
+#7 6.663 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 4381 files and directories currently installed.)
+#7 6.669 Preparing to unpack .../00-openssl_3.0.13-0ubuntu3.16_amd64.deb ...
+#7 6.670 Unpacking openssl (3.0.13-0ubuntu3.16) ...
+#7 6.702 Selecting previously unselected package ca-certificates.
+#7 6.703 Preparing to unpack .../01-ca-certificates_20260816ubuntu0.24.04.2_all.deb ...
+#7 6.704 Unpacking ca-certificates (20260816ubuntu0.24.04.2) ...
+#7 6.737 Selecting previously unselected package libkrb5support0:amd64.
+#7 6.739 Preparing to unpack .../02-libkrb5support0_1.20.1-6ubuntu2.10_amd64.deb ...
+#7 6.740 Unpacking libkrb5support0:amd64 (1.20.1-6ubuntu2.10) ...
+#7 6.753 Selecting previously unselected package libk5crypto3:amd64.
+#7 6.754 Preparing to unpack .../03-libk5crypto3_1.20.1-6ubuntu2.10_amd64.deb ...
+#7 6.755 Unpacking libk5crypto3:amd64 (1.20.1-6ubuntu2.10) ...
+#7 6.768 Selecting previously unselected package libkeyutils1:amd64.
+#7 6.769 Preparing to unpack .../04-libkeyutils1_1.6.3-3build1_amd64.deb ...
+#7 6.770 Unpacking libkeyutils1:amd64 (1.6.3-3build1) ...
+#7 6.782 Selecting previously unselected package libkrb5-3:amd64.
+#7 6.783 Preparing to unpack .../05-libkrb5-3_1.20.1-6ubuntu2.10_amd64.deb ...
+#7 6.784 Unpacking libkrb5-3:amd64 (1.20.1-6ubuntu2.10) ...
+#7 6.802 Selecting previously unselected package libgssapi-krb5-2:amd64.
+#7 6.803 Preparing to unpack .../06-libgssapi-krb5-2_1.20.1-6ubuntu2.10_amd64.deb ...
+#7 6.803 Unpacking libgssapi-krb5-2:amd64 (1.20.1-6ubuntu2.10) ...
+#7 6.818 Selecting previously unselected package libnghttp2-14:amd64.
+#7 6.819 Preparing to unpack .../07-libnghttp2-14_1.59.0-1ubuntu0.4_amd64.deb ...
+#7 6.820 Unpacking libnghttp2-14:amd64 (1.59.0-1ubuntu0.4) ...
+#7 6.833 Selecting previously unselected package libpsl5t64:amd64.
+#7 6.834 Preparing to unpack .../08-libpsl5t64_0.21.2-1.1build1_amd64.deb ...
+#7 6.836 Unpacking libpsl5t64:amd64 (0.21.2-1.1build1) ...
+#7 6.849 Selecting previously unselected package libbrotli1:amd64.
+#7 6.850 Preparing to unpack .../09-libbrotli1_1.1.0-2ubuntu0.1_amd64.deb ...
+#7 6.851 Unpacking libbrotli1:amd64 (1.1.0-2ubuntu0.1) ...
+#7 6.866 Selecting previously unselected package libsasl2-modules-db:amd64.
+#7 6.867 Preparing to unpack .../10-libsasl2-modules-db_2.1.28+dfsg1-5ubuntu3.1_amd64.deb ...
+#7 6.868 Unpacking libsasl2-modules-db:amd64 (2.1.28+dfsg1-5ubuntu3.1) ...
+#7 6.880 Selecting previously unselected package libsasl2-2:amd64.
+#7 6.881 Preparing to unpack .../11-libsasl2-2_2.1.28+dfsg1-5ubuntu3.1_amd64.deb ...
+#7 6.882 Unpacking libsasl2-2:amd64 (2.1.28+dfsg1-5ubuntu3.1) ...
+#7 6.895 Selecting previously unselected package libldap2:amd64.
+#7 6.896 Preparing to unpack .../12-libldap2_2.6.10+dfsg-0ubuntu0.24.04.1_amd64.deb ...
+#7 6.896 Unpacking libldap2:amd64 (2.6.10+dfsg-0ubuntu0.24.04.1) ...
+#7 6.911 Selecting previously unselected package librtmp1:amd64.
+#7 6.912 Preparing to unpack .../13-librtmp1_2.4+20151223.gitfa8646d.1-2build7_amd64.deb ...
+#7 6.913 Unpacking librtmp1:amd64 (2.4+20151223.gitfa8646d.1-2build7) ...
+#7 6.927 Selecting previously unselected package libssh-4:amd64.
+#7 6.928 Preparing to unpack .../14-libssh-4_0.10.6-2ubuntu0.5_amd64.deb ...
+#7 6.929 Unpacking libssh-4:amd64 (0.10.6-2ubuntu0.5) ...
+#7 6.943 Selecting previously unselected package libcurl4t64:amd64.
+#7 6.944 Preparing to unpack .../15-libcurl4t64_8.5.0-2ubuntu10.16_amd64.deb ...
+#7 6.947 Unpacking libcurl4t64:amd64 (8.5.0-2ubuntu10.16) ...
+#7 6.962 Selecting previously unselected package curl.
+#7 6.963 Preparing to unpack .../16-curl_8.5.0-2ubuntu10.16_amd64.deb ...
+#7 6.964 Unpacking curl (8.5.0-2ubuntu10.16) ...
+#7 6.987 Setting up libkeyutils1:amd64 (1.6.3-3build1) ...
+#7 6.989 Setting up libbrotli1:amd64 (1.1.0-2ubuntu0.1) ...
+#7 6.991 Setting up libpsl5t64:amd64 (0.21.2-1.1build1) ...
+#7 6.994 Setting up libnghttp2-14:amd64 (1.59.0-1ubuntu0.4) ...
+#7 6.996 Setting up libkrb5support0:amd64 (1.20.1-6ubuntu2.10) ...
+#7 6.998 Setting up libsasl2-modules-db:amd64 (2.1.28+dfsg1-5ubuntu3.1) ...
+#7 6.999 Setting up librtmp1:amd64 (2.4+20151223.gitfa8646d.1-2build7) ...
+#7 7.001 Setting up libk5crypto3:amd64 (1.20.1-6ubuntu2.10) ...
+#7 7.003 Setting up libsasl2-2:amd64 (2.1.28+dfsg1-5ubuntu3.1) ...
+#7 7.005 Setting up libkrb5-3:amd64 (1.20.1-6ubuntu2.10) ...
+#7 7.007 Setting up openssl (3.0.13-0ubuntu3.16) ...
+#7 7.011 Setting up libldap2:amd64 (2.6.10+dfsg-0ubuntu0.24.04.1) ...
+#7 7.013 Setting up ca-certificates (20260816ubuntu0.24.04.2) ...
+#7 7.078 debconf: unable to initialize frontend: Dialog
+#7 7.078 debconf: (TERM is not set, so the dialog frontend is not usable.)
+#7 7.078 debconf: falling back to frontend: Readline
+#7 7.079 debconf: unable to initialize frontend: Readline
+#7 7.079 debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC entries checked: /etc/perl /usr/local/lib/x86_64-linux-gnu/perl/5.38.2 /usr/local/share/perl/5.38.2 /usr/lib/x86_64-linux-gnu/perl5/5.38 /usr/share/perl5 /usr/lib/x86_64-linux-gnu/perl-base /usr/lib/x86_64-linux-gnu/perl/5.38 /usr/share/perl/5.38 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 8.)
+#7 7.079 debconf: falling back to frontend: Teletype
+#7 7.404 Updating certificates in /etc/ssl/certs...
+#7 7.852 120 added, 0 removed; done.
+#7 7.852 Running hooks in /etc/ca-certificates/update.d...
+#7 7.853 done.
+#7 7.864 Setting up libgssapi-krb5-2:amd64 (1.20.1-6ubuntu2.10) ...
+#7 7.866 Setting up libssh-4:amd64 (0.10.6-2ubuntu0.5) ...
+#7 7.868 Setting up libcurl4t64:amd64 (8.5.0-2ubuntu10.16) ...
+#7 7.870 Setting up curl (8.5.0-2ubuntu10.16) ...
+#7 7.872 Processing triggers for libc-bin (2.39-0ubuntu8.9) ...
+#7 DONE 8.0s
+
+#8 [3/3] COPY rnode /usr/local/bin/rnode
+#8 DONE 0.2s
+
+#9 exporting to image
+#9 exporting layers
+#9 exporting layers 0.4s done
+#9 writing image sha256:ec527b36491baaae9c008bd783babf97c8cba93236fd34ebdf32bdd00721f0a6 done
+#9 naming to docker.io/library/rnode:local done
+#9 DONE 0.4s

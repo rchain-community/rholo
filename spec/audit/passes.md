@@ -12420,11 +12420,24 @@ and halt with the reset disabled plus the operator resume. All three pass.
 `spec/audit/evidence/n564-self-replay-recovery-drill-20261113/` (35 files), both digest-verified,
 `locality: local-devnet`, `execution_proven:false`.
 
-**Boundary.** The workload is the synthetic pending-peek shape distilled from the recovered BYOID
-registry, not the incident's terms or block; the original rejected bytes/trace and the incident
-state remain unrecovered. This is not an incident reproduction and not a live or candidate-binary
-result. C357 and #564 stay open for the live/candidate operational acceptance and the §6
-compatibility/lockstep decision. No deployment is authorized.
+**Boundary.** This fresh-genesis workload is the synthetic pending-peek shape distilled from the
+recovered BYOID registry, not the original incident execution. The original rejected serialized
+block/processed-trace bytes and complete live validator store remain unavailable; authenticated
+deploys and Merkle-verified state closures were recovered separately in the
+[historical reconstruction](evidence/n564-rcb-recovered-20261111/README.md). The §158 run is not an
+incident reproduction or a live/selected-candidate result.
+
+**Pinned-binary follow-up (2026-11-13).** The
+[retained qualification record](evidence/n564-binary-qualification-20261113/README.md) builds pristine
+`1ceabd291` with Rust 1.95.0 (debug profile, symbols disabled), captures executable SHA-256
+`5ff2b4f9d77a4694d3efa4df46cb1a86fb6a31a157929cc4770a5e43436cd1b8`, and passes the natural
+pending-peek arm plus all three recovery arms on that image. Independent captures verify the same
+content-addressed block and finalized inclusion on both nodes, cost 13317, matching state/accounting,
+and matching executable files. This is a single-host disposable qualification build, **not a
+maintainer-selected release artifact or four-validator installed result**. The public-route snapshot
+still self-reports `0a1e02362` and returns 404 for finality-observation. C357 and #564 remain open for
+independent compatibility acceptance/lockstep decision and live/selected-candidate acceptance; no
+deployment is authorized.
 
 ## 159. The equivocation refusal that stalled the honest nodes (C367, #575, #576)
 

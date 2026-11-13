@@ -1,0 +1,10 @@
+none: PASS
+missing-state: REJECTED
+empty-deploys: REJECTED
+wrong-deploy: REJECTED
+zero-cost: REJECTED
+errored: REJECTED
+unfinalized: REJECTED
+raw-disagreement: REJECTED
+binary-mismatch: REJECTED
+PASS: positive fixture plus 8 adversarial capture controls; offline harness checks only

@@ -1,0 +1,13 @@
+{
+  "observed_at_utc": "2026-11-13T18:13:27.763582+00:00",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json",
+    "access-control-expose-headers": "*",
+    "access-control-allow-origin": "*",
+    "content-length": "736",
+    "connection": "close",
+    "date": "Fri, 13 Nov 2026 18:13:27 GMT"
+  },
+  "path": "/health"
+}

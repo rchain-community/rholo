@@ -1,0 +1,10 @@
+{
+  "run_id": "43479787916",
+  "run_attempt": "1",
+  "harness_sha": "4c0ec2f1ceda8354690b00d798df01ca0b052c74",
+  "runtime_source_sha": "1ceabd2917a2d4f41104116b6cf8b5fd0317964b",
+  "locality": "single-host-github-runner-disposable-devnet",
+  "execution_proven": false,
+  "release_selected": false,
+  "live_deployment": false
+}

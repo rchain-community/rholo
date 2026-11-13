@@ -12,6 +12,7 @@
 mod common;
 
 use std::collections::BTreeMap;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -60,6 +61,64 @@ impl KeyValueStoreManager for FailingStoreManager {
     async fn shutdown(&self) {}
 }
 
+/// A store that accepts `allow` writes and fails every write after them. The coordinator's second
+/// write with one leg is the decision (the first is the open record), so this is how Law 99a's
+/// ordering is pinned: a decision that cannot be made durable must not be delivered.
+struct FailAfterStoreManager {
+    allow: usize,
+}
+
+struct FailAfterStore {
+    inner: BTreeMap<Vec<u8>, Vec<u8>>,
+    puts: Arc<AtomicUsize>,
+    allow: usize,
+}
+
+impl KeyValueStore for FailAfterStore {
+    fn get(&self, keys: &[Vec<u8>]) -> Result<Vec<Option<Vec<u8>>>, String> {
+        Ok(keys.iter().map(|k| self.inner.get(k).cloned()).collect())
+    }
+    fn put(&mut self, pairs: Vec<(Vec<u8>, Vec<u8>)>) -> Result<(), String> {
+        let n = self.puts.fetch_add(1, Ordering::SeqCst);
+        if n >= self.allow {
+            return Err("store write failed".to_string());
+        }
+        for (key, value) in pairs {
+            self.inner.insert(key, value);
+        }
+        Ok(())
+    }
+    fn delete(&mut self, keys: &[Vec<u8>]) -> Result<usize, String> {
+        let mut removed = 0;
+        for key in keys {
+            if self.inner.remove(key).is_some() {
+                removed += 1;
+            }
+        }
+        Ok(removed)
+    }
+    fn entries(&self) -> Result<Vec<(Vec<u8>, Vec<u8>)>, String> {
+        Ok(self
+            .inner
+            .iter()
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect())
+    }
+}
+
+#[async_trait::async_trait]
+impl KeyValueStoreManager for FailAfterStoreManager {
+    async fn store(&self, _name: &str) -> Result<SharedStore, String> {
+        let store: Box<dyn KeyValueStore + Send + Sync> = Box::new(FailAfterStore {
+            inner: BTreeMap::new(),
+            puts: Arc::new(AtomicUsize::new(0)),
+            allow: self.allow,
+        });
+        Ok(Arc::new(tokio::sync::Mutex::new(store)))
+    }
+    async fn shutdown(&self) {}
+}
+
 /// A gateway over the given shard APIs, with its own ledger.
 fn gateway_over(
     apis: Vec<(ShardId, Arc<TestShardApi>)>,
@@ -101,6 +160,23 @@ async fn fixture(
     PublicKey,
     String,
 ) {
+    fixture_with_faults(manager, ShardFaults::default(), faults_b).await
+}
+
+/// Like [`fixture`], with both shards' fault knobs exposed.
+async fn fixture_with_faults(
+    manager: Arc<dyn KeyValueStoreManager>,
+    faults_a: ShardFaults,
+    faults_b: ShardFaults,
+) -> (
+    GatewayTxn,
+    Arc<TestShardApi>,
+    Arc<TestShardApi>,
+    Arc<TxnLedger>,
+    PrivateKey,
+    PublicKey,
+    String,
+) {
     let (key, pub_key) = construct_deploy::default_key_pair().unwrap();
     let coordinator_addr = RevAddress::from_public_key(&pub_key).unwrap().to_base58();
 
@@ -109,7 +185,11 @@ async fn fixture(
     fund(rm_a.runtime(), &coordinator_addr, 100);
     fund(rm_b.runtime(), &coordinator_addr, 100);
 
-    let api_a = Arc::new(TestShardApi::new("/root", Arc::clone(&rm_a)));
+    let api_a = Arc::new(TestShardApi::with_faults(
+        "/root",
+        Arc::clone(&rm_a),
+        faults_a,
+    ));
     let api_b = Arc::new(TestShardApi::with_faults(
         "/root/child",
         Arc::clone(&rm_b),
@@ -374,13 +454,24 @@ async fn a_three_leg_transaction_commits() {
     );
 }
 
-/// A shard whose head cannot be read anchors its legs at 0 rather than failing the phase — the
-/// permissive fallback, asserted so that a change to it is deliberate.
+/// **Law 100b, C64/C67**: a shard whose head cannot be read **refuses** its leg — it must not anchor
+/// the phase at genesis, where it would be born expired once the chain is past the deploy lifespan.
+/// The transaction therefore aborts, no deploy reaches the unreadable shard, and the readable leg is
+/// still anchored at its own head.
+///
+/// The two fault knobs this exercises were declared but read nowhere before this test: `head_error`
+/// did nothing, so the previous version of this case asserted `Committed` and could not fail for the
+/// reason its name gave (C370). `reported_height` makes "anchored at the head" distinguishable from
+/// "anchored at 0" on a shard that has produced no earlier deploy.
 #[tokio::test]
-async fn an_unreadable_head_anchors_the_leg_at_zero() {
+async fn an_unreadable_head_refuses_the_leg_and_aborts() {
     let manager = Arc::new(InMemoryStoreManager::default());
-    let (gateway, api_a, _api_b, ..) = fixture(
+    let (gateway, api_a, api_b, ..) = fixture_with_faults(
         manager,
+        ShardFaults {
+            reported_height: Some(7),
+            ..ShardFaults::default()
+        },
         ShardFaults {
             head_error: true,
             ..ShardFaults::default()
@@ -392,12 +483,113 @@ async fn an_unreadable_head_anchors_the_leg_at_zero() {
         .run(b"no-head", &txn_legs("dest"))
         .await
         .expect("run");
-    assert_eq!(record.state, CoordState::Committed);
-    // A leg anchored at its shard's head is not ambiguous with one anchored at 0 only if the head is
-    // non-zero, which is why the readable shard is told to report one.
+    assert_eq!(record.state, CoordState::Aborted);
+    assert!(
+        record
+            .reason
+            .as_deref()
+            .unwrap_or("")
+            .contains("could not be read"),
+        "the refusal must name the unreadable head: {record:?}"
+    );
+    assert!(
+        api_b.deploy_terms().is_empty(),
+        "no deploy may reach the shard whose head cannot be read: {:?}",
+        api_b.deploy_terms()
+    );
     assert_eq!(
         api_a.last_anchor(),
-        Some(1),
-        "the readable shard anchors at its head (its deploy counter, raised by the previous phase)"
+        Some(7),
+        "the readable shard anchors at its head, not at 0"
+    );
+}
+
+/// **Law 99a — the decision is durable before its effect.** With one leg, the second ledger write is
+/// the decision: failing it makes `run` return an error *before* phase two, so the participant has
+/// taken its prepare and nothing has been committed. The stored record is still the open one, which
+/// is what recovery resumes from.
+#[tokio::test]
+async fn a_decision_that_cannot_be_written_sends_no_phase_two() {
+    let manager: Arc<dyn KeyValueStoreManager> = Arc::new(FailAfterStoreManager { allow: 1 });
+    let (key, pub_key) = construct_deploy::default_key_pair().unwrap();
+    let coordinator_addr = RevAddress::from_public_key(&pub_key).unwrap().to_base58();
+    let rm = Arc::new(build_runtime_manager().await);
+    fund(rm.runtime(), &coordinator_addr, 100);
+
+    let api = Arc::new(TestShardApi::new("/root", Arc::clone(&rm)));
+    let ledger = Arc::new(TxnLedger::open(manager.as_ref()).await.expect("ledger"));
+    let gateway = gateway_over(
+        vec![(shard("/root"), api.clone())],
+        ledger.clone(),
+        key,
+        pub_key,
+    );
+    let legs = vec![GatewayLeg {
+        shard_id: shard("/root"),
+        amount: 30,
+        to: "dest".to_string(),
+    }];
+
+    let err = gateway
+        .run(b"unwritable", &legs)
+        .await
+        .expect_err("the decision write fails, so the run fails");
+    assert!(err.contains("store write failed"), "{err}");
+
+    let terms = api.deploy_terms();
+    assert_eq!(terms.len(), 1, "phase one ran exactly once: {terms:?}");
+    assert!(terms[0].contains("prepare"), "{terms:?}");
+    assert!(
+        !terms.iter().any(|t| t.contains("commit")),
+        "a decision that is not durable must not be delivered: {terms:?}"
+    );
+
+    let stored = ledger
+        .get(b"unwritable")
+        .await
+        .expect("read")
+        .expect("the open record is durable");
+    assert_eq!(
+        stored.state,
+        CoordState::Proposed,
+        "the decision was not written, so the record is still open"
+    );
+}
+
+/// **Law 100a's unknown-shard boundary.** A leg that left the node's membership between the open and
+/// the resume is refused by `LocalShardDeployService`'s `member()` gate, so it aborts rather than
+/// anchoring at the unknown shard's `Ok(0)` height. No deploy reaches either member shard.
+#[tokio::test]
+async fn recover_in_flight_refuses_a_leg_that_left_the_membership() {
+    let manager = Arc::new(InMemoryStoreManager::default());
+    let (gateway, api_a, api_b, ledger, ..) = fixture(manager, ShardFaults::default()).await;
+
+    let mut record = seeded_record(b"left-membership", "dest");
+    record.legs = vec![LegRecord {
+        shard_id: shard("/elsewhere"),
+        amount: NonNegI64::try_from(30).unwrap(),
+        to: "dest".to_string(),
+    }];
+    ledger.put(&record).await.expect("put");
+
+    let recovered = gateway.recover_in_flight().await.expect("recover");
+    assert_eq!(recovered.len(), 1);
+    assert_eq!(recovered[0].state, CoordState::Aborted);
+    assert!(
+        recovered[0]
+            .reason
+            .as_deref()
+            .unwrap_or("")
+            .contains("/elsewhere"),
+        "the abort must name the leg that left the membership: {:?}",
+        recovered[0]
+    );
+    assert!(
+        api_a.deploy_terms().is_empty(),
+        "no member deploy for the foreign leg"
+    );
+    assert!(
+        api_b.deploy_terms().is_empty(),
+        "no member deploy for the foreign leg"
     );
 }

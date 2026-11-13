@@ -90,6 +90,18 @@ async fn fixture(manager: Arc<InMemoryStoreManager>) -> Fixture {
         rm_b,
     }
 }
+
+/// One address's vault balance on a shard; an absent vault is zero, as the participant reads it.
+async fn vault(rm: &rchain_casper::runtime_manager::RuntimeManager, address: &str) -> i64 {
+    i64::from(
+        NativeSystemState::new(rm.runtime().native_store())
+            .vault_balance(address)
+            .await
+            .expect("vault read")
+            .unwrap_or_else(NonNegI64::zero),
+    )
+}
+
 #[tokio::test]
 async fn gateway_commits_a_two_shard_transaction_and_records_the_decision() {
     let fx = fixture(Arc::new(InMemoryStoreManager::default())).await;
@@ -163,6 +175,16 @@ async fn gateway_moves_the_escrow_on_every_leg() {
                 .unwrap()
         ),
         40
+    );
+    // Law 98: the debit and the credit are the same amount on each shard, so the leg's total is
+    // conserved — nothing is minted or burned by the split.
+    assert_eq!(
+        vault(&fx.rm_a, &fx.coordinator_addr).await + vault(&fx.rm_a, &fx.destination).await,
+        100
+    );
+    assert_eq!(
+        vault(&fx.rm_b, &fx.coordinator_addr).await + vault(&fx.rm_b, &fx.destination).await,
+        100
     );
 }
 
@@ -247,6 +269,16 @@ async fn gateway_aborts_every_leg_when_one_cannot_prepare() {
     );
     assert_eq!(native_a.vault_balance(&destination).await.unwrap(), None);
     assert_eq!(native_b.vault_balance(&destination).await.unwrap(), None);
+    // Law 98: each leg's total is conserved on its own shard — A's debit was refunded, B never
+    // moved a unit.
+    assert_eq!(
+        vault(&rm_a, &coordinator_addr).await + vault(&rm_a, &destination).await,
+        100
+    );
+    assert_eq!(
+        vault(&rm_b, &coordinator_addr).await + vault(&rm_b, &destination).await,
+        10
+    );
 }
 
 /// A re-run of a completed transaction returns the same record and touches no participant, so a

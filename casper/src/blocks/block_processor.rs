@@ -771,6 +771,10 @@ pub async fn apply<F, Fut>(
 mod tests {
     use super::*;
 
+    // These two tests reset the same process-wide halt across await points.
+    // Keep their setup, assertion and cleanup in one async critical section.
+    static OWN_KEY_TEST_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
     /// **A missing justification is recorded under its own stage** (Law 88d): not "validation
     /// internal", where it would be indistinguishable from a store or runtime fault.
     #[test]
@@ -812,6 +816,7 @@ mod tests {
     /// after every restart — how one equivocating validator stalled the node in the M3 join arm).
     #[tokio::test]
     async fn an_equivocation_verdict_accounts_for_the_body_without_owing_it() {
+        let _own_key_guard = OWN_KEY_TEST_LOCK.lock().await;
         use crate::block_disposition::BlockDispositionCodec;
         use rchain_block_storage::dag::codecs::BlockHashCodec;
         use rchain_shared::store_manager::{database, InMemoryStoreManager};
@@ -898,6 +903,7 @@ mod tests {
     /// the key, not the block, so proposing again would deepen the fork.
     #[tokio::test]
     async fn an_own_key_equivocation_verdict_latches_the_proposal_halt() {
+        let _own_key_guard = OWN_KEY_TEST_LOCK.lock().await;
         use crate::block_disposition::BlockDispositionCodec;
         use rchain_block_storage::dag::codecs::BlockHashCodec;
         use rchain_shared::store_manager::{database, InMemoryStoreManager};

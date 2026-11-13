@@ -3943,10 +3943,15 @@ fn attested_history(
     justifications: &[BlockHash],
     state: &DagMessageState<BlockHash, rchain_models::validator::Validator>,
 ) -> bool {
-    // U1 harness: today's behaviour — no block is ever treated as history. The next commit makes
-    // this the closed-round test the doc comment describes.
-    let _ = (block_number, justifications, state);
-    false
+    if state.round_parents.is_empty() || block_number >= state.round_height {
+        return false;
+    }
+    justifications.iter().all(|parent| {
+        state
+            .round_parents
+            .values()
+            .any(|m| m.seen.contains(parent))
+    })
 }
 
 /// Whether the attest tap should answer `block` — it is not history the node's chain already covers.

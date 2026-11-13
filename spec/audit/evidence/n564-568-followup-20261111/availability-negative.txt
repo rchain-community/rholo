@@ -1,0 +1,45 @@
+   Compiling rchain-casper v0.1.0 (/home/runner/work/rchain-rust/rchain-rust/casper)
+    Finished `test` profile [unoptimized] target(s) in 18.96s
+     Running unittests src/lib.rs (target/debug/deps/rchain_casper-8eba8e9803980f37)
+
+running 1 test
+OMEGA_OBSERVATION failed_writes=2 refusedBodyAvailable=true refusedBodyLen=363
+
+thread 'blocks::proposer::proposer::tests::omega_review_failed_persistence_must_not_advertise_a_durable_body' (11078) panicked at casper/src/blocks/proposer/proposer.rs:3745:9:
+a failed store write must not advertise a durable refused body
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: rchain_casper::blocks::proposer::proposer::tests::omega_review_failed_persistence_must_not_advertise_a_durable_body::{{closure}}
+   3: <core::pin::Pin<P> as core::future::future::Future>::poll
+   4: tokio::runtime::scheduler::current_thread::CoreGuard::block_on::{{closure}}::{{closure}}::{{closure}}
+   5: tokio::runtime::scheduler::current_thread::CoreGuard::block_on::{{closure}}::{{closure}}
+   6: tokio::runtime::scheduler::current_thread::Context::enter
+   7: tokio::runtime::scheduler::current_thread::CoreGuard::block_on::{{closure}}
+   8: tokio::runtime::scheduler::current_thread::CoreGuard::enter::{{closure}}
+   9: tokio::runtime::context::scoped::Scoped<T>::set
+  10: tokio::runtime::context::set_scheduler::{{closure}}
+  11: std::thread::local::LocalKey<T>::try_with
+  12: std::thread::local::LocalKey<T>::with
+  13: tokio::runtime::context::set_scheduler
+  14: tokio::runtime::scheduler::current_thread::CoreGuard::enter
+  15: tokio::runtime::scheduler::current_thread::CoreGuard::block_on
+  16: tokio::runtime::scheduler::current_thread::CurrentThread::block_on::{{closure}}
+  17: tokio::runtime::context::runtime::enter_runtime
+  18: tokio::runtime::scheduler::current_thread::CurrentThread::block_on
+  19: tokio::runtime::runtime::Runtime::block_on_inner
+  20: tokio::runtime::runtime::Runtime::block_on
+  21: rchain_casper::blocks::proposer::proposer::tests::omega_review_failed_persistence_must_not_advertise_a_durable_body
+  22: rchain_casper::blocks::proposer::proposer::tests::omega_review_failed_persistence_must_not_advertise_a_durable_body::{{closure}}
+  23: core::ops::function::FnOnce::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+test blocks::proposer::proposer::tests::omega_review_failed_persistence_must_not_advertise_a_durable_body ... FAILED
+
+failures:
+
+failures:
+    blocks::proposer::proposer::tests::omega_review_failed_persistence_must_not_advertise_a_durable_body
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 623 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `-p rchain-casper --lib`

@@ -12361,3 +12361,34 @@ pending-peek block, a second corrected node to strictly replay that same seriali
 recorded costs and post-state, and the #568 attestation/reset/catch-up/halt recovery arms on the
 integrated build. Retain source and executable digests, block/pre-state identity, both nodes'
 verdicts and the recovery receipts. This continuation does not claim that operational run.
+
+## 157. A complete DAG inventory before recovery rewind (C366)
+
+The reset preflight previously enumerated surviving block-body keys, so a DAG candidate
+whose body was absent could evade the inventory and still permit destructive rewind.
+`return_unfinalised_deploys` now enumerates DAG candidate hashes and refuses missing
+metadata or missing body above the finalised anchor before mutation. The production
+implementation and tests from #567 compose with #568's reset-history, write gating,
+automatic resume and operator surface.
+
+**Falsification.** The original reset source fails the new absent-body assertion,
+whereas the corrected source passes. The targeted integration cases cover refusal
+with missing body, the healthy deploy-return path and LMDB close/reopen. The original
+isolated fork run also executed the full workspace suite and pinned Clippy/format
+checks; see [receipts](evidence/n564-reset-inventory/README.md). The receipts
+predate the #568/#570 merges; the merged-tree verification is recorded below.
+
+**Merged-tree verification.** Merged with `dev` at `dfc2e1fea` (merge commit `d62f93b9c`) and
+re-run there: the targeted reset integration suite (16 tests, including the three C366 cases), the
+register emitter check, audit-status, fmt and the CI-equivalent Clippy. A merged-tree verification
+section in the evidence README records the commands and results; the original pinned source and
+negative-control receipts are unchanged.
+
+**Reconciliation.** The preceding §156 records the #568 three-arm injected devnet
+drill, and the RC-B continuation above records #570; this inventory fix is
+accounted as §157 rather than overwriting either. C361/C364/C365 are done on
+their recovery evidence; C366 closes only the inventory defect. RC-B's
+replay-order correction is merged, but its compatibility/operational acceptance
+remains open. Neither the synthetic drill nor the inventory test reproduces the
+historical 274-phlo trigger. No validator deployment or live chain mutation is
+authorized by this pass.

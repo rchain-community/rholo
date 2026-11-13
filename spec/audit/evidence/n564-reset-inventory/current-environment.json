@@ -1,0 +1,54 @@
+{
+  "scope": "Read-only operator observation of current processes; not incident-time proof or a cryptographic attestation of source identity",
+  "label_basis": "Service names on operator-configured SSH aliases; on-chain validator identities were not reverified",
+  "hosts": [
+    {
+      "label": "host_1",
+      "observed_at_utc": "2026-11-11T14:34:54.114586+00:00",
+      "services": [
+        {
+          "unit": "rnode.service",
+          "environment_read": "success",
+          "batch_or_scheduler_environment": {},
+          "scheduler_flags": [],
+          "binary_name": "rnode-0a1e0236",
+          "binary_sha256": "a07d41aa010e446c95f59cf2764cccc3a63070410ee6c314487617b0057897fd",
+          "started_utc": "Tue Nov 10 13:52:18 2026"
+        },
+        {
+          "unit": "rnode-d.service",
+          "environment_read": "success",
+          "batch_or_scheduler_environment": {},
+          "scheduler_flags": [],
+          "binary_name": "rnode-0a1e0236",
+          "binary_sha256": "a07d41aa010e446c95f59cf2764cccc3a63070410ee6c314487617b0057897fd",
+          "started_utc": "Thu Oct 29 20:57:25 2026"
+        }
+      ]
+    },
+    {
+      "label": "host_2",
+      "observed_at_utc": "2026-11-11T14:35:02.950851+00:00",
+      "services": [
+        {
+          "unit": "rnode.service",
+          "environment_read": "success",
+          "batch_or_scheduler_environment": {},
+          "scheduler_flags": [],
+          "binary_name": "rnode-0a1e0236",
+          "binary_sha256": "a07d41aa010e446c95f59cf2764cccc3a63070410ee6c314487617b0057897fd",
+          "started_utc": "Thu Oct 29 20:53:12 2026"
+        },
+        {
+          "unit": "rnode-c.service",
+          "environment_read": "success",
+          "batch_or_scheduler_environment": {},
+          "scheduler_flags": [],
+          "binary_name": "rnode-0a1e0236",
+          "binary_sha256": "a07d41aa010e446c95f59cf2764cccc3a63070410ee6c314487617b0057897fd",
+          "started_utc": "Thu Oct 29 20:53:40 2026"
+        }
+      ]
+    }
+  ]
+}

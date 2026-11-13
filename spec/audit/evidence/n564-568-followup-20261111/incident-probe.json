@@ -1,0 +1,7 @@
+{
+  "source_commit": "0a1e02362a7c34e474e068ffd47469c8d4be707a",
+  "source_scope": "all tracked production files unchanged; only a new integration fixture",
+  "probe_sha256": "b68bf0990baebe6d4f0417b6ab38c975c5183d4d1c313a173c3a94f5fb9dc6a5",
+  "signature_bytes": "opaque fixture data; no authentication claim",
+  "scope": "M15 transient COMM variants and two controls on the incident source; no original incident terms or state, no per-category census"
+}

@@ -1,0 +1,16 @@
+{
+  "source_sha": "8cea0db043e2533adad6effa9df4da7d49efb50a",
+  "green_image": "sha256:b7ce2d60b90326f97f4763b76391dc9ad04540bbe1fae7ae6b75333876dd8e8c",
+  "red_image": "sha256:7e1b5c5c4404a27228e12582971116b8517c7271d255da31eab13d2506e3dde2",
+  "aggregate": "PASS",
+  "cycles": [
+    {
+      "control": "green",
+      "result": "PASS"
+    },
+    {
+      "control": "red",
+      "result": "PASS"
+    }
+  ]
+}

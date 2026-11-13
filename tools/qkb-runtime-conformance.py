@@ -208,19 +208,24 @@ class Run:
             time.sleep(0.3)
         raise AssertionError(label + ": not included: " + repr(receipt))
 
-    def install(self):
+    def install(self, label="install"):
+        channel = "qkb-installed-uri-" + label
         original = Path(self.args.contract).read_text()
         self.report["contract_sha256"] = hashlib.sha256(original.encode()).hexdigest()
         term = "new outputId(`rho:rchain:deployId`) in {\n" + original + (
-            '\n| for (@uri <- outputId) { @"qkb-installed-uri"!(uri) }\n}')
-        block, sig = self.submit("install", term)
-        reply = self.explore('for (@uri <- @"qkb-installed-uri") { @"out"!(uri) }', block)
-        self.save("publication.json", reply)
+            f'\n| for (@uri <- outputId) {{ @"{channel}"!(uri) }}\n}}')
+        block, sig = self.submit(label, term)
+        reply = self.explore(f'for (@uri <- @"{channel}") {{ @"out"!(uri) }}', block)
+        self.save(label + "-publication.json", reply)
         uris = set(re.findall(r"rho:id:[a-z0-9]+", json.dumps(reply)))
         if len(uris) != 1:
             raise AssertionError("publication returned no unique registry URI: " + repr(reply))
         self.uri = Uri(uris.pop())
-        self.report["publication"] = {"uri": self.uri, "block": block, "deploy": sig}
+
+        publication = {"uri": self.uri, "block": block, "deploy": sig}
+        self.report.setdefault("publications", {})[label] = publication
+        if label == "install":
+            self.report["publication"] = publication
 
     def case(self, label, op, values, expected, signer=0, fake=False):
         expected = expected_value(expected)
@@ -387,20 +392,24 @@ class Run:
 
         # Runtime coverage of every length-4 history admitted by the native bit:
         # 168 actual per-axis closures and all 216 aggregate-only false positives.
-        gate_rows = []
-        positives = 0
+        main_service = self.uri
+        words = [list(word) for word in itertools.product(range(8), repeat=4)
+                 if ref.rholo_native_zfa(list(word))]
+        positives = sum(ref.is_closure(ts) for ts in words)
         phase_code = {"+1": 1, "-1": -1, "+i": 2, "-i": -2}
-        for word in itertools.product(range(8), repeat=4):
-            ts = list(word)
-            if ref.rholo_native_zfa(ts):
-                expected = kb.assert_closure("gate-census", ts, identities[0])
-                positives += int(expected["ok"])
-                gate_rows.append([ts, expected_value(expected),
-                                  (True, phase_code[ref.phase(ts)])])
-        if len(gate_rows) != 384 or positives != 168:
+        if len(words) != 384 or positives != 168:
             raise AssertionError("unexpected native-positive census")
-        for offset in range(0, len(gate_rows), 48):
-            self.gate_batch(f"gate-census-{offset//48}", gate_rows[offset:offset+48])
+        for offset in range(0, len(words), 32):
+            # This is an admission conformance census, not a growing-store benchmark.
+            # Each bounded batch has its own installed QKB and independent reference.
+            label = f"gate-census-{offset//32}"
+            self.install(label + "-install")
+            batch_kb = ref.KB()
+            rows = [[ts, expected_value(batch_kb.assert_closure("gate-census", ts, identities[0])),
+                     (True, phase_code[ref.phase(ts)])]
+                    for ts in words[offset:offset+32]]
+            self.gate_batch(label, rows)
+        self.uri = main_service
 
         # All 22 well-formed propositions, both operations on every ordered pair.
         props = ["bot", "top"] + [(a, s) for a in range(4) for s in (1, -1)]
@@ -416,7 +425,8 @@ class Run:
         self.report["runtime_vectors"] = {
             "native_positive_length4": 384, "per_axis_admitted": 168,
             "aggregate_only_refused": 216, "proposition_pairs": 484,
-            "logic_comparisons": 968, "solver_seeds": 5}
+            "logic_comparisons": 968, "solver_seeds": 5,
+            "gate_batch_size": 32, "gate_instances": 12}
         self.report["python_only_groups"] = {
             "f": "sharded model; current Rholang contract has one state cell",
             "j": "mutable queued callbacks; Rholang values are immutable"}

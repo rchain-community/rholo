@@ -1,10 +1,10 @@
 # #487 / #553 — pre-registered public four-validator acceptance runbook
 
-**Status:** DRAFT / NOT EXECUTED. Refreshed 2026-11-13 onto `dev@dfc2e1fea`: the scoring criteria, arms and abort conditions are unchanged, and §1 remains deliberately unpopulated. This document is a proposed acceptance protocol, not authorization to touch validators, submit transactions, restart nodes or claim a live result.
+**Status:** DRAFT / NOT EXECUTED. Refreshed 2026-11-13 onto `dev@1ceabd291` (including #572 and #578): the scoring criteria and arms are unchanged; candidate/approval pins remain unpopulated. Sections 1.1–1.2 make collection, independent checks and the maintainer handoff explicit. This document is a proposed acceptance protocol, not authorization to touch validators, submit transactions, restart nodes or claim a live result.
 
 **Decision owner:** Jim + Patrick (maintainer go/no-go and final verdict); operator and independent evidence reviewer must be identified before execution. **Scope owner:** Aria (pre-registration/evidence design). Approval of this document alone does not authorize execution.
 
-**Parent:** [#553](https://github.com/rhovision-org/rholo/issues/553). **Local comparator:** [n487-admission-finality-stall-n4-20261102](../evidence/n487-admission-finality-stall-n4-20261102/README.md). **Already satisfied separately:** the scoped #485/#492 historical differential, [merged #557](https://github.com/rhovision-org/rholo/pull/557) at `f5ec8e2b` (a historical, scoped record; `dev` has since moved through #565/#566/#568/#570/#569/#571 and #555, which is why this runbook was refreshed). This runbook **does not reopen #485**.
+**Parent:** [#553](https://github.com/rhovision-org/rholo/issues/553). **Local comparator:** [n487-admission-finality-stall-n4-20261102](../evidence/n487-admission-finality-stall-n4-20261102/README.md). **Already satisfied separately:** the scoped #485/#492 historical differential, [merged #557](https://github.com/rhovision-org/rholo/pull/557) at `f5ec8e2b` (a historical, scoped record, not acceptance of the current public deployment). This runbook **does not reopen #485**.
 
 ## 0. Acceptance contract — freeze before the window
 
@@ -40,6 +40,85 @@ Create a **signed or maintainer-reviewed, time-stamped preflight manifest** with
 
 **Hard NO-GO:** diverging binary/genesis/bond pins; unverified quorum/validator set; inability to observe finality and settlement surfaces; missing approval to submit the test transfer; unresolved host-capacity or rollback exposure; unstable time sync; unresolved network instability; or any request to run destructive restart/partition experiments during this window.
 
+### 1.1. Collect the private candidate record with the merged probe
+
+Use [release-pin-probe.py](../../../tools/release-pin-probe.py) from the frozen runbook checkout; the collector and its [complete-form schema](n487-live-postdeployment.preflight.schema.json) landed in [#572](https://github.com/rhovision-org/rholo/pull/572). Collection is read-only; it does not install a release, submit a deploy, approve a window or establish acceptance. The designated operator runs host-local observation on **each of the four actual validator hosts**, using the service, executable, data/genesis directories and private endpoints that belong to that instance.
+
+```sh
+# On each validator host; the operator supplies these private, instance-specific values.
+# N487_OUT is a new directory for this run, never a reused collection.
+set -eu
+umask 077
+test ! -e "$N487_OUT"
+mkdir -m 700 "$N487_OUT"
+python3 tools/release-pin-probe.py observe \
+  --out "$N487_OUT" --name "$N487_VALIDATOR_ALIAS" \
+  --http "$N487_HTTP" --admin "$N487_ADMIN" \
+  --local --service "$N487_SERVICE" --binary "$N487_BINARY" \
+  --data-dir "$N487_DATA_DIR" --genesis-dir "$N487_GENESIS_DIR" \
+  --config-file "$N487_CONFIG_FILE"
+```
+
+Assign four distinct aliases without path separators. Copy exactly one `validator-<alias>.json` per host into a **fresh private aggregation directory**. Retain original observations and their capture times; do not combine records from different installations/windows or fill missing observations from historical evidence. The executable path must be traced to the **running process**: hashing a spare binary at the same version is not an installed-process pin. Host-local `--version` and HTTP version strings are self-reports; resolve the full source commit and independently bind the installed executable digest to the approved CI artifact (URL, run attempt, archive digest, extracted binary digest and packaging/image digest).
+
+Create `$N487_OPERATOR_JSON` privately from this **deliberately incomplete** input skeleton. Replace every null/empty field with approved values; this example is not approval, a release pin, a transfer or an executable test configuration.
+
+```json
+{
+  "source_sha": null,
+  "release_tag": null,
+  "release_branch": null,
+  "window_start_utc": null,
+  "window_end_utc": null,
+  "operator": null,
+  "observers": [],
+  "independent_reviewer": null,
+  "rollback_owner": null,
+  "test_transfer": null,
+  "rollback": null,
+  "evidence_destination": null
+}
+```
+
+`source_sha` must be the full approved commit; record an explicit reviewed "untagged commit build" designation if there is no release tag, never invent a tag. `test_transfer` must include every signed-deploy field in §1, including approval reference, maximum fee, payload digest and non-replay plan. `rollback` must identify the prior build/config, state compatibility, snapshot, capacity, authority and separate procedure. The independent reviewer must differ from the operator. Keep signed payloads, endpoints, wallet authorizations and private identities outside Git.
+
+```sh
+# On the private aggregation host, after copying the four records.
+set -eu
+python3 tools/release-pin-probe.py merge \
+  --out "$N487_OUT" --expect 4 --check \
+  --operator-json "$N487_OPERATOR_JSON"
+# Only after the private manifest has passed the human checks below:
+python3 tools/release-pin-probe.py merge \
+  --out "$N487_OUT" --expect 4 --check \
+  --operator-json "$N487_OPERATOR_JSON" --redact
+```
+
+A failed `merge --check` means **NO-GO / incomplete or inconsistent collection**. Stop on any nonzero exit and inspect the error; invocation/IO failures also prevent a usable preflight. `observe` may exit 0 while recording read errors or unset fields, so inspect each record before merging. Exit 0 from the merge is only a preliminary collection result, **not GO**. The schema describes record shape, not operational truth. Neither tool checks maintainer authorization or demonstrates live execution.
+
+| Check | Collector coverage / mandatory independent check |
+|---|---|
+| Record count and missing fields | `merge --expect 4 --check` checks count and recorded `unset` lists. Reviewer must verify actual values, four distinct bonded identities, and one fresh record per actual host; four filenames do not prove four validators. |
+| Agreement | Collector compares network, shard, genesis hash/raw digest and binary digest. Reviewer must also compare full source/artifact provenance, bonds/file digests, live bond set and weights against the approved pins. Genesis bonds alone are not proof of the current live validator set. |
+| Readiness and observations | A present `ready: false`, stale sample, endpoint/local read error or incomplete local provenance must not pass the human gate merely because `checks.ok` is true. Review `errors`, `local.local_errors`, boot IDs, API observability and the full A0 baseline; Date-header offset is coarse and not a time-sync attestation. Different latest finalized heights may be normal; conflicting hashes at the same finalized height are not. |
+| Operator fields | Collector checks top-level presence, not approval validity, nested transfer/rollback completeness, window ordering, reviewer independence or source-to-binary identity. Review every §1 field and approval reference independently. |
+| Redaction | `--redact` masks known fields only. Read errors, node addresses, binary/config paths and nested free text may still expose host or endpoint details. Manually review the entire public copy; retain protected originals and document each redaction. |
+
+Retain the collector revision/command, private manifest digest, reviewed public manifest digest and a separate signed/maintainer-reviewed **§1 pin sheet** for fields the collector does not preserve (especially CI provenance, live membership and approvals). Freeze the runbook revision, pin sheet, transfer identity, A0/A1–A4 criteria and approved UTC window together. Jim/Patrick must explicitly record GO against that exact set **before** the sole submission. Any installation, identity, boot, source/binary or membership drift invalidates that freeze: stop, recollect and obtain a new decision.
+
+### 1.2. Concrete maintainer handoff / current blocker
+
+As of this refresh, **no live candidate, four-host installed digest set, approved operator/window or authorized native-REV transfer is supplied here**. Readiness is **NO-GO / NOT EXECUTED**. Completing this runbook or passing offline collector tests does not discharge those inputs.
+
+| Decision owner | Required next input | Completion evidence |
+|---|---|---|
+| Jim/Patrick | Select the installed candidate and approve its source-to-artifact provenance | Full source SHA, CI run/attempt and artifact/binary digests, matched on all four hosts |
+| Designated validator operator | Collect the private four-host records and finish §1 pin sheet | Fresh per-host records, identity/stake/chain checks, capacity and rollback references; A0 baseline at the approved window |
+| Jim/Patrick | Name operator, observer(s), independent reviewer, rollback owner and UTC window; authorize the exact bounded signed native-REV transfer | Explicit approval references tied to the frozen runbook, pins and deploy identity |
+| Independent reviewer | Review private completeness and public redactions before GO; review live evidence afterward | Preflight review followed by a separate human live verdict under §4 |
+
+These are external run inputs, not values for Aria to guess. Keep [#553](https://github.com/rhovision-org/rholo/issues/553) open until the actual live verdict.
+
 ## 2. Arms / sampling plan — freeze these criteria before execution
 
 Keep this run **non-disruptive**. No deliberate validator shutdown, network partition, bond change or synthetic finality freeze on the public network. The exactly-2/3, recovery and partition negative controls have **already been exercised locally** in n487; they are not a license to recreate those failures in production.
@@ -71,6 +150,8 @@ Immediately stop further submissions and mark the run **ABORTED / FAIL-SAFE** if
 **Abort is not a consensus rollback.** Halt test submissions, preserve accepted deploy IDs and the full evidence record, and notify Jim/Patrick. Keep all four validators' data volumes intact. Do not delete/rebuild state, restart validators, revert a finalized transfer, or make network changes under this document.
 
 If an operator-approved binary/configuration rollback becomes necessary, only the designated maintainer executes the separately pre-approved rollback procedure on the approved target/region, after confirming that state compatibility, snapshot retention and capacity are safe. If rollback cannot be executed safely, leave systems stable and escalate; never improvise a destructive restore. Record every operational action with timestamp and actor.
+
+**Store-loss boundary (#576/#578).** If a store is already lost or an own-key equivocation halt is observed, abort this acceptance run and preserve the evidence. Starting the retained signing key on an empty store is unsafe; do not restart or clear a halt to force progress. The supported recovery ordering is backup restoration, or passive replication/catch-up before key activation under a separate maintainer-approved procedure, as documented in [testnet.md](../../../docs/src/node/testnet.md#recovery). The `DEVNET_RESET_PASSIVE=1 ... reset` / `activate` examples there are **disposable DevNet commands**, not instructions for these public validators. A source-tree fix merged in [#578](https://github.com/rhovision-org/rholo/pull/578) is not evidence that the installed candidate contains it; verify provenance first. Recovery or a changed boot invalidates the preflight and requires a fresh window/GO decision.
 
 ## 4. Evidence deliverable and independent human verdict
 

@@ -5281,6 +5281,634 @@ def lawsC : List Law := [
       consensus invariant, but the Rust witness refuses a second reset at the same anchor; the \
       operator's explicit resume remains the fallback when no anchor was named, the reset was \
       disabled, or the anchor has already had its attempt." },
+
+  { number := 95, clause := "a", layer := "RSpace",
+    statement := "**The replay record is built in the play's execution order.** RSpace prepends \
+      every event to its log, so the log is newest-first (`rspace/src/rspace.rs:202-216`), while \
+      `build_replay_data` files each recorded COMM under its consume/produce refs in the order it \
+      walks that log (`rspace/src/replay_rspace.rs:129-167`). A chronological build makes the \
+      candidate list a consume sees the play's own sequence; the newest-first builder is the \
+      defect's shape. The law fixes the order; the cost consequence is clause b.",
+    status := .provedModel,
+    declarations := [`Rchain.ReplayOrder.Event, `Rchain.ReplayOrder.ReplayData,
+      `Rchain.ReplayOrder.build, `Rchain.ReplayOrder.buildNewestFirst,
+      `Rchain.ReplayOrder.the_chronological_build_files_the_play_order,
+      `Rchain.ReplayOrder.the_newest_first_build_files_the_later_comm_first],
+    axioms := [],
+    rust := ["rspace/src/replay_rspace.rs", "rspace/src/rspace.rs"],
+    rustWitness := ["casper/tests/replay_trace_order.rs:pending_peeks_replay_with_exact_cost_and_state"],
+    witness := [`Rchain.ReplayOrder.the_chronological_build_files_the_play_order,
+      `Rchain.ReplayOrder.the_newest_first_build_files_the_later_comm_first],
+    falsifiable := "Delete `.rev()` from `build_replay_data` — that is exactly the newest-first \
+      builder — and the chronological theorem is false of the code: the witness list is \
+      `[later, earlier]` and the Rust witness returns `ReplayCostMismatch` again. The model's two \
+      builder functions are the two code shapes; the `[5, 3]` trace is the smallest in which they \
+      disagree.",
+    note := "**What this law does not claim.** It does not model the produce-side map, the matcher, \
+      or the RCHAIN-3505 workaround that drops the reverse half for a failed deploy \
+      (`casper/src/runtime_replay.rs:733-749`); that mask is Law 11's recorded hazard, not this \
+      law's. The incident's 5576/5302 pair is evidence, not a model witness: the Lean witness is a \
+      decided trace, and the Rust test pins 1860 / 2606 / 4844. The model abstracts \
+      produce/consume identity to `Nat` refs because the law is about order, not hashing." },
+
+  { number := 95, clause := "b", layer := "RSpace",
+    statement := "**The inverted order changes the binding and the cost.** On a two-request witness \
+      sharing one persistent consume's datum, the chronological list offers the earlier COMM (cost \
+      5) and the later request is suppressed; the newest-first list offers the later COMM (cost 3) \
+      and the earlier request is suppressed. The record is the same; the order is not.",
+    status := .provedModel,
+    declarations := [`Rchain.ReplayOrder.Store, `Rchain.ReplayOrder.run,
+      `Rchain.ReplayOrder.the_two_builds_differ_on_the_witness,
+      `Rchain.ReplayOrder.the_inversion_changes_the_cost,
+      `Rchain.ReplayOrder.a_persistent_datum_survives_a_fire,
+      `Rchain.ReplayOrder.a_non_persistent_datum_is_consumed],
+    axioms := [],
+    rust := ["rspace/src/replay_rspace.rs"],
+    rustWitness := ["casper/tests/replay_trace_order.rs:pending_peeks_replay_with_exact_cost_and_state"],
+    witness := [`Rchain.ReplayOrder.the_inversion_changes_the_cost,
+      `Rchain.ReplayOrder.the_two_builds_differ_on_the_witness,
+      `Rchain.ReplayOrder.a_persistent_datum_survives_a_fire],
+    falsifiable := "Make the build the unreversed walk: `run` then charges the later COMM first, \
+      the first conjunct of the cost theorem decides to 3 instead of 5, and the Rust witness reddens \
+      with the cost mismatch. The persistence control is falsified by making the datum persistent \
+      always true, which changes the second request's outcome and fails the non-persistent control.",
+    note := "The model's `run` is the selector's order-sensitivity, not a full replay: it charges \
+      the cost and continuation of the **first** offered COMM and suspends when none is offered, \
+      which is what `get_comm_and_consume_candidates` does (`rspace/src/replay_rspace.rs:235-246`). \
+      The 274-phlo class is the shape; the incident's exact deploy set is not modelled." },
+
+  { number := 96, clause := "a", layer := "Scheduler",
+    statement := "**Verification is not optional.** The effective batch policy — what the runtime \
+      manager stores after `with_batch_policy`/`set_batch_policy` — has no state with an enabled \
+      batch and verification off; the canonicaliser forces `verify` \
+      (`casper/src/runtime_manager.rs:501-513`).",
+    status := .provedModel,
+    declarations := [`Rchain.Split.BatchPolicy, `Rchain.Split.canonicalize,
+      `Rchain.Split.the_canonicaliser_forces_verification,
+      `Rchain.Split.an_unverified_policy_is_not_canonical],
+    axioms := [],
+    rust := ["casper/src/runtime_manager.rs"],
+    rustWitness := ["casper/src/runtime_manager.rs:a_batch_policy_without_verification_is_not_representable"],
+    witness := [`Rchain.Split.the_canonicaliser_forces_verification,
+      `Rchain.Split.an_unverified_policy_is_not_canonical],
+    falsifiable := "Delete the `verify` forcing from `canonical_batch_policy`; the Rust witness \
+      reddens because the runtime then accepts an enabled unverified policy. The raw struct literal \
+      is constructible — the law is about the effective policy, which is why the Rust test drives \
+      the canonicaliser rather than the fields.",
+    note := "The model's `canonicalize` is `casper/src/runtime_manager.rs:508-513`; the theorem is \
+      the statement that the canonicaliser leaves no unverified enabled batch." },
+
+  { number := 96, clause := "b", layer := "Scheduler",
+    statement := "**A certified split equals the fold.** For a canonical policy the published \
+      per-deploy cost, COMM log, failure flag and post-state are the sequential oracle's; a failed \
+      verification is the whole-block sequential fallback. An unverified split can record a \
+      different cost and state — C360's `[986, 984, 984, 984]` and the different post-state.",
+    status := .provedModel,
+    declarations := [`Rchain.Split.Outcome, `Rchain.Split.publishedBatch,
+      `Rchain.Split.a_canonical_policy_publishes_the_oracle,
+      `Rchain.Split.an_unverified_policy_can_change_the_cost],
+    axioms := [],
+    rust := ["casper/src/runtime_manager.rs"],
+    rustWitness := ["casper/tests/determinism.rs:play_and_replay_agree_per_deploy_for_same_key_multi_transfer"],
+    witness := [`Rchain.Split.a_canonical_policy_publishes_the_oracle,
+      `Rchain.Split.an_unverified_policy_can_change_the_cost],
+    falsifiable := "Disable the verification comparison in the batched path (or run it with \
+      verification off): the batched costs `[986, 984, 984, 984]` and the post-state differ from \
+      the sequential oracle (C360, matrix M08), which is exactly the unverified witness; the Rust \
+      test that compares the two play paths reddens.",
+    note := "The state half is Law 25's and Law 86c's; this row adds the per-deploy carrier (cost, \
+      log, failure flag). The model's `speculative` is a `+1` stand-in for C360's observed \
+      difference; the Rust witness carries the real numbers." },
+
+  { number := 96, clause := "c", layer := "Scheduler",
+    statement := "**Concurrent validation of a dependency-free batch agrees with serial \
+      validation.** Each block replays on its own fork seeded at its committed pre-state and \
+      insertion remains serial (`casper/src/blocks/block_processor.rs:536-620`, \
+      `casper/src/runtime_manager.rs:670-688`); a shared replay runtime would change a verdict.",
+    status := .provedModel,
+    declarations := [`Rchain.Split.Block, `Rchain.Split.Verdict,
+      `Rchain.Split.serialValidation, `Rchain.Split.concurrentValidation,
+      `Rchain.Split.sharedValidation,
+      `Rchain.Split.concurrent_validation_agrees_with_serial,
+      `Rchain.Split.a_shared_replay_runtime_changes_a_verdict],
+    axioms := [],
+    rust := ["casper/src/blocks/block_processor.rs", "casper/src/runtime_manager.rs"],
+    rustWitness := ["casper/src/blocks/block_processor.rs:the_parallel_validation_cap_is_never_zero",
+      "casper/src/runtime_manager.rs:fork_replay_runtime_replays_empty",
+      "casper/tests/determinism.rs:concurrent_forked_replays_agree_with_serial_replays"],
+    witness := [`Rchain.Split.concurrent_validation_agrees_with_serial,
+      `Rchain.Split.a_shared_replay_runtime_changes_a_verdict],
+    falsifiable := "Validate a batch against one shared replay runtime instead of a fork per block: \
+      the shared-runtime witness is that shape, and the per-block fork is what makes the equality \
+      true. `concurrent_forked_replays_agree_with_serial_replays` reddens if the concurrent replay \
+      does not reach the serial verdict; the cap test pins the concurrent path and the fork test \
+      pins the isolation.",
+    note := "The equality is a consequence of each block's replay being a function of its own \
+      committed pre-state; the dependency-free/antichain hypothesis is the processor's batch, not \
+      arbitrary blocks. It does not claim a speedup or a capacity result (M1/M2). The direct Rust \
+      witness replays two dependency-free blocks concurrently on per-block forks and compares each \
+      verdict with its serial replay." },
+
+  { number := 96, clause := "d", layer := "Scheduler",
+    statement := "**A cross-node verdict disagreement is not published.** Two verdicts are \
+      reconciled only by agreement; a difference publishes nothing and is attributed by provenance \
+      (Law 92) and bounded by the recovery state machine (Law 94), never silently reconciled.",
+    status := .provedModel,
+    declarations := [`Rchain.Split.publishAgreed, `Rchain.Split.publishLocal,
+      `Rchain.Split.a_disagreement_publishes_nothing,
+      `Rchain.Split.an_agreement_publishes_it,
+      `Rchain.Split.the_local_rule_publishes_a_disagreement],
+    axioms := [],
+    rust := ["casper/src/interpreter_util.rs", "casper/src/blocks/proposer/proposer.rs"],
+    rustWitness := ["casper/tests/determinism.rs:a_cost_only_tamper_is_refused_before_the_state_hash_is_compared"],
+    witness := [`Rchain.Split.a_disagreement_publishes_nothing,
+      `Rchain.Split.an_agreement_publishes_it,
+      `Rchain.Split.the_local_rule_publishes_a_disagreement],
+    falsifiable := "Publish the local verdict despite the peer's disagreement — the local rule \
+      exhibits it, and the incident's divergence reading was that shape; the agreed rule is what \
+      the node must keep. The Rust cost-only tamper test pins the refusal.",
+    note := "This is the composition of Law 92 (a self-built replay failure is a local fault) and \
+      Law 94 (a local fault has a bounded exit). It does not say the raw verdicts are equal — that \
+      is 96b's canonical-path statement; it says a difference is not reconciled into a \
+      publication." },
+
+  { number := 97, clause := "a", layer := "Casper",
+    statement := "**Every conflict-scope chain is classified, and every rejection has a reason.** A \
+      chain is kept, rejected by the conflict resolution, or rejected by a final-scope decision; a \
+      kept chain is neither resolved nor forced out; a rejected conflict-scope chain carries a \
+      non-zero reason (I1: it conflicts with a kept chain or depends on a rejected one). The \
+      final-scope ledger is named separately (`final_scope_rejected_chains`/`_deploys`).",
+    status := .provedModel,
+    declarations := [`Rchain.MergeAccounting.Verdict, `Rchain.MergeAccounting.classify,
+      `Rchain.MergeAccounting.every_chain_is_classified,
+      `Rchain.MergeAccounting.a_kept_chain_is_neither_resolved_nor_forced,
+      `Rchain.MergeAccounting.every_rejection_has_a_reason],
+    axioms := [],
+    rust := ["casper/src/merging.rs", "sdk/src/dag/merging.rs"],
+    rustWitness := ["casper/tests/n420_boundary_merge.rs:a_boundary_round_merge_keeps_the_base_states_user_write"],
+    witness := [`Rchain.MergeAccounting.every_chain_is_classified,
+      `Rchain.MergeAccounting.a_kept_chain_is_neither_resolved_nor_forced,
+      `Rchain.MergeAccounting.every_rejection_has_a_reason],
+    falsifiable := "Drop a chain from the classification (the defect's shape: a rejection visible \
+      nowhere, #280) — the totality theorem has no fourth state, and the kept theorem fails if a \
+      resolved chain is reported kept. Make the reason always zero — the non-zero conclusion of the \
+      reason theorem fails. The Rust witness asserts the report's partition and the I1/I2 \
+      emptiness.",
+    note := "**The fixture identity is not the general theorem.** \
+      `resolve_conflict_set_with_census` returns `kept = conflictSet \\ enforce_rejected \\ \
+      resolved` and `rejected = resolved ∪ enforce_rejected` (`sdk/src/dag/merging.rs:926-978`), \
+      so `kept + rejected = conflict` holds only when the final-scope decisions lie inside the \
+      conflict set. The n420 assertion is that fixture's control; this row states the set relation \
+      and the per-chain classification, which are general." },
+
+  { number := 97, clause := "b", layer := "Casper",
+    statement := "**No kept effect is silently lost.** The coverage check is multiset-sensitive: \
+      every occurrence a kept chain added or removed must occur in the combined change, so the \
+      duplicate-occurrence case (the #420 incident's shape) cannot pass as a set check.",
+    status := .provedModel,
+    declarations := [`Rchain.MergeAccounting.covers,
+      `Rchain.MergeAccounting.coverage_is_reflexive,
+      `Rchain.MergeAccounting.a_dropped_occurrence_breaks_coverage,
+      `Rchain.MergeAccounting.duplicate_occurrences_are_counted],
+    axioms := [],
+    rust := ["casper/src/merging.rs"],
+    rustWitness := ["casper/src/merging.rs:coverage_preserves_duplicate_occurrences_within_and_across_kept_chains"],
+    witness := [`Rchain.MergeAccounting.coverage_is_reflexive,
+      `Rchain.MergeAccounting.a_dropped_occurrence_breaks_coverage,
+      `Rchain.MergeAccounting.duplicate_occurrences_are_counted],
+    falsifiable := "Replace the multiset coverage with a set or `contains` check: the dropped \
+      duplicate is the case it misses, and the Rust duplicate-occurrence witness reddens. The \
+      positive is the reflexive coverage; the two decided instances keep it from passing on a \
+      single occurrence.",
+    note := "The coverage check is computed from the kept chains' `StateChange`s against the \
+      combined change (`casper/src/merging.rs:350-403`); it is an observation, not an input to the \
+      state — the report re-runs identically." },
+
+  { number := 97, clause := "c", layer := "Casper",
+    statement := "**A cost move is applied at most once.** A move whose `(payer, slot)` is already \
+      applied is skipped; a composition that would take a vault below zero is refused rather than \
+      invented — the fail-closed branch reachable when two accepted blocks spend one payer's REV \
+      without seeing each other.",
+    status := .provedModel,
+    declarations := [`Rchain.MergeAccounting.CostMove, `Rchain.MergeAccounting.applies,
+      `Rchain.MergeAccounting.applyOne,
+      `Rchain.MergeAccounting.a_seen_move_is_not_reapplied,
+      `Rchain.MergeAccounting.an_unseen_move_is_applied,
+      `Rchain.MergeAccounting.compose,
+      `Rchain.MergeAccounting.an_overdraft_is_refused,
+      `Rchain.MergeAccounting.a_funded_spend_is_composed],
+    axioms := [],
+    rust := ["casper/src/merging.rs"],
+    rustWitness := ["casper/tests/n420_boundary_merge.rs:sibling_hot_cell_merges_keep_one_value_and_name_a_rejection"],
+    witness := [`Rchain.MergeAccounting.a_seen_move_is_not_reapplied,
+      `Rchain.MergeAccounting.an_unseen_move_is_applied,
+      `Rchain.MergeAccounting.an_overdraft_is_refused,
+      `Rchain.MergeAccounting.a_funded_spend_is_composed],
+    falsifiable := "Apply every move unconditionally (drop the `seen` check): the seen-move \
+      theorem fails. Return a negative balance instead of refusing: the overdraft theorem fails. \
+      The Rust sibling-hot-cell witness pins the one-value/one-slot outcome; the parallel-register \
+      witness pins the parallel case.",
+    note := "The refusal is a merge-level `Err` (a local drop), not a block-validity verdict \
+      (`casper/src/merging.rs:1616-1630`). A rejected chain's effects are not applied; the \
+      rejection is recorded (`rejected_cost_accounted_chains`). It does not decide the fee/refund \
+      question (Law 48)." },
+
+  { number := 97, clause := "d", layer := "Casper",
+    statement := "**Independent chains commute and their charges add.** The state half is Law 86c's \
+      (independent `StateChange`s commute); the cost half is this law's: the merge's per-chain move \
+      totals are additive over the kept set.",
+    status := .provedModel,
+    declarations := [`Rchain.MergeAccounting.moveTotal, `Rchain.MergeAccounting.totalCost,
+      `Rchain.MergeAccounting.chainA, `Rchain.MergeAccounting.chainB,
+      `Rchain.MergeAccounting.independent_merges_commute_and_add],
+    axioms := [],
+    rust := ["casper/src/merging.rs", "rspace/src/merger/state_change.rs"],
+    rustWitness := ["casper/tests/n420_boundary_merge.rs:parallel_register_shaped_rmws_leave_a_countable_channel"],
+    witness := [`Rchain.MergeAccounting.independent_merges_commute_and_add],
+    falsifiable := "Make the cost total non-additive (for example, subtract a shared fee once per \
+      merge): the additive theorem fails. The state half's falsifier is Law 86c's, which reddens if \
+      the merge orders dependent chains. The Rust parallel-register witness pins the state \
+      outcome.",
+    note := "The state half is cited to Law 86c, not reproved; this row adds the cost carrier. The \
+      model's two chains are a concrete disjoint pair; the general independence criterion is Law \
+      17c's `chainConflict`/`resolves`." },
+
+  { number := 98, clause := "a", layer := "Casper",
+    statement := "**A cross-shard leg's prepare escrows exactly, and conserves the leg total.** \
+      `txn_prepare` debits the payer by exactly the amount, leaves the payee untouched when the two \
+      accounts differ, records a `prepared` record carrying that amount, and the payer + payee + \
+      escrow total is unchanged. The debit happens after the balance check, so a refused prepare \
+      moves nothing.",
+    status := .provedModel,
+    declarations := [`Rchain.Acceptance.escrow, `Rchain.Acceptance.recordTotal,
+      `Rchain.Acceptance.preparedRecord, `Rchain.Acceptance.prepareWithoutDebit,
+      `Rchain.Acceptance.prepare_escrows_exactly,
+      `Rchain.Acceptance.prepare_conserves_the_leg_total,
+      `Rchain.Acceptance.a_prepare_that_does_not_debit_creates_value],
+    axioms := [],
+    rust := ["rholang/src/native_state.rs"],
+    rustWitness := ["rholang/src/native_state.rs:txn_prepare_commit_round_trip",
+      "casper/tests/gateway_txn.rs:gateway_moves_the_escrow_on_every_leg"],
+    witness := [`Rchain.Acceptance.prepare_escrows_exactly,
+      `Rchain.Acceptance.prepare_conserves_the_leg_total,
+      `Rchain.Acceptance.a_prepare_that_does_not_debit_creates_value],
+    falsifiable := "Record the transaction without debiting the payer (`prepareWithoutDebit`): the \
+      escrow-inclusive total is larger by exactly the amount, which is \
+      `a_prepare_that_does_not_debit_creates_value`; a double debit fails the exact-debit \
+      conjunct. In Rust, the `100 -> 60` payer balance is `txn_prepare_commit_round_trip` and the \
+      two-shard `100 -> 70 / 100 -> 60` debits are `gateway_moves_the_escrow_on_every_leg`.",
+    note := "**What this law does not claim.** Idempotence is Law 28's, cited \
+      (`Rchain.txnPrepare_idempotent`), not reproved. The gateway's boundary does not validate the \
+      amount — Law 26 records that `admitLeg` admits a negative amount and the ledger's `NonNegI64` \
+      catches it later. The model's `Ledger` is the participant's `native_state` store, and \
+      `src = dst` is excluded from the untouched-payee half because the pair total is not the right \
+      carrier for a self-payment." },
+
+  { number := 98, clause := "b", layer := "Casper",
+    statement := "**The terminal verbs release exactly the escrow, never more and never twice.** \
+      `txn_commit` credits the payee by exactly the record's amount and leaves the payer untouched \
+      when the accounts differ; `txn_abort` refunds the payer by exactly that amount and leaves the \
+      payee untouched; each moves the record to a terminal state, so the escrow-inclusive total is \
+      unchanged. Commit is not a mint and abort is not a second payment.",
+    status := .provedModel,
+    declarations := [`Rchain.Acceptance.commit_credits_the_payee_exactly,
+      `Rchain.Acceptance.commit_conserves_the_leg_total,
+      `Rchain.Acceptance.abort_refunds_the_payer_exactly,
+      `Rchain.Acceptance.abort_conserves_the_leg_total,
+      `Rchain.Acceptance.commitThatKeepsTheEscrow,
+      `Rchain.Acceptance.commitWithCredit,
+      `Rchain.Acceptance.a_commit_that_keeps_the_escrow_creates_value,
+      `Rchain.Acceptance.an_overcredit_creates_value],
+    axioms := [],
+    rust := ["rholang/src/native_state.rs"],
+    rustWitness := ["rholang/src/native_state.rs:txn_prepare_commit_round_trip",
+      "rholang/src/native_state.rs:txn_prepare_abort_returns_escrow",
+      "casper/tests/gateway_txn.rs:gateway_aborts_every_leg_when_one_cannot_prepare",
+      "casper/tests/cross_shard_txn.rs:two_shard_2pc_commits_all"],
+    witness := [`Rchain.Acceptance.commit_credits_the_payee_exactly,
+      `Rchain.Acceptance.commit_conserves_the_leg_total,
+      `Rchain.Acceptance.abort_refunds_the_payer_exactly,
+      `Rchain.Acceptance.abort_conserves_the_leg_total,
+      `Rchain.Acceptance.a_commit_that_keeps_the_escrow_creates_value,
+      `Rchain.Acceptance.an_overcredit_creates_value],
+    falsifiable := "Credit `amount + 1` and `an_overcredit_creates_value` holds — one unit is \
+      created; credit the payee while leaving the record `prepared` and \
+      `a_commit_that_keeps_the_escrow_creates_value` holds — the escrow is counted twice. In Rust, \
+      the `100 -> 60 -> 40` commit and the `100 -> 70 -> 100` abort are the two round-trip \
+      witnesses, and the abort path restores shard A while leaving the destination empty.",
+    note := "**What this law does not claim.** Idempotence is Law 28's, cited \
+      (`Rchain.txnCommit_idempotent`, `Rchain.txnAbort_idempotent`); the `checked_add` overflow \
+      refusal is a Rust refinement not modelled. The account-untouched half needs `src != dst`, \
+      because a self-payment's commit credits the payer's own balance." },
+
+  { number := 98, clause := "c", layer := "Casper",
+    statement := "**The instance is the sum of its legs, under one decision.** A committed instance \
+      credits each destination by its leg's escrow; an aborted instance refunds each source; the \
+      summed totals equal the per-leg totals, so no leg's move is counted twice and no value is \
+      created or lost. The one decision is Law 27's, cited.",
+    status := .provedModel,
+    declarations := [`Rchain.Acceptance.Book, `Rchain.Acceptance.Book.commit,
+      `Rchain.Acceptance.Book.abort, `Rchain.Acceptance.Book.total,
+      `Rchain.Acceptance.listSum, `Rchain.Acceptance.a_commit_conserves_one_leg,
+      `Rchain.Acceptance.a_committed_instance_conserves_the_totals,
+      `Rchain.Acceptance.a_committed_instance_credits_the_leg_amounts,
+      `Rchain.Acceptance.an_abort_conserves_one_leg,
+      `Rchain.Acceptance.an_aborted_instance_conserves_the_totals,
+      `Rchain.Acceptance.an_aborted_instance_refunds_the_leg_amounts,
+      `Rchain.Acceptance.Decision, `Rchain.Acceptance.mixedDecision,
+      `Rchain.Acceptance.a_mixed_instance_is_not_one_decision,
+      `Rchain.Acceptance.badCommit, `Rchain.Acceptance.a_double_credit_creates_value],
+    axioms := [],
+    rust := ["casper/src/gateway/mod.rs"],
+    rustWitness := ["casper/tests/cross_shard_txn.rs:two_shard_2pc_commits_all",
+      "casper/tests/cross_shard_txn.rs:two_shard_2pc_aborts_all_when_a_leg_fails",
+      "casper/tests/gateway_txn.rs:gateway_moves_the_escrow_on_every_leg"],
+    witness := [`Rchain.Acceptance.a_committed_instance_conserves_the_totals,
+      `Rchain.Acceptance.a_committed_instance_credits_the_leg_amounts,
+      `Rchain.Acceptance.an_aborted_instance_conserves_the_totals,
+      `Rchain.Acceptance.an_aborted_instance_refunds_the_leg_amounts,
+      `Rchain.Acceptance.a_mixed_instance_is_not_one_decision,
+      `Rchain.Acceptance.a_double_credit_creates_value],
+    falsifiable := "Apply commit to one leg and abort to another (`mixedDecision`): \
+      `a_mixed_instance_is_not_one_decision` is the decided counterexample, and the instance is no \
+      longer one decision's. Credit both accounts from the escrow (`badCommit`): the instance's \
+      total grows by the escrow, which `a_double_credit_creates_value` states. The Rust \
+      commit-all and abort-all witnesses pin the two arms across the two shards.",
+    note := "The `Book` is the accounting shape after 98a/98b's bridge from the participant verbs; \
+      it does not model phase-two delivery failure or the coordinator's retry loop (99 covers the \
+      ordering; C161 records the delivery residual). The one decision is Law 27's \
+      (`Rchain.every_leg_reaches_the_one_decision`), and the once-only move is Law 28's, both \
+      cited rather than reproved." },
+
+  { number := 99, clause := "a", layer := "Casper",
+    statement := "**No phase-two effect without a terminal decision.** An undecided coordinator \
+      record applies nothing; a decided one applies the single verb to exactly the legs that voted \
+      ready. The decision is durable before the effect (`drive` writes the record, then \
+      `apply_phase_two`), so a crash between them cannot deliver a decision that was never \
+      recorded.",
+    status := .provedModel,
+    declarations := [`Rchain.Acceptance.hasVote, `Rchain.Acceptance.voteFor,
+      `Rchain.Acceptance.phaseTwo, `Rchain.Acceptance.phaseTwoUnguarded,
+      `Rchain.Acceptance.readyRecord, `Rchain.Acceptance.pendingRecord,
+      `Rchain.Acceptance.an_undecided_record_applies_nothing,
+      `Rchain.Acceptance.a_decided_record_applies_the_ready_legs,
+      `Rchain.Acceptance.a_phase_two_without_the_terminal_guard_applies_before_a_decision],
+    axioms := [],
+    rust := ["casper/src/gateway/mod.rs", "casper/src/gateway/ledger.rs"],
+    rustWitness := ["casper/src/gateway/mod.rs:apply_phase_two_returns_early_for_an_undecided_record",
+      "casper/src/gateway/mod.rs:apply_phase_two_skips_legs_that_did_not_vote_ready",
+      "casper/tests/gateway_faults.rs:a_decision_that_cannot_be_written_sends_no_phase_two"],
+    witness := [`Rchain.Acceptance.an_undecided_record_applies_nothing,
+      `Rchain.Acceptance.a_decided_record_applies_the_ready_legs,
+      `Rchain.Acceptance.a_phase_two_without_the_terminal_guard_applies_before_a_decision],
+    falsifiable := "Drop the `state.IsTerminal` guard: `phaseTwoUnguarded` applies a verb to a \
+      `prepared` record's ready legs before a decision exists \
+      (`a_phase_two_without_the_terminal_guard_applies_before_a_decision`). In Rust, the ledger \
+      write that would carry the decision is failed in \
+      `a_decision_that_cannot_be_written_sends_no_phase_two`, which asserts the prepare deploy \
+      happened and no commit deploy did.",
+    note := "The model's `phaseTwo` returns the shards a verb is sent to, not the participant \
+      outcomes; it does not claim a failed phase-two delivery is retried (C161's residual). It \
+      cites Law 29's absorbing terminal record for why the durable decision cannot be moved after \
+      it is written." },
+
+  { number := 99, clause := "b", layer := "Casper",
+    statement := "**Every drive reaches a terminal state.** Phase one records a vote per leg; a \
+      record still undecided afterwards — including a record with no legs — aborts, so `drive` never \
+      returns a `prepared` record. The fallback is the branch that makes recovery total.",
+    status := .provedModel,
+    declarations := [`Rchain.Acceptance.prepareLoop, `Rchain.Acceptance.prepareAll,
+      `Rchain.Acceptance.decideRecord, `Rchain.Acceptance.drive,
+      `Rchain.Acceptance.driveNoFallback, `Rchain.Acceptance.leglessRecord,
+      `Rchain.Acceptance.a_drive_reaches_a_terminal_state,
+      `Rchain.Acceptance.a_legless_drive_aborts,
+      `Rchain.Acceptance.a_drive_without_the_fallback_can_stay_undecided],
+    axioms := [],
+    rust := ["casper/src/gateway/mod.rs", "casper/src/gateway/ledger.rs"],
+    rustWitness := ["casper/tests/gateway_faults.rs:drive_aborts_a_legless_record",
+      "casper/tests/gateway_faults.rs:recover_in_flight_aborts_when_a_leg_errors"],
+    witness := [`Rchain.Acceptance.a_drive_reaches_a_terminal_state,
+      `Rchain.Acceptance.a_legless_drive_aborts,
+      `Rchain.Acceptance.a_drive_without_the_fallback_can_stay_undecided],
+    falsifiable := "Remove the fallback (`driveNoFallback`): a legless record stays `prepared`, \
+      which `a_drive_without_the_fallback_can_stay_undecided` states. The Rust \
+      `drive_aborts_a_legless_record` asserts the abort and its reason.",
+    note := "The fallback is `drive`'s `record.state = Aborted` branch \
+      (`casper/src/gateway/mod.rs:394-401`), reached only by a record no leg list explains. The \
+      theorem is a branch property; its non-vacuity is the unguarded contrast, and Law 29's \
+      absorbing record supplies `a decided record is not re-decided`." },
+
+  { number := 99, clause := "c", layer := "Casper",
+    statement := "**A terminal record is returned untouched and contacts nobody.** `resume`/`run` \
+      on a decided transaction returns the record it found with an empty send list, so a retried \
+      request or a restart recovery cannot move funds again. The participant balance is unchanged \
+      because no verb is sent, which is Law 28's idempotence at the second line of defence.",
+    status := .provedModel,
+    declarations := [`Rchain.Acceptance.resume, `Rchain.Acceptance.resumeUnguarded,
+      `Rchain.Acceptance.a_terminal_record_is_returned_untouched,
+      `Rchain.Acceptance.a_terminal_resume_contacts_nobody,
+      `Rchain.Acceptance.a_resume_without_the_terminal_guard_contacts_a_decided_transaction],
+    axioms := [],
+    rust := ["casper/src/gateway/mod.rs"],
+    rustWitness := ["casper/tests/gateway_txn.rs:gateway_is_idempotent_under_txn_id",
+      "casper/tests/gateway_faults.rs:a_failed_phase_two_leaves_the_decision_intact",
+      "casper/tests/gateway_txn.rs:gateway_recovers_an_in_flight_transaction_from_the_ledger"],
+    witness := [`Rchain.Acceptance.a_terminal_record_is_returned_untouched,
+      `Rchain.Acceptance.a_terminal_resume_contacts_nobody,
+      `Rchain.Acceptance.a_resume_without_the_terminal_guard_contacts_a_decided_transaction],
+    falsifiable := "Without the terminal return, `resumeUnguarded` returns a non-empty send list \
+      for a decided record (`a_resume_without_the_terminal_guard_contacts_a_decided_transaction`). \
+      In Rust, `gateway_is_idempotent_under_txn_id` asserts the shard height does not move on a \
+      third run.",
+    note := "The lever is `run_under_lock`'s `existing.state.is_terminal() -> return Ok(existing)` \
+      (`casper/src/gateway/mod.rs:292-296`); the model returns a send list rather than balances, so \
+      the balance half is Law 28's participant idempotence, cited. `a_failed_phase_two...` shows \
+      the complementary direction: a failed delivery does not undo a durable decision." },
+
+  { number := 99, clause := "d", layer := "Casper",
+    statement := "**A resume never re-prepares a leg that already voted.** The phase-one loop skips \
+      a shard already in the vote set, so votes are monotone and a crash mid-phase-one cannot escrow \
+      a second time. The leg that already voted is not contacted; only the pending legs are.",
+    status := .provedModel,
+    declarations := [`Rchain.Acceptance.prepareLoop, `Rchain.Acceptance.sentBy,
+      `Rchain.Acceptance.sentByUnguarded,
+      `Rchain.Acceptance.prepareLoop_never_sends_initial_voted,
+      `Rchain.Acceptance.a_voted_leg_is_never_prepared,
+      `Rchain.Acceptance.a_resume_does_not_re_prepare_the_voted_leg,
+      `Rchain.Acceptance.a_resume_sends_only_the_pending_legs,
+      `Rchain.Acceptance.an_unguarded_prepare_re_prepares_a_voted_leg],
+    axioms := [],
+    rust := ["casper/src/gateway/mod.rs"],
+    rustWitness := ["casper/tests/gateway_faults.rs:run_resumes_an_existing_non_terminal_record",
+      "casper/tests/gateway_txn.rs:concurrent_calls_for_one_txn_id_open_the_transaction_once"],
+    witness := [`Rchain.Acceptance.prepareLoop_never_sends_initial_voted,
+      `Rchain.Acceptance.a_voted_leg_is_never_prepared,
+      `Rchain.Acceptance.a_resume_does_not_re_prepare_the_voted_leg,
+      `Rchain.Acceptance.a_resume_sends_only_the_pending_legs,
+      `Rchain.Acceptance.an_unguarded_prepare_re_prepares_a_voted_leg],
+    falsifiable := "Remove the skip (`sentByUnguarded`): a voted shard is sent a prepare again \
+      (`an_unguarded_prepare_re_prepares_a_voted_leg`). In Rust, \
+      `run_resumes_an_existing_non_terminal_record` asserts the already-voted leg's deploy list \
+      contains no `prepare` while the pending leg gets prepare then commit.",
+    note := "The loop carries the voted set explicitly rather than reading it back from \
+      `recordVote`, and the skipped branch returns the record unchanged, so a vote is never \
+      rewritten. The general invariant is \
+      `prepareLoop_never_sends_initial_voted`; the two decided positives are the finite witnesses \
+      the Rust test mirrors." },
+
+  { number := 100, clause := "a", layer := "Casper",
+    statement := "**Membership is admitted before a record opens.** An empty leg list or any leg on \
+      a shard this node does not validate opens no record and submits no deploy; every opened \
+      record names only members. A transaction for a foreign shard is a caller error, not a \
+      guaranteed abort.",
+    status := .provedModel,
+    declarations := [`Rchain.Acceptance.allMembers, `Rchain.Acceptance.openTxn,
+      `Rchain.Acceptance.openTxnUnguarded,
+      `Rchain.Acceptance.a_non_member_leg_opens_no_record,
+      `Rchain.Acceptance.an_empty_leg_list_opens_no_record,
+      `Rchain.Acceptance.an_opened_record_names_only_members,
+      `Rchain.Acceptance.an_unguarded_open_records_a_foreign_leg],
+    axioms := [],
+    rust := ["casper/src/gateway/mod.rs"],
+    rustWitness := ["casper/tests/gateway_txn.rs:gateway_rejects_a_non_member_shard",
+      "casper/tests/gateway_txn.rs:local_deploy_service_rejects_a_non_member_shard",
+      "casper/tests/gateway_faults.rs:recover_in_flight_refuses_a_leg_that_left_the_membership"],
+    witness := [`Rchain.Acceptance.a_non_member_leg_opens_no_record,
+      `Rchain.Acceptance.an_empty_leg_list_opens_no_record,
+      `Rchain.Acceptance.an_opened_record_names_only_members,
+      `Rchain.Acceptance.an_unguarded_open_records_a_foreign_leg],
+    falsifiable := "Drop the membership loop (`openTxnUnguarded`): a foreign leg opens a record and \
+      reaches a prepare (`an_unguarded_open_records_a_foreign_leg`). In Rust, the two non-member \
+      rejections pin the gateway and the deploy service; the recovery case pins a leg that left the \
+      membership between the open and the resume.",
+    note := "**What this law does not claim.** A member may still fail — a down member aborts under \
+      Law 27 — and no deploy is relayed (an explicit non-goal). The model's membership list is the \
+      node's `LocalShardDeployService` map; the gateway checks every leg before the durable `put` \
+      (`casper/src/gateway/mod.rs:301-331`)." },
+
+  { number := 100, clause := "b", layer := "Casper",
+    statement := "**A phase is anchored at the target shard's head, and an unreadable head refuses \
+      it.** The anchor is `current_height(shard)`, so a phase is admissible while the chain is \
+      within the deploy lifespan; a head that cannot be read produces a refusal rather than \
+      `valid_after = 0`, whose deploy is born expired once `head >= lifespan` (C166/C64). A refused \
+      phase cannot vote ready.",
+    status := .provedModel,
+    declarations := [`Rchain.Acceptance.PhaseResult,
+      `Rchain.Acceptance.phaseWithHead,
+      `Rchain.Acceptance.phaseWithHeadUnguarded,
+      `Rchain.Acceptance.phaseAnchor, `Rchain.Acceptance.BornExpired,
+      `Rchain.Acceptance.an_unreadable_head_refuses_the_phase,
+      `Rchain.Acceptance.a_refused_phase_is_not_a_ready_vote,
+      `Rchain.Acceptance.a_readable_head_votes,
+      `Rchain.Acceptance.a_readable_head_anchors_at_its_height,
+      `Rchain.Acceptance.a_refused_phase_has_no_anchor,
+      `Rchain.Acceptance.a_genesis_anchor_is_born_expired,
+      `Rchain.Acceptance.the_head_anchor_is_admissible,
+      `Rchain.Acceptance.the_unguarded_phase_votes_ready_without_a_head],
+    axioms := [],
+    rust := ["casper/src/gateway/mod.rs", "casper/src/txn_coordinator.rs",
+      "casper/src/validate.rs"],
+    rustWitness := ["casper/src/gateway/mod.rs:current_height_refuses_a_head_it_cannot_read",
+      "casper/src/gateway/mod.rs:current_height_reads_the_shards_head",
+      "casper/tests/gateway_faults.rs:an_unreadable_head_refuses_the_leg_and_aborts",
+      "casper/src/txn_coordinator.rs:run_2pc_anchors_each_phase_at_its_legs_height"],
+    witness := [`Rchain.Acceptance.an_unreadable_head_refuses_the_phase,
+      `Rchain.Acceptance.a_refused_phase_is_not_a_ready_vote,
+      `Rchain.Acceptance.a_genesis_anchor_is_born_expired,
+      `Rchain.Acceptance.the_head_anchor_is_admissible,
+      `Rchain.Acceptance.the_unguarded_phase_votes_ready_without_a_head],
+    falsifiable := "Answer a failed head read with `valid_after = 0` \
+      (`phaseWithHeadUnguarded`): the phase votes ready on a chain past the lifespan \
+      (`the_unguarded_phase_votes_ready_without_a_head`), and \
+      `a_genesis_anchor_is_born_expired` is the arithmetic that makes it a silent expiry. In Rust, \
+      `current_height_refuses_a_head_it_cannot_read` and the rewritten gateway fault case pin the \
+      refusal and the empty deploy list on the unreadable shard.",
+    note := "The expiry is the port's `valid_after <= height - lifespan` \
+      (`casper/src/validate.rs:77`), i.e. `anchor + lifespan <= head`. **The unknown-shard edge is \
+      not a law clause**: `current_height` returns `Ok(0)` for a shard the node does not hold, \
+      which is unreachable on a fresh run (membership precedes the phase) and, on recovery after a \
+      membership change, the deploy service's `member()` gate refuses the shard and the leg aborts \
+      (the recovery witness). A leg already voted ready on a removed shard keeps its escrow locked \
+      — a recorded residual, outside the law." },
+
+  { number := 100, clause := "c", layer := "Casper",
+    statement := "**Block and deploy ingress is shard-local, so every merge input is one shard.** An \
+      accepted block carries the node's shard id and every deploy in it carries that same id; \
+      therefore any list of accepted blocks — and hence any merge input — is one shard. This is why \
+      the shard-blind DAG and Law 97's per-shard merge accounting are safe: a merge can never mix \
+      shards because no foreign block or deploy enters one.",
+    status := .provedModel,
+    declarations := [`Rchain.Acceptance.Deploy, `Rchain.Acceptance.Block,
+      `Rchain.Acceptance.blockShardOk, `Rchain.Acceptance.deployShardOk,
+      `Rchain.Acceptance.accepted,
+      `Rchain.Acceptance.acceptedByBlockShardOnly,
+      `Rchain.Acceptance.an_accepted_block_is_the_nodes_shard,
+      `Rchain.Acceptance.every_deploy_in_an_accepted_block_is_the_nodes_shard,
+      `Rchain.Acceptance.a_merge_input_of_accepted_blocks_is_one_shard,
+      `Rchain.Acceptance.a_block_shard_check_alone_accepts_a_foreign_deploy],
+    axioms := [],
+    rust := ["casper/src/blocks/block_receiver.rs", "casper/src/validate.rs"],
+    rustWitness := ["casper/src/blocks/block_receiver.rs:a_block_from_another_shard_is_not_of_interest_at_the_receiver",
+      "casper/src/validate.rs:a_block_whose_deploy_is_from_another_shard_is_refused",
+      "casper/src/validate.rs:deploy_validators",
+      "casper/src/validate.rs:format_of_fields_rejects_non_ascii_shard_id"],
+    witness := [`Rchain.Acceptance.an_accepted_block_is_the_nodes_shard,
+      `Rchain.Acceptance.every_deploy_in_an_accepted_block_is_the_nodes_shard,
+      `Rchain.Acceptance.a_merge_input_of_accepted_blocks_is_one_shard,
+      `Rchain.Acceptance.a_block_shard_check_alone_accepts_a_foreign_deploy],
+    falsifiable := "Accept on the block's shard alone (`acceptedByBlockShardOnly`): a block whose \
+      deploy names another shard passes, which \
+      `a_block_shard_check_alone_accepts_a_foreign_deploy` states. At the receiver, \
+      `a_block_from_another_shard_is_not_of_interest_at_the_receiver` refuses the foreign block \
+      with a same-shard positive control, and \
+      `a_block_whose_deploy_is_from_another_shard_is_refused` pins the per-deploy half.",
+    note := "Models the shard halves of `check_if_of_interest` \
+      (`casper/src/blocks/block_receiver.rs:440-459`), `format_of_fields`' shard-id check and \
+      `deploys_shard_identifier` (`casper/src/validate.rs:11-27`, `:96-106`). **It does not model** \
+      hash, signature, version, phlo or pool checks (Laws 16/17/48/86), and it does not claim the \
+      DAG is otherwise shard-aware — it is not; safety comes from this ingress. Law 97's accounting \
+      is per shard and is cited, not reproved." },
+
+  { number := 100, clause := "d", layer := "Node",
+    statement := "**A deploy is dispatched to its named member or refused with the membership — never \
+      relayed.** The router has no relay outcome: a member deploy goes to exactly its own shard, a \
+      non-member is an error naming the membership, and a keyed lookup probes the primary first. A \
+      router whose primary is not a member is not constructible.",
+    status := .provedModel,
+    declarations := [`Rchain.Acceptance.Route, `Rchain.Acceptance.Router,
+      `Rchain.Acceptance.mkRouter, `Rchain.Acceptance.Router.isMember,
+      `Rchain.Acceptance.routeDeploy, `Rchain.Acceptance.relayRoute,
+      `Rchain.Acceptance.probeOrder, `Rchain.Acceptance.firstSome,
+      `Rchain.Acceptance.probe, `Rchain.Acceptance.sampleRouter,
+      `Rchain.Acceptance.answerChild,
+      `Rchain.Acceptance.a_deploy_is_dispatched_only_to_its_named_member,
+      `Rchain.Acceptance.a_non_member_deploy_is_refused,
+      `Rchain.Acceptance.a_router_needs_a_primary_that_is_a_member,
+      `Rchain.Acceptance.a_member_primary_makes_a_router,
+      `Rchain.Acceptance.the_primary_is_probed_first,
+      `Rchain.Acceptance.a_key_on_a_secondary_is_found_after_the_primary_misses,
+      `Rchain.Acceptance.a_relay_route_leaves_the_named_shard],
+    axioms := [],
+    rust := ["node/src/api/shard_routing.rs"],
+    rustWitness := ["node/src/api/shard_routing.rs:deploy_is_dispatched_to_the_named_shard",
+      "node/src/api/shard_routing.rs:deploy_to_a_non_member_shard_is_rejected_with_the_membership",
+      "node/src/api/shard_routing.rs:every_keyed_lookup_probes_the_members",
+      "node/src/api/shard_routing.rs:the_primary_answers_every_unrouted_method",
+      "node/src/api/shard_routing.rs:a_router_needs_a_primary_that_is_a_member"],
+    witness := [`Rchain.Acceptance.a_deploy_is_dispatched_only_to_its_named_member,
+      `Rchain.Acceptance.a_non_member_deploy_is_refused,
+      `Rchain.Acceptance.a_router_needs_a_primary_that_is_a_member,
+      `Rchain.Acceptance.the_primary_is_probed_first,
+      `Rchain.Acceptance.a_relay_route_leaves_the_named_shard],
+    falsifiable := "Route a non-primary's deploy to the primary (`relayRoute`): the deploy leaves \
+      the named member (`a_relay_route_leaves_the_named_shard`), which is the relay the port \
+      refuses. Dropping the membership check makes a foreign deploy reach the primary instead of \
+      the membership error; `deploy_to_a_non_member_shard_is_rejected_with_the_membership` reddens.",
+    note := "**This row is the router's shape, not a network claim.** No-relay is a statement that \
+      the dispatch function has no relay outcome; the only dispatch target is the named member. The \
+      primary-first probe and the unrouted-default are the router's policy, mirrored by the Rust \
+      table, not a liveness claim, and health fan-out and finality reads are out of the model \
+      (`node/src/api/shard_routing.rs:40-113`)." },
 ]
 
 def laws : List Law := lawsA ++ lawsB ++ lawsC

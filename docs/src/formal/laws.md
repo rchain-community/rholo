@@ -1,6 +1,6 @@
 # The laws — what they guarantee
 
-rholo's behaviour is pinned by **<!-- counts:laws -->94 laws<!-- counts:end -->** — one invariant per layer of
+rholo's behaviour is pinned by **<!-- counts:laws -->100 laws<!-- counts:end -->** — one invariant per layer of
 the system. A law says what must be true of the node (or of the model it is proved over), why it matters,
 and what would falsify it. This page is the **reading**: one line per law, grouped by layer. The checked
 register is the authority for status, declarations and falsifiers; where this page and the register
@@ -8,10 +8,10 @@ disagree, the register is right.
 
 > **How to read a law number**
 >
-> - **`Law N`** — a stable number, 1–91. Numbers are never reused; a new law takes the next one.
+> - **`Law N`** — a stable number, 1–100. Numbers are never reused; a new law takes the next one.
 > - **`Law Nx`** — a *clause* of a law whose parts have different proofs or statuses (`16a`, `16b`, …).
->   <!-- counts:clause-laws -->21<!-- counts:end --> laws carry clauses; the register has one **entry** per clause.
-> - **Entry** — one row of the register. **<!-- counts:laws -->94 laws<!-- counts:end --> = <!-- counts:entries -->134 entries<!-- counts:end -->**, and the
+>   <!-- counts:clause-laws -->27<!-- counts:end --> laws carry clauses; the register has one **entry** per clause.
+> - **Entry** — one row of the register. **<!-- counts:laws -->100 laws<!-- counts:end --> = <!-- counts:entries -->155 entries<!-- counts:end -->**, and the
 >   status counts are per entry. Laws 14, 16 and 86 have clauses on both sides of `proved-tied`/`proved-model`,
 >   which is why the number of *laws* proved is smaller than the sum of the two status columns.
 > - **`C###`** — an audit finding (`spec/audit/passes.md`), never a law. HAZOP rows are `F-U…`/`H-U…`,
@@ -47,6 +47,8 @@ disagree, the register is right.
 | 87 | **Decimal — retired** | the exact value algebra was **removed before mainnet** (issue #527); the clause rows are `retired` in the register and the record is [the decimal type, withdrawn](decimal-removed.md) |
 | 88–90 | **Disposition, liveness, hostlist** | a stored body is accounted for and the proposal gate is total in its anchor (88); jail before any vote reaches a bond (89); the published hostlist is earned, bounded and fresh (90) |
 | 91 | **The cost model** | a canonicalisation and a union charge their elements, `censure` its cubic fold, a tally its option lists; the register and the census that keep the shapes honest are [here](cost-model.md) |
+| 92–97 | **Replay evidence and split accounting** | a cost verdict is not a state verdict (93) and a replay failure's cause is provenance-dependent (92); a local fault has a bounded exit (94); the replay record is the play's order (95); a split execution does not change the accounting (96); a merge's accounting is total and single-counted (97) |
+| 98–100 | **Cross-shard acceptance** | the escrow moves exactly and conserves value (98); the decision is durable before its effects and recovery closes (99); every phase is a shard-local deploy and the DAG is single-shard (100) |
 
 ## Rholang — the language (Laws 1–6)
 
@@ -104,6 +106,10 @@ catalog does not silently shrink.
 | 27 | Two-phase commit: every leg that prepared reaches the coordinator's single decision. |
 | 28 | The leg verbs are idempotent under the transaction id; terminal verbs refuse a reversal. |
 | 29 | The decision is a function of the votes and a durable record a prepared participant can recover. |
+
+The acceptance language these four rows leave open — that the escrow moves exactly once and conserves
+value, that the decision is durable before its effects and recovery closes, and that every phase is a
+shard-local deploy — is Laws 98–100 ([below](#cross-shard-acceptance-laws-98100)).
 
 ## The surface a client writes and a matcher reads (Laws 30–43)
 
@@ -252,6 +258,42 @@ deleted, so the decision travels with the number — and the archived algebra is
 | 91b | `rho:gov:censure` charges `(U+1)³` for a member universe of `U`: a charge that covers every member and grows with the universe, bounding the fold's `U+1`-round fixed point. |
 | 91c | A tally charges the option lists it scans: a ranked tally the worst case of one scan per entry per round, an approval tally every approved entry. The member maps keep the universe bound; the lists are priced, not refused. |
 
+## Split execution and its accounting (Laws 95–97)
+
+| Law | What it guarantees |
+|---|---|
+| 95a | The replay record is built in the play's execution order: RSpace's newest-first log is walked in reverse, so a consume's candidate list is the play's own sequence. |
+| 95b | The inverted build changes the binding and the cost: the later request's COMM is offered first, the earlier request is suppressed, and the replayed cost differs (the 5576/5302 class). |
+| 96a | Verification is not optional: no effective batch policy has an enabled batch with verification off. |
+| 96b | A certified split equals the sequential fold on per-deploy cost, COMM log, failure flag and post-state; an unverified split can change all four (C360). |
+| 96c | Concurrent validation of a dependency-free block batch agrees with serial validation, because each block replays on its own fork at its committed pre-state; a shared runtime would not. |
+| 96d | A cross-node verdict disagreement is not published: only agreement is reconciled; a difference is attributed and bounded, never silently published. |
+| 97a | Every conflict-scope chain is classified (kept, rejected with a reason, or final-scope rejected); every rejection carries a non-zero reason. |
+| 97b | No kept effect is silently lost: the coverage check is multiset-sensitive, so a duplicate occurrence cannot pass as a set. |
+| 97c | A cost move is applied at most once; a seen slot is skipped and an overdraft is refused, not invented. |
+| 97d | Independent chains commute (Law 86c's state half) and their charges add (the cost half). |
+
+## Cross-shard acceptance (Laws 98–100)
+
+The cross-shard protocol's shape is Laws 26–29. These rows carry the **acceptance language** that
+shape leaves open: what the escrow verbs do to balances, the ordering between a decision and its
+effects, and the shard-local scope that makes the rest safe. There is no M1–M6 gate for cross-shard
+transactions; acceptance is the register plus the resolution of issue #33.
+
+| Law | What it guarantees |
+|---|---|
+| 98a | A prepare debits the payer by exactly the amount, leaves the payee untouched and records the escrow; the payer + payee + escrow total is unchanged. |
+| 98b | A commit credits the payee exactly the escrow; an abort refunds the payer exactly it; each releases the escrow, so the total is unchanged. Commit is not a mint and abort is not a second payment. |
+| 98c | A multi-shard instance applies one decision to every leg and its totals are the legs': committed credits sum, aborted refunds sum, and a mixed decision is the failure shape. |
+| 99a | No phase-two effect without a terminal decision: an undecided record applies nothing; a decided one applies the one verb to the legs that voted ready. |
+| 99b | Every drive reaches a terminal state, including the no-legs abort; a record cannot be left in flight by a failure to decide. |
+| 99c | A terminal record is returned untouched and contacts nobody, so a retry or restart cannot move funds again. |
+| 99d | A resume never re-prepares a leg that already voted; votes are monotone, so a crash mid-phase-one cannot escrow twice. |
+| 100a | Membership is admitted before a record opens: an empty or foreign leg list opens no record and submits no deploy, and every opened record names only members. |
+| 100b | A phase is anchored at the target shard's head; an unreadable head refuses the phase (it cannot vote ready), and a genesis anchor is born expired once `head ≥ lifespan` (C166/C64). |
+| 100c | Block and deploy ingress is shard-local, so every accepted block and every merge input is one shard — the reason the shard-blind DAG and Law 97's accounting are safe per shard. |
+| 100d | A deploy is dispatched to its named member or refused with the membership, never relayed; a keyed lookup probes the primary first. |
+
 ## Proved, assumed, and open
 
 The register classifies every entry; the words mean different things:
@@ -259,16 +301,16 @@ The register classifies every entry; the words mean different things:
 - **proved-tied** — proved, *and* tied to the node by a conformance corpus the Rust consumer runs.
   <!-- counts:proved-tied-entries -->31<!-- counts:end --> entries.
 - **proved-model** — proved about a model that a person keeps in sync with the Rust.
-  <!-- counts:proved-model-entries -->89<!-- counts:end --> entries.
+  <!-- counts:proved-model-entries -->110<!-- counts:end --> entries.
 - **axiom-by-design** — a primitive assumed rather than proved (cryptography): <!-- counts:axioms -->10 axioms<!-- counts:end --> across the tree.
 - **owed / deferred** — stated, with the proof or the decision outstanding; **open** — a recorded design
   question, not a proof gap; **vacuous** — proved but restating its own definition (kept visible, never
   counted as coverage); **orphaned** — out of scope (the Rosette rows); **retired** — the port has no
   rule of that shape, evidenced by naming the code that was read.
 
-The count arithmetic, in one sentence: **<!-- counts:laws -->94 laws<!-- counts:end -->, <!-- counts:entries -->134 entries<!-- counts:end -->**, because <!-- counts:clause-laws -->21<!-- counts:end --> laws
-carry clauses; **<!-- counts:proved-laws -->86<!-- counts:end --> laws are proved in at least one clause**, split over entries as
-<!-- counts:proved-tied-entries -->31<!-- counts:end --> tied and <!-- counts:proved-model-entries -->89<!-- counts:end --> over the model. The two status columns overlap on
+The count arithmetic, in one sentence: **<!-- counts:laws -->100 laws<!-- counts:end -->, <!-- counts:entries -->155 entries<!-- counts:end -->**, because <!-- counts:clause-laws -->27<!-- counts:end --> laws
+carry clauses; **<!-- counts:proved-laws -->92<!-- counts:end --> laws are proved in at least one clause**, split over entries as
+<!-- counts:proved-tied-entries -->31<!-- counts:end --> tied and <!-- counts:proved-model-entries -->110<!-- counts:end --> over the model. The two status columns overlap on
 laws 14, 16 and 86, which is why they do not add up to the law-level union. No total on this page is
 hand-written: the spans are emitted from the register.
 
@@ -277,7 +319,7 @@ hand-written: the spans are emitted from the register.
 - [`spec/LAWS.md`](../../../spec/LAWS.md) — the generated tables: every entry's status, declarations,
   axioms, witnesses and falsifier. **The authority.**
 - [`spec/INVENTORY.md`](../../../spec/INVENTORY.md) — the long-form catalogue with the Rust realization per
-  law. Its hand-written table currently ends at **Law 77**; the register covers 1–91, and where the two
+  law. Its hand-written table currently ends at **Law 77**; the register covers 1–100, and where the two
   disagree the register is right.
 - [The laws → Rust code](../contributor/laws-to-rust.md) — per-law Lean/Rust anchors and tests, scoped to
   Laws 1–29 by design.

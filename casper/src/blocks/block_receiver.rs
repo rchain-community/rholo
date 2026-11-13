@@ -943,6 +943,47 @@ pub fn apply_with_queue_observer(
 mod tests {
     use super::*;
 
+    /// **Law 100c** — the receiver's shard gate. The same signed block is of interest to its own
+    /// shard and not to a sibling shard. The positive control is the point: without it, a false
+    /// answer could be an invalid fixture (a bad hash or signature) rather than the shard check.
+    #[tokio::test]
+    async fn a_block_from_another_shard_is_not_of_interest_at_the_receiver() {
+        use rchain_models::block::state_hash::StateHash;
+        use rchain_models::casper::protocol::casper_message::RholangState;
+        use rchain_models::validator::Validator;
+        use rchain_shared::log::NopLog;
+        use rchain_shared::refined::{BlockHeight, SeqNum};
+
+        let identity = crate::validator_identity::ValidatorIdentity::from_hex(
+            "67e56582298859ddae725f972992a07c6c4fb9f62a8fff58ce3ca926a1063530",
+        )
+        .expect("identity");
+        let block = crate::proto_util::unsigned_block_proto(
+            1,
+            "root".to_string(),
+            BlockHeight::try_from(0).expect("height"),
+            Validator::from_slice(identity.public_key.bytes()),
+            SeqNum::try_from(0).expect("seq"),
+            StateHash::new([0u8; 32]),
+            StateHash::new([0u8; 32]),
+            vec![],
+            BTreeMap::new(),
+            BTreeSet::new(),
+            RholangState::default(),
+            0,
+        );
+        let signed = identity.sign_block(&block).expect("sign");
+
+        assert!(
+            check_if_of_interest(&signed, "root", &NopLog, LogSource::new("test")).await,
+            "the fixture is a valid block for its own shard"
+        );
+        assert!(
+            !check_if_of_interest(&signed, "/root/child", &NopLog, LogSource::new("test")).await,
+            "a block whose shard differs from the node's is not of interest"
+        );
+    }
+
     #[test]
     fn pending_blocks_counts_the_blocks_st_queue_the_cap_is_on() {
         let state = BlockReceiverState::<String>::new();

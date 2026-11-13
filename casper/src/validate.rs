@@ -1164,6 +1164,18 @@ mod tests {
         assert!(!block_hash(&b));
     }
 
+    /// **Law 100c** — a block whose deploy names another shard is refused by the per-deploy half of
+    /// the shard gate, even when the block's own shard id is the node's.
+    #[test]
+    fn a_block_whose_deploy_is_from_another_shard_is_refused() {
+        let mut b = block();
+        b.state.deploys = vec![deploy(0, 10, "/root/child")];
+        assert_eq!(
+            deploys_shard_identifier(&b, "/root"),
+            BlockStatus::InvalidDeployShardId
+        );
+    }
+
     #[test]
     fn deploy_validators() {
         let mut b = block();

@@ -7,12 +7,12 @@ gates it) is in [`../docs/src/contributor/laws-to-rust.md`](../docs/src/contribu
 
 **Scope note.** This long-form table ends at **Law 77**. The register
 ([`LAWS.md`](LAWS.md), emitted from `Rchain/Laws.lean` and refused stale by the gate) is the authority
-for **Laws 1–94**: rows 78–94 — the developer allocation and its vesting, root publication, the
+for **Laws 1–100**: rows 78–100 — the developer allocation and its vesting, root publication, the
 verified-answer join, the validator lifecycle, the trust model, the genesis anchor, the fringe state,
 admission/concurrency (86), the **retired** decimal value algebra (87 — removed before mainnet,
 issue #527), block disposition (88), PoS liveness
 enforcement (89), the published node hostlist (90), the collection/censure charge magnitudes
-(91), provenance-dependent replay-failure classification (92), the independence of a cost verdict from a state verdict (93), and the bounded exit of a local fault (94) — are in the register and read in
+(91), provenance-dependent replay-failure classification (92), the independence of a cost verdict from a state verdict (93), the bounded exit of a local fault (94), the replay record's execution order (95), a split execution's accounting (96), the merge's accounting (97), cross-shard value conservation and the durable decision (98–99), and shard-local ingress/routing (100) — are in the register and read in
 [`../docs/src/formal/laws.md`](../docs/src/formal/laws.md).
 Backfilling them here is open work; where this page and the register disagree, the register is right.
 
@@ -52,7 +52,9 @@ The **cross-shard extension (Laws 26–29)** lifts that discipline from one shar
 is deterministic (Law 26, a typed `ShardId`), and a cross-shard transaction is a **two-phase commit** —
 a Git-pull-request flow (propose → stage → review → merge, or close) whose coordinator commits on
 every participant or aborts on every one (Law 27), with idempotent legs (Law 28) and a durable,
-content-addressed decision record (Law 29) — see `Rchain/CrossShard.lean` and
+content-addressed decision record (Law 29). The acceptance laws 98–100 carry the value conservation,
+the decision-before-effect ordering and recovery closure, and the shard-local ingress/routing — see
+`Rchain/CrossShard.lean`, `Rchain/CrossShardAcceptance.lean` and
 [`../docs/src/formal/cross-shard-transactions.md`](../docs/src/formal/cross-shard-transactions.md).
 
 **Status legend**

@@ -28,6 +28,10 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Assert isolation, rollback, and negative controls
         run: python3 -m unittest discover -s tests -p 'test_n447_*.py' -v
+      - name: Assert the mature-join arm's evidence extraction
+        # The arm's sequence witness is what proves a reactivated validator did not reuse a
+        # sequence; a one-character unpacking defect read 5 for 15 and passed (#576).
+        run: python3 -m unittest discover -s tests -p 'test_n457_mature_join.py' -v
       - name: Parse the full fork-point harness
         run: python3 -m py_compile tools/n420-fork-point.py tools/n447_partition.py
 

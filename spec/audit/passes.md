@@ -12552,3 +12552,51 @@ named, operator-visible state. What it does **not** do: heal the fork (the guard
 operator rotates the key or withdraws the bond), or substitute for the supported procedure when the
 operator has a choice. The M3 off-host positive and candidate-binary acceptance remain the
 envelope's, and no run here is mainnet evidence. No deployment is authorized.
+
+## 162. Split execution and its accounting: Laws 95–97 (#564, #428)
+
+The register proved the surrounding invariants but carried no **cost** through the parallel paths.
+Law 11 modelled replay as an occurrence equivalence and explicitly not the order; Law 25 proved the
+*state* a speculative run publishes; Law 86c proved independent `StateChange`s commute, not that their
+charges add; Law 93 separated the cost verdict from the state verdict but not the order that produces
+it. #428's M5 asks for the merge's per-chain accounting, and #564's acceptance asks for play cost ==
+replay cost per deploy and per block. This pass formalises the missing carrier in three rows.
+
+**Law 95 — the replay record is the play's execution order.** RSpace prepends events
+(`rspace/src/rspace.rs:202-216`); `build_replay_data` files COMMs under their consume/produce refs in
+the order it walks that newest-first log. The fix walks it reversed
+(`rspace/src/replay_rspace.rs:129-167`). The model (`Rchain/RSpace/ReplayOrder.lean`) has two builders
+— the chronological one and the defect's unreversed shape — and a two-request witness that shares a
+datum: chronological charges the earlier COMM (5) and suppresses the later request; newest-first
+charges the later COMM (3) and suppresses the earlier. The real incident's 5576/5302 pair is evidence;
+the Rust witness (`casper/tests/replay_trace_order.rs::pending_peeks_replay_with_exact_cost_and_state`)
+pins the real costs 1860 / 2606 / 4844 and exact-cost replay. The RCHAIN-3505 failed-deploy trace mask
+is out of scope and stays Law 11's recorded hazard.
+
+**Law 96 — a split execution does not change the accounting.** Three splits: the batched play path
+(`casper/src/runtime_manager.rs:1793-1895`), concurrent validation of dependency-free blocks
+(`casper/src/blocks/block_processor.rs:536-620`), and cross-node replay. The model
+(`Rchain/SplitAccounting.lean`) states the four clauses: an enabled batch always verifies
+(`canonical_batch_policy`, C360's `[986, 984, 984, 984]` is the unverified counterexample); a certified
+batch equals the sequential oracle on cost, log, failure flag and post-state; concurrent validation on
+per-block forks agrees with serial; and a cross-node disagreement publishes nothing (Law 92 attributes
+it, Law 94 bounds it). It does not claim a speedup — M1/M2 measure that.
+
+**Law 97 — a merge's accounting is total and single-counted.** The model
+(`Rchain/Casper/MergeAccounting.lean`) classifies every conflict-scope chain (kept / rejected with a
+non-zero reason / final-scope rejected); checks kept effects as a **multiset** (`covers_occurrences`,
+`casper/src/merging.rs:391-403`) so the duplicate case the #420 incident lived in cannot pass as a set;
+applies a cost move at most once and refuses an overdraft (`compose_cost_accounting`,
+`casper/src/merging.rs:1616-1630`); and adds independent chains' charges (the state half is Law 86c's).
+It states the set relation rather than the fixture identity: `resolve_conflict_set_with_census` returns
+`kept = conflictSet \ enforce_rejected \ resolved` and `rejected = resolved ∪ enforce_rejected`
+(`sdk/src/dag/merging.rs:926-978`), so `kept + rejected = conflict` is a control, not the general
+theorem. The fee/refund question stays retired (Law 48).
+
+**What this pass does not do.** It does not run M1–M6, and none of the three laws is evidence for
+them: a proved invariant is not a measured capacity, an off-host join, a multi-host finality run, the
+historical 840→841 witness, or an independent sign-off. It does not touch cross-shard transactions
+(Laws 26–29) or change consensus. The Law 96c direct Rust verdict-equality witness
+(`concurrent_forked_replays_agree_with_serial_replays`) replays two dependency-free blocks
+concurrently on per-block forks and compares each with its serial replay; the cap and fork tests pin
+the dispatch mechanism. The next `C` number remains unused: these are model rows, not findings.

@@ -5281,6 +5281,257 @@ def lawsC : List Law := [
       consensus invariant, but the Rust witness refuses a second reset at the same anchor; the \
       operator's explicit resume remains the fallback when no anchor was named, the reset was \
       disabled, or the anchor has already had its attempt." },
+
+  { number := 95, clause := "a", layer := "RSpace",
+    statement := "**The replay record is built in the play's execution order.** RSpace prepends \
+      every event to its log, so the log is newest-first (`rspace/src/rspace.rs:202-216`), while \
+      `build_replay_data` files each recorded COMM under its consume/produce refs in the order it \
+      walks that log (`rspace/src/replay_rspace.rs:129-167`). A chronological build makes the \
+      candidate list a consume sees the play's own sequence; the newest-first builder is the \
+      defect's shape. The law fixes the order; the cost consequence is clause b.",
+    status := .provedModel,
+    declarations := [`Rchain.ReplayOrder.Event, `Rchain.ReplayOrder.ReplayData,
+      `Rchain.ReplayOrder.build, `Rchain.ReplayOrder.buildNewestFirst,
+      `Rchain.ReplayOrder.the_chronological_build_files_the_play_order,
+      `Rchain.ReplayOrder.the_newest_first_build_files_the_later_comm_first],
+    axioms := [],
+    rust := ["rspace/src/replay_rspace.rs", "rspace/src/rspace.rs"],
+    rustWitness := ["casper/tests/replay_trace_order.rs:pending_peeks_replay_with_exact_cost_and_state"],
+    witness := [`Rchain.ReplayOrder.the_chronological_build_files_the_play_order,
+      `Rchain.ReplayOrder.the_newest_first_build_files_the_later_comm_first],
+    falsifiable := "Delete `.rev()` from `build_replay_data` — that is exactly the newest-first \
+      builder — and the chronological theorem is false of the code: the witness list is \
+      `[later, earlier]` and the Rust witness returns `ReplayCostMismatch` again. The model's two \
+      builder functions are the two code shapes; the `[5, 3]` trace is the smallest in which they \
+      disagree.",
+    note := "**What this law does not claim.** It does not model the produce-side map, the matcher, \
+      or the RCHAIN-3505 workaround that drops the reverse half for a failed deploy \
+      (`casper/src/runtime_replay.rs:733-749`); that mask is Law 11's recorded hazard, not this \
+      law's. The incident's 5576/5302 pair is evidence, not a model witness: the Lean witness is a \
+      decided trace, and the Rust test pins 1860 / 2606 / 4844. The model abstracts \
+      produce/consume identity to `Nat` refs because the law is about order, not hashing." },
+
+  { number := 95, clause := "b", layer := "RSpace",
+    statement := "**The inverted order changes the binding and the cost.** On a two-request witness \
+      sharing one persistent consume's datum, the chronological list offers the earlier COMM (cost \
+      5) and the later request is suppressed; the newest-first list offers the later COMM (cost 3) \
+      and the earlier request is suppressed. The record is the same; the order is not.",
+    status := .provedModel,
+    declarations := [`Rchain.ReplayOrder.Store, `Rchain.ReplayOrder.run,
+      `Rchain.ReplayOrder.the_two_builds_differ_on_the_witness,
+      `Rchain.ReplayOrder.the_inversion_changes_the_cost,
+      `Rchain.ReplayOrder.a_persistent_datum_survives_a_fire,
+      `Rchain.ReplayOrder.a_non_persistent_datum_is_consumed],
+    axioms := [],
+    rust := ["rspace/src/replay_rspace.rs"],
+    rustWitness := ["casper/tests/replay_trace_order.rs:pending_peeks_replay_with_exact_cost_and_state"],
+    witness := [`Rchain.ReplayOrder.the_inversion_changes_the_cost,
+      `Rchain.ReplayOrder.the_two_builds_differ_on_the_witness,
+      `Rchain.ReplayOrder.a_persistent_datum_survives_a_fire],
+    falsifiable := "Make the build the unreversed walk: `run` then charges the later COMM first, \
+      the first conjunct of the cost theorem decides to 3 instead of 5, and the Rust witness reddens \
+      with the cost mismatch. The persistence control is falsified by making the datum persistent \
+      always true, which changes the second request's outcome and fails the non-persistent control.",
+    note := "The model's `run` is the selector's order-sensitivity, not a full replay: it charges \
+      the cost and continuation of the **first** offered COMM and suspends when none is offered, \
+      which is what `get_comm_and_consume_candidates` does (`rspace/src/replay_rspace.rs:235-246`). \
+      The 274-phlo class is the shape; the incident's exact deploy set is not modelled." },
+
+  { number := 96, clause := "a", layer := "Scheduler",
+    statement := "**Verification is not optional.** The effective batch policy — what the runtime \
+      manager stores after `with_batch_policy`/`set_batch_policy` — has no state with an enabled \
+      batch and verification off; the canonicaliser forces `verify` \
+      (`casper/src/runtime_manager.rs:501-513`).",
+    status := .provedModel,
+    declarations := [`Rchain.Split.BatchPolicy, `Rchain.Split.canonicalize,
+      `Rchain.Split.the_canonicaliser_forces_verification,
+      `Rchain.Split.an_unverified_policy_is_not_canonical],
+    axioms := [],
+    rust := ["casper/src/runtime_manager.rs"],
+    rustWitness := ["casper/src/runtime_manager.rs:a_batch_policy_without_verification_is_not_representable"],
+    witness := [`Rchain.Split.the_canonicaliser_forces_verification,
+      `Rchain.Split.an_unverified_policy_is_not_canonical],
+    falsifiable := "Delete the `verify` forcing from `canonical_batch_policy`; the Rust witness \
+      reddens because the runtime then accepts an enabled unverified policy. The raw struct literal \
+      is constructible — the law is about the effective policy, which is why the Rust test drives \
+      the canonicaliser rather than the fields.",
+    note := "The model's `canonicalize` is `casper/src/runtime_manager.rs:508-513`; the theorem is \
+      the statement that the canonicaliser leaves no unverified enabled batch." },
+
+  { number := 96, clause := "b", layer := "Scheduler",
+    statement := "**A certified split equals the fold.** For a canonical policy the published \
+      per-deploy cost, COMM log, failure flag and post-state are the sequential oracle's; a failed \
+      verification is the whole-block sequential fallback. An unverified split can record a \
+      different cost and state — C360's `[986, 984, 984, 984]` and the different post-state.",
+    status := .provedModel,
+    declarations := [`Rchain.Split.Outcome, `Rchain.Split.publishedBatch,
+      `Rchain.Split.a_canonical_policy_publishes_the_oracle,
+      `Rchain.Split.an_unverified_policy_can_change_the_cost],
+    axioms := [],
+    rust := ["casper/src/runtime_manager.rs"],
+    rustWitness := ["casper/tests/determinism.rs:play_and_replay_agree_per_deploy_for_same_key_multi_transfer"],
+    witness := [`Rchain.Split.a_canonical_policy_publishes_the_oracle,
+      `Rchain.Split.an_unverified_policy_can_change_the_cost],
+    falsifiable := "Disable the verification comparison in the batched path (or run it with \
+      verification off): the batched costs `[986, 984, 984, 984]` and the post-state differ from \
+      the sequential oracle (C360, matrix M08), which is exactly the unverified witness; the Rust \
+      test that compares the two play paths reddens.",
+    note := "The state half is Law 25's and Law 86c's; this row adds the per-deploy carrier (cost, \
+      log, failure flag). The model's `speculative` is a `+1` stand-in for C360's observed \
+      difference; the Rust witness carries the real numbers." },
+
+  { number := 96, clause := "c", layer := "Scheduler",
+    statement := "**Concurrent validation of a dependency-free batch agrees with serial \
+      validation.** Each block replays on its own fork seeded at its committed pre-state and \
+      insertion remains serial (`casper/src/blocks/block_processor.rs:536-620`, \
+      `casper/src/runtime_manager.rs:670-688`); a shared replay runtime would change a verdict.",
+    status := .provedModel,
+    declarations := [`Rchain.Split.Block, `Rchain.Split.Verdict,
+      `Rchain.Split.serialValidation, `Rchain.Split.concurrentValidation,
+      `Rchain.Split.sharedValidation,
+      `Rchain.Split.concurrent_validation_agrees_with_serial,
+      `Rchain.Split.a_shared_replay_runtime_changes_a_verdict],
+    axioms := [],
+    rust := ["casper/src/blocks/block_processor.rs", "casper/src/runtime_manager.rs"],
+    rustWitness := ["casper/src/blocks/block_processor.rs:the_parallel_validation_cap_is_never_zero",
+      "casper/src/runtime_manager.rs:fork_replay_runtime_replays_empty",
+      "casper/tests/determinism.rs:concurrent_forked_replays_agree_with_serial_replays"],
+    witness := [`Rchain.Split.concurrent_validation_agrees_with_serial,
+      `Rchain.Split.a_shared_replay_runtime_changes_a_verdict],
+    falsifiable := "Validate a batch against one shared replay runtime instead of a fork per block: \
+      the shared-runtime witness is that shape, and the per-block fork is what makes the equality \
+      true. `concurrent_forked_replays_agree_with_serial_replays` reddens if the concurrent replay \
+      does not reach the serial verdict; the cap test pins the concurrent path and the fork test \
+      pins the isolation.",
+    note := "The equality is a consequence of each block's replay being a function of its own \
+      committed pre-state; the dependency-free/antichain hypothesis is the processor's batch, not \
+      arbitrary blocks. It does not claim a speedup or a capacity result (M1/M2). The direct Rust \
+      witness replays two dependency-free blocks concurrently on per-block forks and compares each \
+      verdict with its serial replay." },
+
+  { number := 96, clause := "d", layer := "Scheduler",
+    statement := "**A cross-node verdict disagreement is not published.** Two verdicts are \
+      reconciled only by agreement; a difference publishes nothing and is attributed by provenance \
+      (Law 92) and bounded by the recovery state machine (Law 94), never silently reconciled.",
+    status := .provedModel,
+    declarations := [`Rchain.Split.publishAgreed, `Rchain.Split.publishLocal,
+      `Rchain.Split.a_disagreement_publishes_nothing,
+      `Rchain.Split.an_agreement_publishes_it,
+      `Rchain.Split.the_local_rule_publishes_a_disagreement],
+    axioms := [],
+    rust := ["casper/src/interpreter_util.rs", "casper/src/blocks/proposer/proposer.rs"],
+    rustWitness := ["casper/tests/determinism.rs:a_cost_only_tamper_is_refused_before_the_state_hash_is_compared"],
+    witness := [`Rchain.Split.a_disagreement_publishes_nothing,
+      `Rchain.Split.an_agreement_publishes_it,
+      `Rchain.Split.the_local_rule_publishes_a_disagreement],
+    falsifiable := "Publish the local verdict despite the peer's disagreement — the local rule \
+      exhibits it, and the incident's divergence reading was that shape; the agreed rule is what \
+      the node must keep. The Rust cost-only tamper test pins the refusal.",
+    note := "This is the composition of Law 92 (a self-built replay failure is a local fault) and \
+      Law 94 (a local fault has a bounded exit). It does not say the raw verdicts are equal — that \
+      is 96b's canonical-path statement; it says a difference is not reconciled into a \
+      publication." },
+
+  { number := 97, clause := "a", layer := "Casper",
+    statement := "**Every conflict-scope chain is classified, and every rejection has a reason.** A \
+      chain is kept, rejected by the conflict resolution, or rejected by a final-scope decision; a \
+      kept chain is neither resolved nor forced out; a rejected conflict-scope chain carries a \
+      non-zero reason (I1: it conflicts with a kept chain or depends on a rejected one). The \
+      final-scope ledger is named separately (`final_scope_rejected_chains`/`_deploys`).",
+    status := .provedModel,
+    declarations := [`Rchain.MergeAccounting.Verdict, `Rchain.MergeAccounting.classify,
+      `Rchain.MergeAccounting.every_chain_is_classified,
+      `Rchain.MergeAccounting.a_kept_chain_is_neither_resolved_nor_forced,
+      `Rchain.MergeAccounting.every_rejection_has_a_reason],
+    axioms := [],
+    rust := ["casper/src/merging.rs", "sdk/src/dag/merging.rs"],
+    rustWitness := ["casper/tests/n420_boundary_merge.rs:a_boundary_round_merge_keeps_the_base_states_user_write"],
+    witness := [`Rchain.MergeAccounting.every_chain_is_classified,
+      `Rchain.MergeAccounting.a_kept_chain_is_neither_resolved_nor_forced,
+      `Rchain.MergeAccounting.every_rejection_has_a_reason],
+    falsifiable := "Drop a chain from the classification (the defect's shape: a rejection visible \
+      nowhere, #280) — the totality theorem has no fourth state, and the kept theorem fails if a \
+      resolved chain is reported kept. Make the reason always zero — the non-zero conclusion of the \
+      reason theorem fails. The Rust witness asserts the report's partition and the I1/I2 \
+      emptiness.",
+    note := "**The fixture identity is not the general theorem.** \
+      `resolve_conflict_set_with_census` returns `kept = conflictSet \\ enforce_rejected \\ \
+      resolved` and `rejected = resolved ∪ enforce_rejected` (`sdk/src/dag/merging.rs:926-978`), \
+      so `kept + rejected = conflict` holds only when the final-scope decisions lie inside the \
+      conflict set. The n420 assertion is that fixture's control; this row states the set relation \
+      and the per-chain classification, which are general." },
+
+  { number := 97, clause := "b", layer := "Casper",
+    statement := "**No kept effect is silently lost.** The coverage check is multiset-sensitive: \
+      every occurrence a kept chain added or removed must occur in the combined change, so the \
+      duplicate-occurrence case (the #420 incident's shape) cannot pass as a set check.",
+    status := .provedModel,
+    declarations := [`Rchain.MergeAccounting.covers,
+      `Rchain.MergeAccounting.coverage_is_reflexive,
+      `Rchain.MergeAccounting.a_dropped_occurrence_breaks_coverage,
+      `Rchain.MergeAccounting.duplicate_occurrences_are_counted],
+    axioms := [],
+    rust := ["casper/src/merging.rs"],
+    rustWitness := ["casper/src/merging.rs:coverage_preserves_duplicate_occurrences_within_and_across_kept_chains"],
+    witness := [`Rchain.MergeAccounting.coverage_is_reflexive,
+      `Rchain.MergeAccounting.a_dropped_occurrence_breaks_coverage,
+      `Rchain.MergeAccounting.duplicate_occurrences_are_counted],
+    falsifiable := "Replace the multiset coverage with a set or `contains` check: the dropped \
+      duplicate is the case it misses, and the Rust duplicate-occurrence witness reddens. The \
+      positive is the reflexive coverage; the two decided instances keep it from passing on a \
+      single occurrence.",
+    note := "The coverage check is computed from the kept chains' `StateChange`s against the \
+      combined change (`casper/src/merging.rs:350-403`); it is an observation, not an input to the \
+      state — the report re-runs identically." },
+
+  { number := 97, clause := "c", layer := "Casper",
+    statement := "**A cost move is applied at most once.** A move whose `(payer, slot)` is already \
+      applied is skipped; a composition that would take a vault below zero is refused rather than \
+      invented — the fail-closed branch reachable when two accepted blocks spend one payer's REV \
+      without seeing each other.",
+    status := .provedModel,
+    declarations := [`Rchain.MergeAccounting.CostMove, `Rchain.MergeAccounting.applies,
+      `Rchain.MergeAccounting.applyOne,
+      `Rchain.MergeAccounting.a_seen_move_is_not_reapplied,
+      `Rchain.MergeAccounting.an_unseen_move_is_applied,
+      `Rchain.MergeAccounting.compose,
+      `Rchain.MergeAccounting.an_overdraft_is_refused,
+      `Rchain.MergeAccounting.a_funded_spend_is_composed],
+    axioms := [],
+    rust := ["casper/src/merging.rs"],
+    rustWitness := ["casper/tests/n420_boundary_merge.rs:sibling_hot_cell_merges_keep_one_value_and_name_a_rejection"],
+    witness := [`Rchain.MergeAccounting.a_seen_move_is_not_reapplied,
+      `Rchain.MergeAccounting.an_unseen_move_is_applied,
+      `Rchain.MergeAccounting.an_overdraft_is_refused,
+      `Rchain.MergeAccounting.a_funded_spend_is_composed],
+    falsifiable := "Apply every move unconditionally (drop the `seen` check): the seen-move \
+      theorem fails. Return a negative balance instead of refusing: the overdraft theorem fails. \
+      The Rust sibling-hot-cell witness pins the one-value/one-slot outcome; the parallel-register \
+      witness pins the parallel case.",
+    note := "The refusal is a merge-level `Err` (a local drop), not a block-validity verdict \
+      (`casper/src/merging.rs:1616-1630`). A rejected chain's effects are not applied; the \
+      rejection is recorded (`rejected_cost_accounted_chains`). It does not decide the fee/refund \
+      question (Law 48)." },
+
+  { number := 97, clause := "d", layer := "Casper",
+    statement := "**Independent chains commute and their charges add.** The state half is Law 86c's \
+      (independent `StateChange`s commute); the cost half is this law's: the merge's per-chain move \
+      totals are additive over the kept set.",
+    status := .provedModel,
+    declarations := [`Rchain.MergeAccounting.moveTotal, `Rchain.MergeAccounting.totalCost,
+      `Rchain.MergeAccounting.chainA, `Rchain.MergeAccounting.chainB,
+      `Rchain.MergeAccounting.independent_merges_commute_and_add],
+    axioms := [],
+    rust := ["casper/src/merging.rs", "rspace/src/merger/state_change.rs"],
+    rustWitness := ["casper/tests/n420_boundary_merge.rs:parallel_register_shaped_rmws_leave_a_countable_channel"],
+    witness := [`Rchain.MergeAccounting.independent_merges_commute_and_add],
+    falsifiable := "Make the cost total non-additive (for example, subtract a shared fee once per \
+      merge): the additive theorem fails. The state half's falsifier is Law 86c's, which reddens if \
+      the merge orders dependent chains. The Rust parallel-register witness pins the state \
+      outcome.",
+    note := "The state half is cited to Law 86c, not reproved; this row adds the cost carrier. The \
+      model's two chains are a concrete disjoint pair; the general independence criterion is Law \
+      17c's `chainConflict`/`resolves`." },
 ]
 
 def laws : List Law := lawsA ++ lawsB ++ lawsC

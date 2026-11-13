@@ -119,6 +119,20 @@ was honest. Both are required, and both are deterministic.
 - `calculate_num_channel_diff` is checked, so a number channel cannot silently wrap into a wrong
   merged state (`spec/audit/passes.md` §6).
 
+- **the report is the ledger, not a second opinion (Law 97).** The conflict scope's chains are
+  classified kept, rejected with a reason, or rejected by a final-scope decision; every kept chain's
+  native slot, datum and continuation must occur in the combined change — the coverage check is
+  multiset-sensitive, so a duplicate occurrence cannot hide behind a set (`kept_effect_coverage`,
+  `casper/src/merging.rs:350-403`). A rejected chain's effects are not applied; the rejection is
+  recorded. Each accepted chain's cost moves are applied at most once — a chain whose slot winner has
+  seen it is skipped, and a composition that would take a vault below zero is refused rather than
+  invented (`compose_cost_accounting`, `casper/src/merging.rs:1616-1630`). The report is an
+  observation: re-running the merge produces the same post-state and the same report. **The fixture
+  identity `kept + rejected = conflict` is not the general theorem**: final-scope decisions can lie
+  outside the conflict set (`sdk/src/dag/merging.rs:926-978`), so the test's partition assertion is a
+  control, and the law states the set relation. The model is
+  [`spec/Rchain/Casper/MergeAccounting.lean`](../../../spec/Rchain/Casper/MergeAccounting.lean).
+
 ## Open items
 
 - **Charging a denied deploy.** RCHIP-02 says the deployer should not be charged and the validator

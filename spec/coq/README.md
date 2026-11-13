@@ -60,4 +60,4 @@ Two checks, both in [`tools/check-lean-conformance.sh`](../../tools/check-lean-c
 | `parMerge` (`Syntax.v`) | the port's `|` / `par_merge` — the same operation `Rchain/Par.lean` calls `parMerge` |
 | `cmpPar`, `sortPar` (`Sort.v`) | `models/src/sorter.rs` (or its Scala original, `legacy/models/src/main/scala/coop/rchain/models/rholang/sorter/ordering.scala`) — the comparator Lean's `Rchain/Sort.lean` defines and the register's law 1 is about |
 
-See [`../INVENTORY.md`](../INVENTORY.md) for the full catalog (<!-- counts:laws-entries -->94 laws and 134 entries<!-- counts:end -->).
+See [`../INVENTORY.md`](../INVENTORY.md) for the full catalog (<!-- counts:laws-entries -->97 laws and 144 entries<!-- counts:end -->).

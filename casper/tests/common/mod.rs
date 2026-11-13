@@ -136,7 +136,8 @@ pub struct ShardFaults {
     pub deploy_error: Option<String>,
     /// Fail every reply listen.
     pub listen_error: Option<String>,
-    /// Fail `get_latest_message` (the anchor then falls back to 0).
+    /// Fail `get_latest_message`. The coordinator must refuse the phase rather than anchor it at
+    /// genesis (AUDIT C64/C67).
     pub head_error: bool,
     /// Report this height as the shard's head instead of its deploy counter, so a test can tell
     /// "anchored at the head" from "anchored at 0" on a shard that has not produced blocks.
@@ -304,7 +305,13 @@ impl BlockApi for TestShardApi {
     }
 
     async fn get_latest_message(&self) -> ApiErr<BlockMetadata> {
-        let height = self.height.lock().map(|h| *h).unwrap_or(0);
+        if self.faults.head_error {
+            return Err("head unavailable (ShardFaults::head_error)".to_string());
+        }
+        let height = self
+            .faults
+            .reported_height
+            .unwrap_or_else(|| self.height.lock().map(|h| *h).unwrap_or(0));
         Ok(BlockMetadata {
             block_hash: rchain_models::block_hash::BlockHash::new([0u8; 32]),
             block_num: rchain_shared::refined::BlockHeight::try_from(height)

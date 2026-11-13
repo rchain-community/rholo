@@ -546,3 +546,26 @@ block-path mode, the write-record layer with its `try_acquire` certificate, disp
 pre-claiming, per-deploy fail-fast with the whole-set safety net, and the `validate_relaxed_block`
 oracle) is implemented on `feature/channel-scheduler`; the phase-by-phase account is
 [the on-chain validation phase plan](../contributor/onchain-validation-phases.md).
+
+### The split's accounting (Law 96)
+
+Law 25 says the *state* a speculative run publishes is the sequential oracle's. Law 96 carries the
+same rule through the three ways the port splits work, and through the **per-deploy cost carrier**,
+which is consensus-carried (the refund and executor payment are built from it) even though it is not
+part of the post-state hash:
+
+- **A batch of deploys** runs each deploy on a fork from the base
+  (`play_deploys_batched_with`, `casper/src/runtime_manager.rs:1793-1895`). The verification oracle
+  re-runs the block sequentially and compares each deploy's `cost`, `deploy_log`, `is_failed` and the
+  post-state; a mismatch returns `SpeculationInvalidated` and the whole block falls back to the
+  sequential path. `canonical_batch_policy` makes an enabled batch always verify — the pre-fix shape,
+  measured as C360, recorded costs `[986, 984, 984, 984]` and a different post-state.
+- **A batch of dependency-free blocks** is validated on one forked replay runtime per block and
+  inserted serially (`casper/src/blocks/block_processor.rs:536-620`). Each block reads only its own
+  committed pre-state, so the dispatch order cannot reach a verdict; a shared runtime would.
+- **Two nodes** replaying one block from one pre-state on the canonical path reach the same per-deploy
+  cost and state verdict; a difference is attributed by provenance (Law 92) and bounded by the
+  recovery state machine (Law 94), never silently reconciled.
+
+The model is [`spec/Rchain/SplitAccounting.lean`](../../../spec/Rchain/SplitAccounting.lean). It does
+not claim a speedup or a capacity result: the split changes speed, and M1/M2 measure the speed.

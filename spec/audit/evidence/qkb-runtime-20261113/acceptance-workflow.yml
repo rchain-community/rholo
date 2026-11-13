@@ -1,0 +1,90 @@
+name: QKB isolated runtime acceptance
+on:
+  push:
+    branches: [verify/qkb-execute-20261113]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+defaults:
+  run:
+    shell: bash
+jobs:
+  acceptance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Fetch the exact QLF input
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: rhovision-org/quantum-logical-framework
+          ref: 7667443c7feb14efeb01aa50b86171be0cd38f0a
+          path: qlf-input
+      - name: Fetch source-pinned runtime artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run download 43466083379 --repo aixaria0/rchain-rust -n qkb-rnode-79e5504 -D runtime
+          test "$(cat runtime/source-sha.txt)" = "79e550400114b32a0292b9103cb5e83c6e1e1c72"
+          expected="$(cut -d' ' -f1 runtime/rnode.sha256)"
+          test "$(sha256sum runtime/rnode | cut -d' ' -f1)" = "$expected"
+          chmod +x runtime/rnode
+          python3 -m pip install pycryptodome==3.23.0
+      - name: Execute original QKB through signed deploys
+        run: |
+          mkdir -p target/qkb-original
+          python3 tools/qkb-runtime-conformance.py --rnode runtime/rnode --expected-binary-sha256 2cffda31f4d7d03cb2e7644340449d153da40e9e5db39f5b4c407791c6504201 --rholo . --qlf qlf-input --contract qlf-input/rholang/QKB.rho --out target/qkb-original 2>&1 | tee target/qkb-original/suite.log
+      - name: Exhaustive logic on a separate fresh node
+        run: |
+          mkdir -p target/qkb-logic
+          python3 tools/qkb-runtime-conformance.py --rnode runtime/rnode --expected-binary-sha256 2cffda31f4d7d03cb2e7644340449d153da40e9e5db39f5b4c407791c6504201 --rholo . --qlf qlf-input --contract qlf-input/rholang/QKB.rho --suite logic --logic-batch-size 16 --out target/qkb-logic 2>&1 | tee target/qkb-logic/suite.log
+      - name: Falsify the per-axis admission guard
+        run: |
+          mkdir -p target/qkb-weakened-gate
+          python3 - <<'PY'
+          from pathlib import Path
+          import difflib
+          src = Path("qlf-input/rholang/QKB.rho").read_text()
+          needle = "v == [0, 0, 0, 0]"
+          assert src.count(needle) == 1
+          mutant = src.replace(needle, "true")
+          Path("target/qkb-weakened-gate/QKB-mutant.rho").write_text(mutant)
+          Path("target/qkb-weakened-gate/guard.patch").write_text("".join(difflib.unified_diff(
+              src.splitlines(True), mutant.splitlines(True), fromfile="QKB.rho", tofile="QKB-mutant.rho")))
+          PY
+          set +e
+          python3 tools/qkb-runtime-conformance.py --rnode runtime/rnode --expected-binary-sha256 2cffda31f4d7d03cb2e7644340449d153da40e9e5db39f5b4c407791c6504201 --rholo . --qlf qlf-input --contract target/qkb-weakened-gate/QKB-mutant.rho --out target/qkb-weakened-gate > target/qkb-weakened-gate/suite.log 2>&1
+          result=$?
+          set -e
+          test "$result" -ne 0
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path("target/qkb-weakened-gate")
+          r = json.loads((p / "report.json").read_text())
+          bad = [x["id"] for x in r["cases"] if not x["pass"]]
+          assert r["result"] == "FAIL", r
+          assert bad == ["aggregate-counterexample"], (r.get("error"), bad)
+          (p / "control.json").write_text(json.dumps({
+              "result": "PASS", "falsifier": "per-axis admission guard removed",
+              "detected_at": bad[0], "runtime_source": r["runtime_source"],
+              "binary_sha256": r["binary_sha256"]}, indent=2) + "\n")
+          PY
+      - name: Collect bounded evidence
+        if: always()
+        run: |
+          rm -rf target/qkb-original/node-data target/qkb-weakened-gate/node-data target/qkb-logic/node-data
+          rm -f target/qkb-original/validator.hex target/qkb-weakened-gate/validator.hex target/qkb-logic/validator.hex
+          cp runtime/source-sha.txt runtime/rnode.sha256 runtime/version.txt target/qkb-original/ 2>/dev/null || true
+          git rev-parse HEAD > target/qkb-original/harness-sha.txt
+          git -C qlf-input rev-parse HEAD > target/qkb-original/qlf-sha.txt
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: qkb-runtime-original
+          path: |
+            target/qkb-original/
+            target/qkb-weakened-gate/
+            target/qkb-logic/
+          if-no-files-found: error

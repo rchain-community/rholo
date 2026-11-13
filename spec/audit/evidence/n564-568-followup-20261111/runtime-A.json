@@ -1,0 +1,37 @@
+{
+  "observed_at_utc": "2026-11-11T16:07:17.672745+00:00",
+  "label": "A (operator SSH/service mapping; on-chain identity not reverified)",
+  "unit": "rnode.service",
+  "started_utc": "Tue 2026-11-10 13:52:19 UTC",
+  "binary_name": "rnode-0a1e0236",
+  "binary_sha256": "a07d41aa010e446c95f59cf2764cccc3a63070410ee6c314487617b0057897fd",
+  "current_process_batch_environment": {},
+  "current_unit_batch_environment": {},
+  "current_process_effect_scheduler_flags": [],
+  "historical_journal_query": {
+    "since_utc": "2026-10-29T20:00:00Z",
+    "until_utc": "2026-11-10T13:52:18Z",
+    "regex": "RNODE_CROSS_DEPLOY|cross.deploy.batch|effect.scheduler|batch.verif",
+    "exit": 1,
+    "matching_line_count": 0,
+    "last_matching_lines": [],
+    "stderr": ""
+  },
+  "scope": "Read-only current process/unit and bounded historical log query. Absence of matched logs does not prove the incident-time mode. No service or chain state was changed. The selected config-file inspection is not a complete effective-configuration dump.",
+  "signature": "\u03a9-WITNESS",
+  "current_scheduler_config_observation": {
+    "observed_at_utc": "2026-11-11T16:16:53.989496+00:00",
+    "selection": "explicit config file",
+    "file_exists": true,
+    "file_mtime_utc": "2026-10-29T20:57:54.483949+00:00",
+    "include_line_numbers": [],
+    "scheduler_literal_lines": [],
+    "scope": "current selected config file observation, not a past file or runtime attestation"
+  },
+  "version_query": {
+    "command": "running executable --version",
+    "exit": 0,
+    "reported_first_line": "rnode 0.1.0 (0a1e02362a7c34e474e068ffd47469c8d4be707a)",
+    "scope": "binary self-report; allocator statistics omitted; not a signed build-provenance proof"
+  }
+}

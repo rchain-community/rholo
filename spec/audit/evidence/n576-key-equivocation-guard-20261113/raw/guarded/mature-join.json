@@ -1,0 +1,45 @@
+{
+  "boundary": "finite local devnet witness; not a live-testnet join and not a certification",
+  "chain_height": {
+    "n457join-bootstrap": 19,
+    "n457join-validator-1": 19,
+    "n457join-validator-2": 19
+  },
+  "bootstrap_finalized": {
+    "number": 14,
+    "hash": "eb7ecf79c610668a1e183d1ed0b90814d280d3f1228f285aaec1d06065abc080"
+  },
+  "reset_target": "n457join-validator-3",
+  "recovery_shape": "key-present-fail-closed",
+  "passive_catch_up_seconds": null,
+  "own_key_halt_in_log": true,
+  "proposals_after_halt": 1,
+  "late_proposals_after_halt": [],
+  "recovered": {
+    "latest_block_number": null,
+    "restored_anchor_number": null,
+    "restored_anchor_hash": null,
+    "anchor_held_by_bootstrap": false,
+    "sync": null
+  },
+  "catch_up_seconds": 31.014505863189697,
+  "sync_failures_in_log": 0,
+  "give_ups_in_log": 0,
+  "reset_container_id_created": "f6c6415e5448e0902f67a5c487c5554626179e505791cdb24df1135587d5e1cb 2026-11-13T16:51:02.778338879Z",
+  "self_equivocations_in_log": 1,
+  "blocks_proposed_in_log": 2,
+  "proposed_sequences": [
+    16,
+    17
+  ],
+  "proposed_lines": [
+    "proposed and added block #17 (seq 16)",
+    "proposed and added block #18 (seq 17)"
+  ],
+  "manual_reset": true,
+  "non_claims": [
+    "one local four-validator devnet; a finite witness, not a universal join theorem",
+    "the chain is this build's own; the live testnet replay is #421/#429's",
+    "the reset node is started with `--bootstrap` and the devnet's validator key, the unsupported shape #576 diagnosed"
+  ]
+}

@@ -1,0 +1,107 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/rhovision-org/rholo/spec/audit/runbooks/n487-live-postdeployment.preflight.schema.json",
+  "title": "#559 §1 preflight manifest (complete form)",
+  "description": "The manifest `tools/release-pin-probe.py merge --check` must produce before the #487 live window. This schema describes the COMPLETE form: four validator records, every §1 field observed or supplied, no unset fields, and checks.ok true. The probe also emits incomplete manifests during collection; only this shape is a GO input. Digests prove retained bytes, not that a run happened.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema",
+    "generated_at_utc",
+    "validators",
+    "operator_fields",
+    "unset_observed",
+    "unset_operator",
+    "checks"
+  ],
+  "properties": {
+    "schema": { "const": 1 },
+    "generated_at_utc": { "type": "string" },
+    "source": {
+      "type": "object",
+      "required": ["sha"],
+      "properties": {
+        "sha": { "type": "string", "minLength": 7 },
+        "tag": { "type": ["string", "null"] },
+        "branch": { "type": ["string", "null"] }
+      }
+    },
+    "validators": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "version",
+          "source_sha",
+          "binary_sha256",
+          "binary_path",
+          "network_id",
+          "shard_id",
+          "genesis_hash",
+          "genesis_raw_sha256",
+          "bonds_sha256",
+          "total_stake",
+          "height",
+          "finalized_height",
+          "finalized_hash",
+          "finalized_lag",
+          "ready",
+          "unset"
+        ],
+        "properties": {
+          "name": { "type": "string" },
+          "version": { "type": "string" },
+          "source_sha": { "type": "string" },
+          "binary_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "binary_path": { "type": "string" },
+          "boot_id": { "type": "string" },
+          "network_id": { "type": "string" },
+          "shard_id": { "type": "string" },
+          "genesis_hash": { "type": "string" },
+          "genesis_raw_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "bonds": { "type": "array" },
+          "bonds_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "total_stake": { "type": "integer", "minimum": 0 },
+          "height": { "type": "integer" },
+          "finalized_height": { "type": "integer" },
+          "finalized_hash": { "type": "string" },
+          "finalized_lag": { "type": "integer" },
+          "ready": { "type": "boolean" },
+          "clock_offset_ms": { "type": ["integer", "null"] },
+          "unset": { "type": "array", "maxItems": 0 }
+        }
+      }
+    },
+    "operator_fields": {
+      "type": "object",
+      "description": "Private preflight fields supplied by the operator; never committed. The redacted copy replaces identities and the transfer with <redacted>.",
+      "required": [
+        "release_tag",
+        "release_branch",
+        "window_start_utc",
+        "window_end_utc",
+        "operator",
+        "observers",
+        "independent_reviewer",
+        "rollback_owner",
+        "test_transfer",
+        "rollback",
+        "evidence_destination"
+      ]
+    },
+    "unset_observed": { "type": "array", "maxItems": 0 },
+    "unset_operator": { "type": "array", "maxItems": 0 },
+    "checks": {
+      "type": "object",
+      "required": ["ok", "validator_count"],
+      "properties": {
+        "ok": { "const": true },
+        "validator_count": { "const": 4 }
+      }
+    },
+    "errors": { "type": "array", "items": { "type": "string" } }
+  }
+}

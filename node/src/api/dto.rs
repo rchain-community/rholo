@@ -224,6 +224,13 @@ pub struct ProposerHealthDto {
     /// and attesting are stopped until an operator resumes (#564).
     pub self_replay_fault_halted: bool,
     pub self_replay_fault_reason: Option<String>,
+    /// **This validator's own key has equivocated** (#576): a block by this key was refused because
+    /// a different block by the same key already held its sequence. Proposing is stopped
+    /// permanently — `POST /api/v1/autopropose/resume` does not clear it; the key is rotated or the
+    /// bond withdrawn.
+    pub key_equivocation_halted: bool,
+    /// The refused block behind `key_equivocation_halted`, null when the halt is clear.
+    pub key_equivocation_reason: Option<String>,
     pub autopropose_timer_halted: bool,
     pub autopropose_timer_halt_episodes: u64,
     pub autopropose_halt: HaltStatusDto,

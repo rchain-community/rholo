@@ -12361,3 +12361,194 @@ pending-peek block, a second corrected node to strictly replay that same seriali
 recorded costs and post-state, and the #568 attestation/reset/catch-up/halt recovery arms on the
 integrated build. Retain source and executable digests, block/pre-state identity, both nodes'
 verdicts and the recovery receipts. This continuation does not claim that operational run.
+
+## 157. A complete DAG inventory before recovery rewind (C366)
+
+The reset preflight previously enumerated surviving block-body keys, so a DAG candidate
+whose body was absent could evade the inventory and still permit destructive rewind.
+`return_unfinalised_deploys` now enumerates DAG candidate hashes and refuses missing
+metadata or missing body above the finalised anchor before mutation. The production
+implementation and tests from #567 compose with #568's reset-history, write gating,
+automatic resume and operator surface.
+
+**Falsification.** The original reset source fails the new absent-body assertion,
+whereas the corrected source passes. The targeted integration cases cover refusal
+with missing body, the healthy deploy-return path and LMDB close/reopen. The original
+isolated fork run also executed the full workspace suite and pinned Clippy/format
+checks; see [receipts](evidence/n564-reset-inventory/README.md). The receipts
+predate the #568/#570 merges; the merged-tree verification is recorded below.
+
+**Merged-tree verification.** Merged with `dev` at `dfc2e1fea` (merge commit `d62f93b9c`) and
+re-run there: the targeted reset integration suite (16 tests, including the three C366 cases), the
+register emitter check, audit-status, fmt and the CI-equivalent Clippy. A merged-tree verification
+section in the evidence README records the commands and results; the original pinned source and
+negative-control receipts are unchanged.
+
+**Reconciliation.** The preceding §156 records the #568 three-arm injected devnet
+drill, and the RC-B continuation above records #570; this inventory fix is
+accounted as §157 rather than overwriting either. C361/C364/C365 are done on
+their recovery evidence; C366 closes only the inventory defect. RC-B's
+replay-order correction is merged, but its compatibility/operational acceptance
+remains open. Neither the synthetic drill nor the inventory test reproduces the
+historical 274-phlo trigger. No validator deployment or live chain mutation is
+authorized by this pass.
+
+## 158. The C357 operational arm: the natural trigger, the second node, and the integrated recovery (C357, #564)
+
+The RC-B correction (#570, §156) and the recovery ladder (#568, §156) were evidenced separately: an
+in-process regression, recovered historical inputs and an injected-refusal drill. C357's operational
+arm asked for the natural path — no injector — on the integrated build, with a second node: a
+corrected proposer must self-replay and broadcast the pending-request/peek block, a second corrected
+node must strictly replay that same serialized block at the same accounting, and the #568 recovery
+arms must run on the same build.
+
+**The natural trigger.** Four `get` requests are deployed to `@"replay-order:registry"` before the
+contract exists, leaving four pending requests; the registry contract is then deployed in the next
+manually proposed block. On the integrated build (`8cea0db`, image `b7ce2d60…`) the block is
+accepted by both validators at recorded cost **13317**, with identical pre/post-state
+(`9c42af87…` → `0baef9ef…`) and deploy accounting, and it finalizes on both; the proposer logs no
+self-replay refusal. On the pre-#570 image (`f4feb1a`, `7e1b5c5c…`) the same sequence refuses its
+own block #4 with `ReplayCostMismatch initial_cost=13317 replay_cost=11722` (recording 32 COMMs, 48
+matched, 200 filtered, 22 leftover), and #566's attestation fallback broadcasts instead; the
+registry deploy stays pooled.
+
+**The recovery half.** `tools/self-replay-drill.sh` re-ran the three #568 arms on the same integrated
+build: attestation recovery; reset to the finalised anchor with the automatic post-catch-up resume;
+and halt with the reset disabled plus the operator resume. All three pass.
+
+**Evidence.** `spec/audit/evidence/n564-natural-trigger-20261113/` (42 files) and
+`spec/audit/evidence/n564-self-replay-recovery-drill-20261113/` (35 files), both digest-verified,
+`locality: local-devnet`, `execution_proven:false`.
+
+**Boundary.** The workload is the synthetic pending-peek shape distilled from the recovered BYOID
+registry, not the incident's terms or block; the original rejected bytes/trace and the incident
+state remain unrecovered. This is not an incident reproduction and not a live or candidate-binary
+result. C357 and #564 stay open for the live/candidate operational acceptance and the §6
+compatibility/lockstep decision. No deployment is authorized.
+
+## 159. The equivocation refusal that stalled the honest nodes (C367, #575, #576)
+
+The M3-04/M3-06 witness arm (#575) ended in an honest FAIL: the fringe request and response were
+joinable end to end by peer key, anchor and fringe identity, and the reset validator logged
+`LFS state is successfully restored.` — but the arm's height convergence never completed, because
+`Block #14 … faulted at dag insert (equivocation detected: sender produced two blocks with the same
+sequence number); recorded for retry 1/8 … 5/8` repeated for eight minutes. The pack recorded the
+blocker without a diagnosis. Reading the two captures side by side gives one collision and two
+defects, one on each node.
+
+**The collision.** `tools/devnet.sh reset 3` empties validator 3's store but keeps its validator key,
+and the chain keeps its pre-reset blocks. The node left `NodeSyncing` when the LFS restore completed
+at 15:11:29.158, still fetching missing dependencies — its own pre-reset block #14 `ef7d6965…`
+(sequence 13) among them. Its proposer was licensed at 15:11:30.680 against a parent set with no
+entry for its own key newer than sequence 12, reserved sequence 13, and signed a second block #14
+`852e11dc…` at 15:11:30.917. The older block's insert lost the race by 36 ms and was refused at
+15:11:30.881; the bootstrap, holding the older branch, refused the new block at 15:11:31.049. Both
+refusals are correct: the key had genuinely equivocated on the network once the clone was broadcast.
+
+**Defect A — the honest peers stopped producing (C367).** The H-1 gate refuses an equivocation
+*before any write*, so no retry can change the outcome, but the block processor recorded the refusal
+as an ordinary retryable fault. The row then sat in the disposition ledger for eight escalating
+retries, the process-wide fault latch it feeds is what the proposer gate reads, and the start-up
+seed rebuilt the same block from the ledger after every restart. A node that had done nothing wrong
+therefore stopped proposing for as long as the row lived — in the capture, "propose withheld: the
+node is blocked and is not producing" from 15:12:37 — and a restart did not clear it. A refusal is
+now a verdict: the row is kept under `EQUIVOCATION_VERDICT_STAGE` with the retry budget spent, so
+the body stays **accounted for** (the ownership audit reads rows, and deleting it would make the
+body an orphan the audit blocks readiness over), while `outstanding()` — read by the start-up seed
+and the re-offer — excludes it, and the processor clears any latch an earlier attempt took. The log
+names height, sender and sequence, so the two sides of a collision are joinable.
+
+**Defect B — the reset node signed before its own history arrived (#576).** "LFS restored" is not
+"caught up": the proposer derived its next `seq_num` from a parent set that omitted its own newest
+block because that body was still in flight. This is the freeze recorded as undiagnosed residue in
+§38, and it is the same shape C186 fixed for a stale round snapshot — the arithmetic is right, the
+missing entry was supplied by the wipe. It needs a decision, not a patch: a sync gate that covers the
+node's own key's history, a fail-closed halt for the unsupported full-wipe-with-retained-key shape,
+or an operational rule that a rejoining validator rotates its identity. Filed as #576 with the
+evidence and the option set.
+
+**Evidence.** `spec/audit/evidence/m3-fringe-witness-20261113/` (9 files, digest-verified,
+`locality: local-devnet`, `execution_proven:false`), and the falsifier
+`casper/src/blocks/block_processor.rs::an_equivocation_verdict_accounts_for_the_body_without_owing_it`
+— a body owed after a transient fault is refused as an equivocation, and the test asserts the row is
+retained as the verdict, skipped by `outstanding()`, and absent from the latch. **No re-run of the
+arm is claimed**: it cannot pass until B is decided, and the pack's verdict stays FAIL.
+
+**Boundary.** This is a local four-validator devnet on one host; it is not the off-host M3 positive,
+not M3-00 acceptance and not a candidate-binary result. The M3 arm's instrument half passed; the join
+half remains owed. No deployment is authorized.
+
+## 160. The supported recovery has two halves, and the arm could not see a two-digit sequence (C368, #576)
+
+#575's FAIL left a question the issue could not answer on its own: can a reset validator rejoin at
+all, or only in the shape that forked? The tooling said yes — `DEVNET_RESET_PASSIVE=1` stages the
+node without its signing key — but nothing ever gave the key back, so the supported recovery was a
+documented half. The arm that would have witnessed it also contained an instrument defect that would
+have hidden a failure.
+
+**The instrument.** `tools/n457-mature-join-arm.py` parsed `proposed and added block #N (seq S)` with
+one capture group and unpacked `(_, seq)` in the comprehension, so `findall`'s string "15" split into
+"1" and "5" and the sequence witness read 5. A strictly-increasing list of single characters is still
+increasing, so nothing failed — the arm reported a green sequence check over numbers it had never
+seen. Caught while reconciling the JSON against the captured log, after a raw-line field was added
+beside the parsed pairs; `proposal_sequences` now returns `(block, seq)` pairs,
+`tests/test_n457_mature_join.py` asserts a two-digit sequence stays whole, and the arm records
+`proposed_lines`, the activated container's id and creation time, and one `activated.log` from which
+every count in the record is read.
+
+**The missing half.** `tools/devnet.sh activate <i>` restarts a passively-staged validator with its
+key: the same volume, ports and flags, adding `--validator-private-key-path`, and it refuses a
+container that is absent or already carries the key. The arm's `--supported-recovery` runs the pair —
+staging, catch-up, activation, convergence — and fails on any `equivocation detected` line, on no
+proposal, or on a reused or regressed own sequence. The operator page now says that a rebuild from a
+key and an empty store is not a rebuild from backup, and gives the staged order.
+
+**The witness.** `spec/audit/evidence/n576-passive-join-20261113/` (13 files, digest-verified,
+`locality: local-devnet`, `execution_proven:false`): the passive replica caught up in 17.4 s
+(`LFS state is successfully restored.` at 16:18:14.246Z), activation reached round 19 in 4.3 s with
+`sync: null` and anchor #14 `d67ffe73…` held by the bootstrap, **0** equivocations, and four
+proposals at sequences **15, 16, 17, 18** — starting from the restored own history rather than at 13.
+Two earlier development runs of the same arm reached the same outcome and are not packed.
+
+**What stays open.** The unsupported shape — key present from boot — still signs a second block at a
+used sequence; #575's capture is that fork. A fail-closed guard or an operational rule for it is
+#576's, and this pass does not claim it. The M3 instrument half (#575) and this join half are
+`local-devnet`; the off-host positive remains Jim's envelope.
+
+**Boundary.** One local four-validator devnet on one host; not the off-host M3 positive, not M3-00
+acceptance and not a candidate-binary result. No deployment is authorized.
+
+## 161. A key that equivocated stops proposing (C369, #576)
+
+C367 made an equivocation refusal a verdict so that one peer's offence could not stop an honest
+node. That left the *offending* node's own behaviour open: when the refused block was by the node's
+own key, nothing turned the proof into a stop, and the reset validator in §159's capture kept
+proposing into the fork. #576's second acceptance clause is exactly this.
+
+**The stop.** The block processor is given the node key. An H-1 refusal whose sender is that key
+records a permanent halt, and the proposer's top gate refuses every trigger with
+`KeyEquivocationHalted`, naming the refused block. A peer's refusal is unchanged — a verdict, not a
+stop (C367). The log sentence is one phrase everywhere, `this validator's key equivocated`, so the
+operator, the status surface and the arm read the same fact.
+
+**Durable by derivation.** The halt is not a stored flag: the C367 verdict row and the refused body
+are durable, so `own_key_equivocation_verdict` reads them at startup — one verdict row per offence,
+the body only for its sender — and seeds the halt. A restart therefore cannot silently resume a
+forked key, and an unreadable history fails closed with its reason rather than reading as clean. The
+operator resume deliberately does not clear it; the key is rotated or the bond withdrawn. The
+per-shard status carries `keyEquivocationHalted` with its sentence, and a metric carries the gauge.
+
+**The witness.** `spec/audit/evidence/n576-key-equivocation-guard-20261113/` (12 files,
+digest-verified, `local-devnet`, `execution_proven:false`): the supported arm is the regression
+control — passive catch-up 19.6 s, activation to round 19 in 4.3 s, anchor held, no halt, proposals
+at 15–16; the unsupported arm produces **one** refusal, the named halt, and **no block more than
+10 s afterwards**. Its second proposal completed 107 ms after the halt: that attempt was already in
+flight, which is why the arm's predicate is a settle window rather than line order, and why the
+predicate has its own unit test.
+
+**What this closes.** Both of #576's acceptance clauses are met on `local-devnet`: the supported
+reset converges without self-equivocation, and the unsupported shape refuses to propose with a
+named, operator-visible state. What it does **not** do: heal the fork (the guard stops the node; the
+operator rotates the key or withdraws the bond), or substitute for the supported procedure when the
+operator has a choice. The M3 off-host positive and candidate-binary acceptance remain the
+envelope's, and no run here is mainnet evidence. No deployment is authorized.

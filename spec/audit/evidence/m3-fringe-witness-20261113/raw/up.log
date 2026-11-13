@@ -1,0 +1,25 @@
+==> devnet: 4 validator(s) + 0 observer(s)
+    autopropose=true propose-on-deploy=true admin=true deployer=true
+==> starting n457join-bootstrap (validator 0, standalone, creates genesis)
+5894bd92dfe31c006eeb7dee63529a0cc7f7548d17985dc99f1072d79da17ebf
+==> bootstrap id: 2af731786bf8fa574344f9a33f16e52e63a2543b
+==> n457join-bootstrap has committed genesis (latestBlockNumber=2); starting the network
+==> starting n457join-validator-1 (validator 1, bootstraps from n457join-bootstrap)
+ff0be24e300237c114d6d9aa116ac8659cbe518e87c69d420101fe6d0c4e6ba5
+==> starting n457join-validator-2 (validator 2, bootstraps from n457join-bootstrap)
+cee1392fcf317d942953c14d5379495d384897af826ff46b45d830bdfc512fe7
+==> starting n457join-validator-3 (validator 3, bootstraps from n457join-bootstrap)
+600669575ea038e6a267fb39910da73c1adad4b76b108849b7b3ac04dc69fc37
+==> n457join-bootstrap serving /api/v1/status (latestBlockNumber=2)
+==> n457join-validator-1 synced genesis and serves /api/v1/status (latestBlockNumber=2 port=56403)
+==> n457join-validator-2 synced genesis and serves /api/v1/status (latestBlockNumber=2 port=57403)
+==> n457join-validator-3 synced genesis and serves /api/v1/status (latestBlockNumber=2 port=58403)
+
+==> up. Interact with:
+    tools/devnet.sh deploy <contract.rho>   # signed deploy to n457join-bootstrap
+    tools/devnet.sh query <name>            # listen for data at a public name
+    tools/devnet.sh propose [--admin]       # force a block
+    tools/devnet.sh status | logs <node> | diagnose | down
+
+    Public HTTP API:  http://localhost:55403/api/v1/status
+    Admin HTTP API:   http://localhost:55405/api/v1/propose

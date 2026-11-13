@@ -1,0 +1,27 @@
+{
+  "baseline_commit": "f4feb1a83862b5b58e682b09ec4188ca59294df6",
+  "baseline_function_sha256": "aae1c4afc00ae5e853fc416a72404b68b6a4e7cdb8c0135ee8fa9870ea60a7be",
+  "candidate_function_sha256": "136130691a5fcadc5763e6b982f1933d59769ff5bfd5e29055936368eb32f145",
+  "scope": "source-extracted function with storage stubs, not full Casper or devnet",
+  "toolchain": "rustc 1.99.1 (58cf8f9c3 2026-10-13) (built from a source tarball)",
+  "platform": "Android aarch64 / Termux",
+  "baseline": {
+    "kind": "source-extracted inventory function with storage stubs",
+    "utc": "2026-11-11T14:22:47.888324+00:00",
+    "compile": {
+      "exit": 0,
+      "output": ""
+    },
+    "test": {
+      "exit": 101,
+      "output": "\nrunning 4 tests\ntest body_without_dag_metadata_is_outside_rewind_inventory ... ok\ntest complete_empty_inventory_is_allowed ... ok\ntest known_unfinalised_deploy_is_returned_and_not_duplicated ... ok\ntest missing_dag_body_must_refuse_inventory ... FAILED\n\nfailures:\n\nfailures:\n    missing_dag_body_must_refuse_inventory\n\ntest result: FAILED. 3 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nthread 'missing_dag_body_must_refuse_inventory' (27040) panicked at /data/data/com.termux/files/home/omega-rholo-564-evidence-20261111/baseline.rs:138:5:\nDAG block 01 has no body; successful inventory is unsafe, got Ok(0)\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+    }
+  },
+  "candidate": {
+    "utc": "2026-11-11T14:46:21.668721+00:00",
+    "exit": 0,
+    "output": "\nrunning 4 tests\ntest body_without_dag_metadata_is_outside_rewind_inventory ... ok\ntest known_unfinalised_deploy_is_returned_and_not_duplicated ... ok\ntest complete_empty_inventory_is_allowed ... ok\ntest missing_dag_body_must_refuse_inventory ... ok\n\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n",
+    "source_commit": "c4a5356221d558d127929817762c1d462137db3f"
+  },
+  "full_crate_tests": "pending CI"
+}

@@ -1,0 +1,24 @@
+{
+  "source_commit": "a2497f0ea1f3b68fe2045e2adf6f7868fdaef39d",
+  "baseline_file_commit": "f4feb1a83862b5b58e682b09ec4188ca59294df6",
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "-p",
+    "rchain-casper",
+    "--all-features",
+    "--test",
+    "reset",
+    "a_self_replay_reset_refuses_a_dag_block_whose_body_is_missing",
+    "--",
+    "--exact",
+    "--nocapture"
+  ],
+  "exit": 101,
+  "expected_assertion_observed": true,
+  "candidate_restored": true,
+  "candidate_file_sha256": "e169eb0a476e3e3b13f7e7beecda1cdb5da4ec5b7e95d21e92f6b6a25ba1cb06",
+  "baseline_file_sha256": "e51da18cbc0f9e6e569eea30feaf41ff83c138cb2eb0bc0c300b9ad9f0efa3d2",
+  "scope": "real Casper integration fixture; an expected test assertion, not a compile error"
+}

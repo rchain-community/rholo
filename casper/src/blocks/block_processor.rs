@@ -19,12 +19,59 @@ use std::time::Duration;
 use tokio::sync::mpsc;
 use tokio::task::{JoinError, JoinHandle, JoinSet};
 
-use crate::block_disposition::{BlockDispositionStore, MAX_FAULT_RETRIES};
+use crate::block_disposition::{
+    BlockDispositionStore, EQUIVOCATION_VERDICT_STAGE, MAX_FAULT_RETRIES,
+};
 use crate::interpreter_util::ShardHealth;
 use crate::merging::BlockIndex;
 use crate::multi_parent_casper::ValidateError;
 use crate::protocol::comm_util::CommUtil;
 use crate::runtime_manager::RuntimeManager;
+use rchain_models::validator::Validator;
+
+/// **This validator's own key has equivocated, as proven by a verdict this node holds** (#576).
+///
+/// The H-1 gate's refusal of a block by *this* key is a fact about the key, not about the block:
+/// the DAG holds a different block at the same sender and sequence, so another copy of this
+/// validator — a wiped store that signed before it caught up, or a stolen key — has signed twice.
+/// Proposing again would deepen the fork, so every proposal trigger refuses from here.
+///
+/// **The state is derived, not stored.** The C367 verdict row is durable and the refused body is in
+/// the block store, so the start-up seed reconstructs the sentence; a restart cannot silently
+/// resume a forked key. Nothing clears it: a validator whose key equivocated rotates the key or
+/// unbonds. The process cell exists so the proposer and the status surface read the same fact.
+static OWN_KEY_EQUIVOCATION: std::sync::OnceLock<Mutex<Option<String>>> =
+    std::sync::OnceLock::new();
+
+fn own_key_equivocation_cell() -> &'static Mutex<Option<String>> {
+    OWN_KEY_EQUIVOCATION.get_or_init(|| Mutex::new(None))
+}
+
+/// The proof, as the sentence the operator needs, or `None` while this key has no recorded offence.
+pub fn own_key_equivocation() -> Option<String> {
+    own_key_equivocation_cell().lock().unpoison().clone()
+}
+
+/// Seed the halt at startup from the durable verdict rows (see [`own_key_equivocation`]). The first
+/// offence is the record; a later call does not replace it.
+pub fn seed_own_key_equivocation(reason: Option<String>) {
+    if let Some(reason) = reason {
+        let mut cell = own_key_equivocation_cell().lock().unpoison();
+        if cell.is_none() {
+            *cell = Some(reason);
+        }
+    }
+}
+
+fn record_own_key_equivocation(reason: String) {
+    seed_own_key_equivocation(Some(reason));
+}
+
+/// Tests only: the production halt has no clear (see the static's note).
+#[cfg(test)]
+pub(crate) fn clear_own_key_equivocation() {
+    *own_key_equivocation_cell().lock().unpoison() = None;
+}
 
 /// **How many received blocks this process has dropped before a DAG entry**, and the most recent
 /// one. The live private-chain incident had no counter for this state: the only trace was one
@@ -208,6 +255,96 @@ async fn record_block_fault(
             ),
         ),
     }
+}
+
+/// **An equivocation at insert is a verdict, not an obligation** (AUDIT C367).
+///
+/// The DAG's H-1 gate refuses a second, distinct block by one sender at one `seq_num` before any
+/// write: the DAG can never hold both, so no retry can change the outcome. Recording it as a
+/// retryable fault instead left the body in the disposition ledger for eight escalating retries
+/// (~20 minutes), and the process-wide fault latch — which the proposer gate reads — stopped
+/// *this* node producing for as long as the row lived, re-seeded from the ledger on every
+/// restart. One equivocating validator therefore took every honest node out of production.
+///
+/// The refusal is the outcome: the DAG's own equivocation-evidence record is the durable offence
+/// (C200), the body's ledger row is marked as a verdict that owes nothing (so the orphan audit
+/// still sees it accounted for, while the latch and the start-up seed do not), and production is
+/// left alone. The log names the height, sender and sequence number so the two sides of the
+/// collision are joinable.
+///
+/// **One case is not left alone**: when the refused block is by *this node's* key, the proof is
+/// about the key, and proposing again would deepen a fork — see [`own_key_equivocation`] (#576).
+fn is_equivocation_refusal(error: &str) -> bool {
+    error.starts_with(crate::dag::EQUIVOCATION_PREFIX)
+}
+
+async fn record_equivocation_verdict(
+    disposition: &BlockDispositionStore,
+    block: &BlockMessage,
+    reason: &str,
+    own_key: Option<&Validator>,
+    log: &Arc<dyn Log>,
+    source: LogSource,
+) {
+    // **A refusal of this key's own block is a fact about the key** (#576). Another copy of this
+    // validator signed a different block at the same sequence — a wiped store that signed before
+    // it caught up, or a stolen key. Refusing to propose is the only safe continuation: the fork is
+    // real, and extending it would add weight to a branch this node cannot know is wrong.
+    if own_key.is_some_and(|key| block.sender == *key) {
+        let sentence = format!(
+            "this validator's key equivocated: block #{} {} (sequence {}) was refused because the \
+             DAG holds a different block by this key at that sequence, so another copy of this \
+             validator has signed twice ({reason})",
+            block.block_number,
+            block.block_hash.to_hex(),
+            block.seq_num,
+        );
+        record_own_key_equivocation(sentence.clone());
+        log.error(
+            source,
+            &format!(
+                "{sentence}; every proposal trigger now refuses until the key is rotated or its \
+                 bond withdrawn — POST /api/v1/autopropose/resume does not clear this, because the \
+                 proof is a verdict, not a transient fault"
+            ),
+        );
+    } else {
+        log.error(
+            source,
+            &format!(
+                "Block #{} {} from {} refused at dag insert: the DAG already holds a different block \
+                 by this sender at sequence {}; the refusal is final (no retry) and does not block \
+                 this node's production",
+                block.block_number,
+                block.block_hash.to_hex(),
+                rchain_shared::base16::encode(&block.sender.as_bytes()[..8]),
+                block.seq_num,
+            ),
+        );
+    }
+    // The row stays as the body's accounting (the orphan audit reads rows) with the budget spent,
+    // so the start-up seed and the re-offer skip it; only the owner of a lost row would fault.
+    if let Err(e) = disposition
+        .mark_terminal_fault(
+            block.block_hash,
+            block.block_number,
+            EQUIVOCATION_VERDICT_STAGE,
+            reason,
+        )
+        .await
+    {
+        log.error(
+            source,
+            &format!(
+                "Block {} equivocation verdict could not be recorded: {e}; the body may read as \
+                 an orphan to the next ownership audit",
+                block.block_hash.to_hex()
+            ),
+        );
+    }
+    // An earlier attempt at the same body may have latched a retryable fault; the verdict
+    // discharges it. This node must not stop producing because a peer equivocated.
+    clear_pipeline_fault(&block.block_hash);
 }
 
 /// A fault no retry can fix is parked with the budget already spent; it stays loud and only an
@@ -403,6 +540,9 @@ pub async fn apply<F, Fut>(
     shard_id: String,
     min_phlo_price: i64,
     max_number_of_parents: i32,
+    // This node's validator key, when it has one. Only an equivocation refused against **this**
+    // key stops production (#576); a peer's offence is a verdict (C367).
+    own_key: Option<Validator>,
     dag: Arc<dyn BlockDagStorage>,
     block_store: BlockStore,
     disposition: BlockDispositionStore,
@@ -558,7 +698,19 @@ pub async fn apply<F, Fut>(
                 }
             };
             if let Err(e) = dag.insert(block_meta, block.clone()).await {
-                record_block_fault(&disposition, &block, "dag insert", &e, &log, source).await;
+                if is_equivocation_refusal(&e) {
+                    record_equivocation_verdict(
+                        &disposition,
+                        &block,
+                        &e,
+                        own_key.as_ref(),
+                        &log,
+                        source,
+                    )
+                    .await;
+                } else {
+                    record_block_fault(&disposition, &block, "dag insert", &e, &log, source).await;
+                }
                 continue;
             }
             // The insert committed, so either verdict is a DAG record; the durable obligation is
@@ -649,6 +801,149 @@ mod tests {
         );
         clear_pipeline_fault(&hash);
         assert!(!pipeline_fault_is_outstanding(&hash));
+    }
+
+    /// **An equivocation verdict accounts for its body without owing an outcome** (C367).
+    ///
+    /// The body is owed after an earlier transient fault and the latch is seeded, which models a
+    /// restart that re-reads the durable ledger. The refusal must keep the row (deleting it makes
+    /// the body an orphan the ownership audit blocks readiness over) and clear the obligation
+    /// (recording it as outstanding would block this node's production for every retry window and
+    /// after every restart — how one equivocating validator stalled the node in the M3 join arm).
+    #[tokio::test]
+    async fn an_equivocation_verdict_accounts_for_the_body_without_owing_it() {
+        use crate::block_disposition::BlockDispositionCodec;
+        use rchain_block_storage::dag::codecs::BlockHashCodec;
+        use rchain_shared::store_manager::{database, InMemoryStoreManager};
+
+        let manager = InMemoryStoreManager::default();
+        let kv = database(
+            &manager,
+            "block-disposition-test",
+            Arc::new(BlockHashCodec),
+            Arc::new(BlockDispositionCodec),
+        )
+        .await
+        .expect("in-memory ledger");
+        let store = BlockDispositionStore::from_store(Arc::new(kv));
+
+        let block = sample_block();
+        store
+            .mark_faulted(
+                block.block_hash,
+                block.block_number,
+                "dag insert",
+                "justification not present in message map",
+            )
+            .await
+            .expect("a prior transient fault");
+        seed_pipeline_faults([block.block_hash]);
+        assert!(pipeline_fault_is_outstanding(&block.block_hash));
+
+        assert!(is_equivocation_refusal(
+            "equivocation detected: sender produced two blocks with the same sequence number"
+        ));
+        assert!(
+            !is_equivocation_refusal("justification not present in message map"),
+            "only the H-1 refusal is a verdict; every other insert error stays retryable"
+        );
+
+        let log: Arc<dyn Log> = Arc::new(rchain_shared::log::NopLog);
+        // **A peer's offence is a verdict and leaves production alone** (C367): the refused block's
+        // sender is not this node's key.
+        clear_own_key_equivocation();
+        record_equivocation_verdict(
+            &store,
+            &block,
+            "equivocation detected: sender produced two blocks with the same sequence number",
+            Some(&Validator::new([0x77; 65])),
+            &log,
+            LogSource::new("casper.blocks.BlockProcessor"),
+        )
+        .await;
+        assert!(
+            own_key_equivocation().is_none(),
+            "a peer's equivocation must not stop this node's production"
+        );
+
+        let row = store
+            .get(&block.block_hash)
+            .await
+            .expect("ledger read")
+            .expect("the row is the body's accounting; deleting it makes the body an orphan");
+        assert!(
+            row.is_equivocation_verdict(),
+            "the row must carry the verdict stage with the retry budget spent"
+        );
+        assert!(
+            store
+                .outstanding()
+                .await
+                .expect("outstanding read")
+                .is_empty(),
+            "a verdict owes no outcome: the start-up seed and the re-offer must skip it"
+        );
+        assert_eq!(
+            store.unsettled().await.expect("unsettled read").len(),
+            1,
+            "the body stays accounted for"
+        );
+        assert!(
+            !pipeline_fault_is_outstanding(&block.block_hash),
+            "a permanently refused block must not hold readiness or the proposer gate"
+        );
+    }
+
+    /// **A refusal of this key's own block latches the proposal halt** (#576): the proof is about
+    /// the key, not the block, so proposing again would deepen the fork.
+    #[tokio::test]
+    async fn an_own_key_equivocation_verdict_latches_the_proposal_halt() {
+        use crate::block_disposition::BlockDispositionCodec;
+        use rchain_block_storage::dag::codecs::BlockHashCodec;
+        use rchain_shared::store_manager::{database, InMemoryStoreManager};
+
+        clear_own_key_equivocation();
+        let manager = InMemoryStoreManager::default();
+        let kv = database(
+            &manager,
+            "block-disposition-test-own-key",
+            Arc::new(BlockHashCodec),
+            Arc::new(BlockDispositionCodec),
+        )
+        .await
+        .expect("in-memory ledger");
+        let store = BlockDispositionStore::from_store(Arc::new(kv));
+        let block = sample_block();
+        let own = block.sender.clone();
+        let log: Arc<dyn Log> = Arc::new(rchain_shared::log::NopLog);
+        record_equivocation_verdict(
+            &store,
+            &block,
+            "equivocation detected: sender produced two blocks with the same sequence number",
+            Some(&own),
+            &log,
+            LogSource::new("casper.blocks.BlockProcessor"),
+        )
+        .await;
+
+        let reason = own_key_equivocation().expect("an own-key refusal must latch the halt");
+        assert!(
+            reason.contains(&block.block_hash.to_hex()),
+            "the halt must name the refused block: {reason}"
+        );
+        assert!(
+            reason.contains(&block.seq_num.to_string()),
+            "the halt must name the sequence: {reason}"
+        );
+        // The durable half is still written: the start-up seed reconstructs the halt from it.
+        assert!(store
+            .get(&block.block_hash)
+            .await
+            .expect("ledger read")
+            .expect("the verdict row")
+            .is_equivocation_verdict());
+        clear_own_key_equivocation();
+        assert!(own_key_equivocation().is_none());
     }
 
     /// A minimal block for the fault/deadline tests. `block-storage`'s shared fixture is

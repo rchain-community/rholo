@@ -98,14 +98,18 @@ The canonical §6 row in [passes.md](../../passes.md#6-scala-deviation-register)
 [Audit:section6-categoryA obligation](../../hardfork-51-closeout.json) record this change.
 Implementation/evidence review is not a release decision.
 
-**C357's operational arm remains owed.** On an isolated devnet/live acceptance run, a corrected
-proposer must self-replay and broadcast the pending-request/peek block; a second corrected node
-must strictly replay that same serialized block with matching recorded per-deploy costs and
-post-state. Capture the block and pre-state identities, source/executable SHA-256 and both nodes'
-verdicts, then exercise the merged #568 attestation, reset/catch-up and halt/resume recovery arms on
-the integrated corrected build. The existing injected-refusal drill establishes recovery behavior;
-it does not substitute for this natural-trigger, second-node arm. Keep C357 and #564 open until
-compatibility and operational acceptance are independently satisfied.
+**C357's operational arm — local half delivered 2026-11-13.** A corrected proposer self-replayed and
+broadcast the natural pending-request/peek block (no injector), a second corrected node strictly
+replayed the same serialized block with identical per-deploy accounting and post-state, and the
+block finalized on both; the pre-#570 image is the red control and refuses the same sequence with
+`ReplayCostMismatch`. The merged #568 recovery arms were re-run on the same integrated build and
+pass. The packed records are
+[`n564-natural-trigger-20261113`](../n564-natural-trigger-20261113/README.md) and
+[`n564-self-replay-recovery-drill-20261113`](../n564-self-replay-recovery-drill-20261113/README.md).
+This is `local-devnet`, single-host, `execution_proven:false`, with a synthetic pending-peek shape
+distilled from the recovered registry — **not** the incident's terms and **not** a live or
+candidate-binary result. Keep C357 and #564 open until the live/candidate operational acceptance and
+the independent compatibility/lockstep decision are satisfied.
 
 ## Verification boundary
 

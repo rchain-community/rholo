@@ -1,0 +1,15 @@
+{
+  "raw/activated.log": "193d17720ffc419199ea389404d265aa4c0ba7ffe2f31aa2aaf301ce329cee5f",
+  "raw/arm.log": "759d1f5188219b5c39bb7748c7915e094d7e2cc1b5384bc8620fb45a2b7558cc",
+  "raw/bootstrap.log": "fae3eb5fc0390572b1838be06735583a798696ae78b204c4d086d748be97094d",
+  "raw/down.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "raw/image-id.txt": "d19cc417a8052ec1fbf7227d0eed99ada4373253d5169e843c238623e27466b1",
+  "raw/mature-join.json": "63eb934a9328a1c528e5d7f6c84eb3c2fa8addce47ea6d08d0d32f3c886bb4b3",
+  "raw/passive.log": "51348d5e0d0e464d013e9fc00dd28b57c505313c3d49ff7fec75a51223cfc1be",
+  "raw/readout.md": "851d2b156e074ed02edf8cb0ebf040b724fd980c2758fc7f8d982785142fa5ee",
+  "raw/source.txt": "f822a15aa930507b8807c925dd5ff6fe3ccb66d7528ee713fbed88252f77c6da",
+  "raw/up.log": "98376cdbccadb3415ad8883db301aac08fa6a7f8e6350e8170b24912f1c36838",
+  "raw/validator-1.log": "8e7a33010986176397897eba61f39f1b69ef2ccd6216bd6ea1abc69c0a74749e",
+  "raw/validator-2.log": "25abcb7f7d60fed15cb6a61d142f2e528124e4a07beb6ebfa58d1e794fd787c7",
+  "raw/validator-3.log": "ce0ce8f9a5216e3f1ad35a2333a41dfd7fc2a573197e809ee4d9eba086fa630e"
+}

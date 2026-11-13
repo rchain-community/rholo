@@ -155,7 +155,12 @@ Commands:
                                  liveness measurement can ask what the survivors do (#70)
   start <node>                   start a node that `stop` stopped (data volume intact)
   reset <i>                      discard validator i's container and store and start it again at once,
-                                 so it must LFS-sync the chain the bootstrap is already serving (#139)
+                                 so it must LFS-sync the chain the bootstrap is already serving (#139).
+                                 With DEVNET_RESET_PASSIVE=1 it comes back as a passive replicator,
+                                 without its signing key, until `activate` is called (#576)
+  activate <i>                   restart a passively-staged validator WITH its signing key, keeping its
+                                 restored store: the second half of the supported recovery, so the
+                                 proposer derives its sequence from a DAG that holds its own history
   status                         docker ps for the network
   logs <node>                    tail a node's logs
   diagnose                       per-node health check (PASS/WARN/FAIL)
@@ -914,6 +919,72 @@ cmd_reset() {
   echo "reset $name: back up with an empty store; it will LFS-sync the chain from $reset_bootstrap_host"
 }
 
+# activate <i>: give a passively-staged validator its signing key back, keeping its restored store.
+#
+# **Why the recovery is two commands.** A wiped validator that signs from the moment it starts can
+# derive a sequence number the chain has already used, because the parent set it derives from does
+# not yet contain its own pre-reset blocks (#576): it signs a second block at one sequence, every
+# honest node refuses it, and the clone is genuine equivocation on the network. The supported shape
+# is therefore staging followed by activation:
+#
+#   DEVNET_RESET_PASSIVE=1 tools/devnet.sh reset 3   # restore and catch up with no key
+#   tools/devnet.sh activate 3                       # then the key, from a DAG that holds its history
+#
+# The passive node keeps the key in its volume (`reset` seeds it), so this command only restarts the
+# same node with the same volume, ports and flags, adding `--validator-private-key-path`.
+cmd_activate() {
+  local idx="${1:-}"
+  case "$idx" in
+    1|2|3) ;;
+    *) echo "activate: takes a validator number (1..3)" >&2; exit 2 ;;
+  esac
+  read_up_state
+  if [[ "$(docker inspect -f '{{.State.Running}}' "$BOOTSTRAP" 2>/dev/null)" != "true" ]]; then
+    echo "activate: $BOOTSTRAP is not running — an activation is a join to a chain that is there" >&2
+    exit 1
+  fi
+  local name; name="$(validator_name "$idx")"
+  # **Only a staged node can be activated.** A container that already carries the key is not a
+  # passive replica, and an absent one has no store: starting either would make the run look like a
+  # recovery while the precondition was never staged.
+  local cmdline
+  cmdline="$(docker inspect -f '{{join .Config.Cmd " "}}' "$name" 2>/dev/null || true)"
+  if [[ -z "$cmdline" ]]; then
+    echo "activate: $name does not exist; run 'DEVNET_RESET_PASSIVE=1 tools/devnet.sh reset $idx' first" >&2
+    exit 1
+  fi
+  if [[ "$cmdline" == *--validator-private-key-path* ]]; then
+    echo "activate: $name already runs with its validator key; there is nothing to activate" >&2
+    exit 2
+  fi
+
+  # A graceful stop, not `rm -f`: the passive node's store is the thing being preserved, and the
+  # activation is meant to be a clean restart from it rather than a crash-recovery exercise too.
+  docker stop "$name" >/dev/null 2>&1 || true
+  docker rm -f "$name" >/dev/null 2>&1 || true
+  local genesis_dir; genesis_dir="$(mktemp -d)"
+  genesis_files "$genesis_dir" "$N"
+  local id; id="${DEVNET_RESET_BOOTSTRAP_ID:-$(bootstrap_id)}"
+  local host_port=$((GRPC_BASE + idx * 1000))
+  local http_port=$((HTTP_BASE + idx * 1000))
+  local admin_port=$((ADMIN_BASE + idx * 1000))
+  local bootstrap_host="${DEVNET_RESET_BOOTSTRAP_HOST:-$BOOTSTRAP}"
+  local -a reset_anchor=()
+  if [[ -n "${DEVNET_RESET_SYNC_ANCHOR:-}" ]]; then
+    reset_anchor=(--sync-anchor "$DEVNET_RESET_SYNC_ANCHOR")
+  fi
+  echo "==> activate $name: same store, signing key restored"
+  # shellcheck disable=SC2046
+  docker run $(docker_opts "$name" "$host_port" "$http_port" "$admin_port") \
+    -v "${genesis_dir}:/genesis:ro" \
+    "$(node_image "$name")" $(rnode_run_common "$name") \
+      --bootstrap "rnode://${id}@${bootstrap_host}?protocol=40400&discovery=40404" \
+      "${reset_anchor[@]}" \
+      --bonds-file /genesis/bonds.txt --wallets-file /genesis/wallets.txt \
+      --validator-private-key-path /var/lib/rnode/validator.hex
+  echo "activate $name: running as a validator from its restored DAG"
+}
+
 cmd_logs() {
   docker logs -f "${1:?node name required}"
 }
@@ -1105,6 +1176,7 @@ case "${1:-}" in
   stop) cmd_stop "${2:-}" ;;
   start) cmd_start "${2:-}" ;;
   reset) cmd_reset "${2:-}" ;;
+  activate) cmd_activate "${2:-}" ;;
   status) cmd_status ;;
   logs) cmd_logs "${2:-}" ;;
   diagnose) cmd_diagnose ;;

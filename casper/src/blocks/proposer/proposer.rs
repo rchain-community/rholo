@@ -686,6 +686,18 @@ impl Proposer {
         source: ProposeSource,
         batch_limit: Option<usize>,
     ) -> Result<(ProposeResult, Option<BlockMessage>), String> {
+        // **A key that has equivocated does not propose again** (#576). The proof is a durable
+        // verdict: this node's own key signed a second block at a sequence the DAG already held, so
+        // every further proposal would deepen the fork. Nothing resumes it — the operator rotates
+        // the key or unbonds — which is why the check sits above the resumable self-replay halt.
+        if let Some(reason) = crate::blocks::block_processor::own_key_equivocation() {
+            return Ok((
+                ProposeResult {
+                    propose_status: ProposeStatus::KeyEquivocationHalted(reason),
+                },
+                None,
+            ));
+        }
         // **The self-replay fault latch stops every trigger** (#564). The autopropose timer, the
         // attest-on-new-blocks tap, the not-due retry and an explicit propose all arrive here, so
         // one check is what makes the halt total; the surface reads the reason beside it.

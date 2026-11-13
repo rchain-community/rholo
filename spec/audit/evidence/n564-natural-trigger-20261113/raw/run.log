@@ -1,0 +1,9 @@
+natural-trigger drill: 8cea0db043e2533adad6effa9df4da7d49efb50a at 2026-11-13T14:26:47Z
+== green (rnode:local, expect green)
+registry deploy id: 3045022100f5906c47b4bc06cd74050e100bed9f644c2e777c918ec967ba98429a1d4658060220666c5a167440024b6b532ccb00f126f12432a8de136a197becaddb8fe76f9ce4
+inclusion block: feaa1e6060eae190cfc1cf3d42dd8c1e89b8f2fb70bd64beabb904b191be9e6b
+green PASS: natural-trigger block feaa1e6060eae190cfc1cf3d42dd8c1e89b8f2fb70bd64beabb904b191be9e6b accepted by both nodes and finalized
+== red (rnode:n564-pre568, expect red)
+registry deploy id: 3045022100c73345accd4e58ef92d1394c4df34e0934d7fdd4c2b1e2fd1a2d50174fc7cd3402207dfca16648aadb6768ec9a1664514fc074a331f590951a3b37f3e2993bc7edf6
+red PASS: the pre-#570 proposer refused its own natural-trigger block (ReplayCostMismatch)
+PASS: all selected natural-trigger arms

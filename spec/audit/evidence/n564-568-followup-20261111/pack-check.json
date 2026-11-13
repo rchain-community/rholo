@@ -1,0 +1,26 @@
+{
+  "observed_at_utc": "2026-11-11T16:19:11.510366+00:00",
+  "source_commit": "4be008d3df9ecec25162dc01f2843e57bba2b17e",
+  "manifest_count": 35,
+  "matching_present_files": 22,
+  "missing_files": [
+    "raw/arm1-attestation/devnet-bootstrap.log",
+    "raw/arm1-attestation/devnet-validator-1.log",
+    "raw/arm1-attestation/devnet-validator-2.log",
+    "raw/arm1-attestation/up.log",
+    "raw/arm2-reset/devnet-bootstrap.log",
+    "raw/arm2-reset/devnet-validator-1.log",
+    "raw/arm2-reset/devnet-validator-2.log",
+    "raw/arm2-reset/up.log",
+    "raw/arm3-halt/devnet-bootstrap.log",
+    "raw/arm3-halt/devnet-validator-1.log",
+    "raw/arm3-halt/devnet-validator-2.log",
+    "raw/arm3-halt/up.log",
+    "raw/run.log"
+  ],
+  "verify_command": "python3 tools/evidence-pack.py verify --record spec/audit/evidence/n564-self-replay-recovery-drill-20261111",
+  "verify_exit": 1,
+  "verify_error": "FAIL  missing file: raw/arm1-attestation/devnet-bootstrap.log",
+  "ignore_rule": ".gitignore:86:*.log\tspec/audit/evidence/n564-self-replay-recovery-drill-20261111/raw/arm1-attestation/devnet-bootstrap.log",
+  "scope": "committed pack completeness and byte checks; not a claim that the author's local run did not occur"
+}

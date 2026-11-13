@@ -1,0 +1,14 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.26s
+     Running tests/n420_boundary_merge.rs (target/debug/deps/n420_boundary_merge-04cef023f76217fa)
+
+running 7 tests
+test accepted_effects_preserved_across_a_sequential_hot_cell_merge ... ok
+test sibling_hot_cell_merges_keep_one_value_and_name_a_rejection ... ok
+test merging_a_tuple_space_rmw_block_duplicates_its_produce ... ok
+test accepted_effects_preserved_across_parallel_register_rmws_merge ... ok
+test a_boundary_round_merge_keeps_the_base_states_user_write ... ok
+test parallel_register_shaped_rmws_leave_a_countable_channel ... ok
+test registered_values_survive_a_burst_and_read_the_same ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.02s
+

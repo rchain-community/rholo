@@ -1,0 +1,76 @@
+{
+  "arms": [],
+  "binary_sha256": "sha256:9ac9e21d2d2713f805a6b7b43c088b9b220173abf425f718efcf534e996b2c8d",
+  "execution_proven": false,
+  "files": [
+    {
+      "bytes": 891,
+      "kind": "log",
+      "path": "raw/arm.log",
+      "sha256": "6dce8379ae091ad06ab92ef50ee1abe28bbd9efa90a969575e70c5fe92a80621"
+    },
+    {
+      "bytes": 72,
+      "kind": "txt",
+      "path": "raw/binary-sha256.txt",
+      "sha256": "2a485571d853c57828d9d2704a413412a1a03c3b7522d2e3e99301ff16fa11c7"
+    },
+    {
+      "bytes": 358702,
+      "kind": "log",
+      "path": "raw/bootstrap.log",
+      "sha256": "07a97dc2209e13e7cfab19db3dc85c7da4a7af880c24d73b099f16c74ab793e0"
+    },
+    {
+      "bytes": 2142,
+      "kind": "md",
+      "path": "raw/readout.md",
+      "sha256": "52cf2d3b203cfed6889e65d1e57f3e0a53d12fe977cd2e567d4b0d644161a527"
+    },
+    {
+      "bytes": 5,
+      "kind": "txt",
+      "path": "raw/result.txt",
+      "sha256": "4f8e9e45f8a9e1843b81eaf3bdf52a6b778d415d23bf985774a9d34a43f69bd5"
+    },
+    {
+      "bytes": 891,
+      "kind": "log",
+      "path": "raw/run-arm.log",
+      "sha256": "6dce8379ae091ad06ab92ef50ee1abe28bbd9efa90a969575e70c5fe92a80621"
+    },
+    {
+      "bytes": 41,
+      "kind": "txt",
+      "path": "raw/source-sha.txt",
+      "sha256": "bd5a04adb8fd384b1234b985e26baf660240521daca16820d971612f228c18d8"
+    },
+    {
+      "bytes": 1636,
+      "kind": "log",
+      "path": "raw/up.log",
+      "sha256": "dfa6a70e6f637ac305d17150d52330111261852b5a7310af694dd7b72d4b1072"
+    },
+    {
+      "bytes": 169953,
+      "kind": "log",
+      "path": "raw/validator-3.log",
+      "sha256": "bf9520f93a4ae463d105b37cea5ee3cdc356f8c72895bf663cda61624e7d2f6a"
+    }
+  ],
+  "gate_id": "M3-04-M3-06",
+  "locality": "local-devnet",
+  "packer": {
+    "packaged_at": "2026-11-13T15:22:18+00:00",
+    "tool": "evidence-pack",
+    "version": 1
+  },
+  "redactions": [],
+  "run": {
+    "attempt": null,
+    "url": null
+  },
+  "schema": 1,
+  "source_sha": "214d78fd973c62041b58729a2f32cae4ab803a29",
+  "verdict": "FAIL"
+}

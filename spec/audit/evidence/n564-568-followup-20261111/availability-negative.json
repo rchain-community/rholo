@@ -1,0 +1,9 @@
+{
+  "source": "4be008d3df9ecec25162dc01f2843e57bba2b17e",
+  "exit": 101,
+  "expected_assertion_observed": true,
+  "source_restored": true,
+  "source_sha256": "7945cd7290579434d29e6f51767d04bd16dbd58e9e7ea968134406957a9fc797",
+  "injected_test_sha256": "a0a9e9d3d3d686950ac6c8dcee77ecc358a0f30949e5eaf804f8cc6fae7a87ec",
+  "scope": "real proposer recovery using its test fixture and an always-failing persistence callback; not a disk or crash drill"
+}

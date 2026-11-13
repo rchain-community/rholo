@@ -1,0 +1,31 @@
+{
+  "recorded_at_utc": "2026-11-11T16:06:40.697516+00:00",
+  "reviewed_source": "4be008d3df9ecec25162dc01f2843e57bba2b17e",
+  "c366_source": "1d17ebc0ffab39ebe38ed052a1b6f534bb114830",
+  "incident_source": "0a1e02362a7c34e474e068ffd47469c8d4be707a",
+  "workflow_commit": "096433d35fe8f474f5677ad840cd187fb35aab03",
+  "run": "43054121454",
+  "outcomes": {
+    "PIN": "success",
+    "BASELINE": "success",
+    "NEGATIVE": "success",
+    "COMBINED": "success",
+    "INCIDENT_PIN": "success",
+    "INCIDENT": "success"
+  },
+  "rust": "rustc 1.95.0 (59807616e 2026-04-14)",
+  "log_sha256": {
+    "availability-negative.json": "ed11c3a0eb1642b3edb7c147b236e4d94eff6555d7903c8ede83c2279aa4b1e8",
+    "availability-negative.log": "baf5c70fc7fa5275f85c8615f374f6fb8eb7d5af0c2dcd8a2e56ae519f5f1256",
+    "c366-rust.patch": "eb7d42652579dc7a24d8fabd40aebb2686279de84448891bbd6a8969ecd1c15c",
+    "combined-reset.log": "814938db931aea3e64e3706ca912eae4019843793bf660c0e93faafe5ebe8523",
+    "incident-m15.log": "afa7054a3053befa32aad066c63ebc487af0dad9a6019b9bcaede9e769a1ec17",
+    "incident-probe.json": "03e591ba8074518c11893d60bf0bf184d57ea9437a77374218783e041543d54b",
+    "omega_rcb_m15.rs": "b68bf0990baebe6d4f0417b6ab38c975c5183d4d1c313a173c3a94f5fb9dc6a5",
+    "protoc-version.txt": "5d8e8ea015f9d39d174f30332765f0edeb50e00689dc792907c56d56ea637d22",
+    "reviewed-bound.log": "f0138cd996d871942a48b52d5dcf76abdc4a2a853f7c7fa0cfdc11c3907f17ca",
+    "reviewed-reset.log": "cb1eb1323d707d26eb510e56c763f15f734f686316cbcfd797e046a11ca87696",
+    "reviewed-self-replay.log": "7116879517bd083fdf0b64c8396e66894a9b62c32ab860f60da96d598dab7dbc"
+  },
+  "scope": "focused recovery tests, expected failing availability assertion, combined C366 fixture and bounded original-source M15 probes; no live validator, incident reproduction or full verification claim"
+}

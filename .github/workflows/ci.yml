@@ -28,6 +28,10 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Assert isolation, rollback, and negative controls
         run: python3 -m unittest discover -s tests -p 'test_n447_*.py' -v
+      - name: Assert the mature-join arm's evidence extraction
+        # The arm's sequence witness is what proves a reactivated validator did not reuse a
+        # sequence; a one-character unpacking defect read 5 for 15 and passed (#576).
+        run: python3 -m unittest discover -s tests -p 'test_n457_mature_join.py' -v
       - name: Parse the full fork-point harness
         run: python3 -m py_compile tools/n420-fork-point.py tools/n447_partition.py
 
@@ -176,6 +180,11 @@ jobs:
           set -e
           test "$rc" -eq 3
 
+
+      - name: Release-pin preflight probe contract
+        # The #559 §1 collector is an acceptance instrument: its merge/check behaviour must not rot.
+        run: |
+          python3 -m unittest discover -s tests -p test_release_pin_probe.py -v
 
       - name: Type-system gate
         # The four **hard** classes only -- production `unwrap()`/`panic!`/`unsafe`, a silent fallible

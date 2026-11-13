@@ -414,30 +414,48 @@ impl CommUtil {
             anchor,
         });
         let msg = protocol_helper::packet(&self.conf.local, &self.conf.network_id, packet);
+        // **Correlation fields for the M3 witness** (#428): the requester and responder must be
+        // joinable by peer key and anchor, not only by a human reading two logs. A "sent" line is
+        // never admission; the admitted-reply line below is the requester-side half.
+        let peer_key = bootstrap.s_key();
+        let anchor_label = match anchor {
+            Some(h) => h.to_hex(),
+            None => "latest".to_string(),
+        };
         // A stored notify_one permit also covers admission before this future is polled.
         let response = received.notified();
         tokio::pin!(response);
         for attempt in 1..=attempts {
             tokio::select! {
                 biased;
-                _ = &mut response => return Ok(()),
+                _ = &mut response => {
+                    self.log.info(self.log_source, &format!(
+                        "LFS fringe reply admitted for peer {peer_key} (anchor {anchor_label}) on attempt {attempt}/{attempts}"
+                    ));
+                    return Ok(())
+                }
                 outcome = tokio::time::timeout(interval, self.transport.send(bootstrap, msg.clone())) => {
                     match outcome {
                         Ok(Ok(())) => self.log.info(self.log_source, &format!(
-                            "LFS fringe request {attempt}/{attempts} sent; awaiting admitted reply from {bootstrap}"
+                            "LFS fringe request {attempt}/{attempts} sent to peer {peer_key} (anchor {anchor_label}); awaiting admitted reply"
                         )),
                         Ok(Err(error)) => self.log.warn(self.log_source, &format!(
-                            "LFS fringe request {attempt}/{attempts} failed: {error:?}"
+                            "LFS fringe request {attempt}/{attempts} to peer {peer_key} (anchor {anchor_label}) failed: {error:?}"
                         )),
                         Err(_) => self.log.warn(self.log_source, &format!(
-                            "LFS fringe request {attempt}/{attempts} send timed out"
+                            "LFS fringe request {attempt}/{attempts} to peer {peer_key} (anchor {anchor_label}) send timed out"
                         )),
                     }
                 }
             }
             tokio::select! {
                 biased;
-                _ = &mut response => return Ok(()),
+                _ = &mut response => {
+                    self.log.info(self.log_source, &format!(
+                        "LFS fringe reply admitted for peer {peer_key} (anchor {anchor_label}) on attempt {attempt}/{attempts}"
+                    ));
+                    return Ok(())
+                }
                 _ = tokio::time::sleep(interval) => {}
             }
         }

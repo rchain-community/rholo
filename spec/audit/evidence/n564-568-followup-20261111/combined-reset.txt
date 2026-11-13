@@ -1,0 +1,24 @@
+   Compiling rchain-casper v0.1.0 (/home/runner/work/rchain-rust/rchain-rust/casper)
+    Finished `test` profile [unoptimized] target(s) in 11.84s
+     Running tests/reset.rs (target/debug/deps/reset-356c3fa9ce2ad752)
+
+running 16 tests
+test a_caught_up_self_replay_reset_resumes_without_an_operator_post ... ok
+test a_crash_after_the_rewind_is_repaired_at_boot_by_the_marker ... ok
+test a_halt_written_before_the_restart_is_read_at_the_next_boot ... ok
+test a_marker_from_another_anchors_reset_does_not_clear_the_self_replay_fault ... ok
+test a_disk_backed_reset_preserves_the_inventory_across_store_reopen ... ok
+test a_reset_record_that_contradicts_the_named_anchor_refuses_boot ... ok
+test a_node_that_never_reset_is_not_touched_by_the_reset_guard ... ok
+test a_self_replay_reset_below_its_anchor_does_not_resume ... ok
+test a_self_replay_reset_record_latches_the_next_boot ... ok
+test a_self_replay_reset_refuses_a_dag_block_whose_body_is_missing ... ok
+test a_reset_request_rewinds_the_stores_when_the_switch_is_on_and_does_nothing_when_it_is_off ... ok
+test a_self_replay_reset_with_the_switch_off_writes_no_marker ... ok
+test an_over_cap_refused_body_is_visible_as_unavailable_with_its_length ... ok
+test a_self_replay_reset_returns_the_deploy_before_purging_its_only_block ... ok
+test the_shard_health_counters_survive_a_restart ... ok
+test the_guard_refuses_a_rewinding_whose_anchor_body_is_absent ... ok
+
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+

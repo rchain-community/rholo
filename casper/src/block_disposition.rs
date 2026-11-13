@@ -20,6 +20,14 @@
 //! second row would be a second truth. Settling — either outcome — deletes the row, so the ledger
 //! is bounded by the number of blocks the node currently owes an outcome, not by chain height.
 //!
+//! **One refusal has no DAG row to be its record** (C367): the H-1 equivocation gate returns
+//! before any write, because the DAG can never hold both blocks by one sender at one sequence
+//! number. That body stays `Faulted` under [`EQUIVOCATION_VERDICT_STAGE`] with the budget spent:
+//! the row keeps it accounted for, while
+//! [`BlockDisposition::is_equivocation_verdict`] and [`BlockDispositionStore::outstanding`] keep
+//! the latch, the start-up seed and the re-offer from reading it as an obligation. It owes nothing
+//! and no retry can change it; the DAG's own offence entry (C200) is the durable evidence.
+//!
 //! **Older stores.** Startup first copies the v3 disposition ledger from its historical
 //! dagstorage location, preserving fault history and pending stages (C355). The one-time legacy
 //! body scan then adopts bodies with neither a DAG verdict nor a disposition, walking hashes and
@@ -100,6 +108,21 @@ pub enum BlockDisposition {
 }
 
 impl BlockDisposition {
+    /// **A refusal that is a verdict, not an obligation** (C367).
+    ///
+    /// The DAG's H-1 gate refuses a second block by one sender at one sequence number *before any
+    /// write*, so the body has no DAG row to be its record, and no retry can change the outcome.
+    /// It is stored under [`EQUIVOCATION_VERDICT_STAGE`] with the retry budget spent: the row keeps
+    /// the body **accounted for** (the orphan audit reads rows, not heights), while nothing owes an
+    /// outcome, so neither the fault latch nor the start-up seed may read it as an obligation.
+    pub fn is_equivocation_verdict(&self) -> bool {
+        matches!(
+            self,
+            BlockDisposition::Faulted { stage, attempts, .. }
+                if stage == EQUIVOCATION_VERDICT_STAGE && *attempts >= MAX_FAULT_RETRIES
+        )
+    }
+
     pub fn block_number(&self) -> BlockHeight {
         match self {
             BlockDisposition::Pending { block_number, .. }
@@ -121,6 +144,12 @@ impl BlockDisposition {
         }
     }
 }
+
+/// **The stage a refusal that is a verdict is stored under** (C367). The H-1 equivocation gate
+/// writes nothing to the DAG, so the ledger row is the only durable record of the refusal besides
+/// the DAG's own offence entry. The row keeps the body accounted for; `is_equivocation_verdict`
+/// marks it as owing nothing.
+pub const EQUIVOCATION_VERDICT_STAGE: &str = "equivocation";
 
 /// **The retry budget before a block is quarantined.** A fault that repeats is not transient; after
 /// this many attempts the row stays `Faulted`, the pipeline fault stays visible, and only an
@@ -681,7 +710,19 @@ impl BlockDispositionStore {
         Ok(self.store.get(&[*hash]).await?.into_iter().next().flatten())
     }
 
-    /// Every row the node still owes an outcome, oldest first by block height.
+    /// The rows that still owe an outcome, oldest first by block height — what the readiness seed
+    /// and the re-offer read. An equivocation verdict is in [`Self::unsettled`] (its row is the
+    /// body's accounting) but owes nothing, so it is not here (C367).
+    pub async fn outstanding(&self) -> Result<Vec<(BlockHash, BlockDisposition)>, String> {
+        Ok(self
+            .unsettled()
+            .await?
+            .into_iter()
+            .filter(|(_, disposition)| !disposition.is_equivocation_verdict())
+            .collect())
+    }
+
+    /// Every row the ledger holds, oldest first by block height.
     pub async fn unsettled(&self) -> Result<Vec<(BlockHash, BlockDisposition)>, String> {
         let mut rows: Vec<(BlockHash, BlockDisposition)> =
             self.store.to_map().await?.into_iter().collect();
@@ -728,6 +769,9 @@ pub const RETRY_SWEEP_INTERVAL: Duration = Duration::from_secs(15);
 /// yet in the DAG: the parent is also in the ledger and is sent earlier, so the processor's serial
 /// order inserts it first; a genuinely missing parent leaves the row `Pending` for the next start
 /// rather than spending its retry budget on a question that cannot be answered yet.
+///
+/// Reads [`BlockDispositionStore::outstanding`]: an equivocation verdict accounts for its body but
+/// owes no outcome, so a boot after one does not re-offer it or report it quarantined (C367).
 pub async fn reoffer_unsettled(
     ledger: BlockDispositionStore,
     block_store: BlockStore,
@@ -738,7 +782,7 @@ pub async fn reoffer_unsettled(
     let source = LogSource::new("casper.blocks.BlockDisposition");
     let mut report = ReofferReport::default();
     let rows = ledger
-        .unsettled()
+        .outstanding()
         .await
         .map_err(|e| format!("could not read the disposition ledger at start-up: {e}"))?;
     for (hash, disposition) in rows {
@@ -1495,6 +1539,41 @@ impl OrphanStreak {
             .count();
         (confirmed > 0).then_some(confirmed as u64)
     }
+}
+
+/// **The proof that this node's own validator key equivocated, read back from the durable verdict**
+/// (#576, C367).
+///
+/// The disposition row is the durable half of the C367 verdict and the refused body is in the block
+/// store; together they say whether the offence was against *this* validator's key. Only verdict
+/// rows are walked — one per recorded offence, not one per block — and the body is loaded only to
+/// read its sender and sequence.
+///
+/// **`Err` is not "clean".** The caller must fail closed: a node that cannot read the history of its
+/// own key's offences must not assume there are none.
+pub async fn own_key_equivocation_verdict(
+    ledger: &BlockDispositionStore,
+    block_store: &BlockStore,
+    own_key: &rchain_models::validator::Validator,
+) -> Result<Option<String>, String> {
+    for (hash, disposition) in ledger.unsettled().await? {
+        if !disposition.is_equivocation_verdict() {
+            continue;
+        }
+        let Some(block) = block_store.get(&[hash]).await?.into_iter().next().flatten() else {
+            continue;
+        };
+        if block.sender == *own_key {
+            return Ok(Some(format!(
+                "this validator's key equivocated: block #{} {} (sequence {}) was refused because \
+                 the DAG holds a different block by this key at that sequence",
+                block.block_number,
+                hash.to_hex(),
+                block.seq_num
+            )));
+        }
+    }
+    Ok(None)
 }
 
 /// Law 88a: a body is an orphan only when neither its DAG entry nor its ledger row owns it.
@@ -2548,6 +2627,57 @@ mod tests {
                 .unwrap()
                 .len(),
             1
+        );
+    }
+
+    /// **The boot seed names this key's own offence, and only this key's** (#576): a verdict row plus
+    /// its stored body is enough to reconstruct it, and an unsettled row is not an offence.
+    #[tokio::test]
+    async fn own_key_equivocation_verdict_is_read_back_from_the_durable_rows() {
+        let own = Validator::new([0x22; 65]);
+        let mut mine = sample_block(hash(41));
+        mine.sender = own.clone();
+        let mut theirs = sample_block(hash(42));
+        theirs.sender = Validator::new([0x33; 65]);
+        let blocks = block_store::create(&InMemoryStoreManager::default())
+            .await
+            .expect("block store");
+        blocks
+            .put(&[
+                (mine.block_hash, mine.clone()),
+                (theirs.block_hash, theirs.clone()),
+            ])
+            .await
+            .expect("bodies");
+        let ledger = store().await;
+        for block in [&mine, &theirs] {
+            ledger
+                .mark_terminal_fault(
+                    block.block_hash,
+                    block.block_number,
+                    EQUIVOCATION_VERDICT_STAGE,
+                    "refused",
+                )
+                .await
+                .unwrap();
+        }
+        // A body merely owed an outcome is not an offence, even when its sender is ours.
+        ledger
+            .mark_pending(hash(43), height(4), PendingStage::Stored)
+            .await
+            .unwrap();
+
+        let found = own_key_equivocation_verdict(&ledger, &blocks, &own)
+            .await
+            .expect("the scan")
+            .expect("our key's offence");
+        assert!(found.contains(&mine.block_hash.to_hex()), "{found}");
+        assert_eq!(
+            own_key_equivocation_verdict(&ledger, &blocks, &Validator::new([0x44; 65]))
+                .await
+                .unwrap(),
+            None,
+            "another key's offence is not this key's proof"
         );
     }
 

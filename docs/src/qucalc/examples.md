@@ -36,3 +36,17 @@ These are the reusable contracts the examples are built from:
 
 See [`Governance.md`](../../../qucalc/rholang/Governance.md) for the governance
 semantics these libraries compose.
+
+## External QKB contract conformance
+
+[`tools/qkb-runtime-conformance.py`](../../../tools/qkb-runtime-conformance.py)
+installs the pinned QLF #216 contract on a fresh loopback-only validator and
+calls the registered service from separately signed deploys. It compares actual
+results with the pinned Python reference, including native deployer identity,
+question replay, answer ordering, per-axis admission and compound propositions.
+
+The [runtime acceptance record](../../../spec/audit/evidence/qkb-runtime-20261113/README.md)
+contains the source and executable digests, carrying-block receipts, bounded
+vector census, deliberately weakened admission control and the retained
+larger-state timeout. Sharding and mutable-client callback checks remain
+reference-model checks; the deployed contract has one state cell.

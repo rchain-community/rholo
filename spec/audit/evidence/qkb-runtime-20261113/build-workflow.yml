@@ -1,0 +1,46 @@
+name: QKB pinned runtime build
+on:
+  push:
+    branches: [verify/qkb-runtime-20261113]
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  CARGO_INCREMENTAL: "0"
+  CARGO_BUILD_JOBS: "2"
+  CARGO_PROFILE_DEV_DEBUG: "0"
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - name: Exact runtime source
+        run: |
+          git worktree add --detach /tmp/qkb-rholo-source 79e550400114b32a0292b9103cb5e83c6e1e1c72
+          mkdir -p receipts
+          git -C /tmp/qkb-rholo-source rev-parse HEAD > receipts/source-sha.txt
+          rustup toolchain install 1.95.0 --profile minimal
+          sudo tools/ci-apt-install.sh protobuf-compiler libprotobuf-dev
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0
+        with:
+          workspaces: /tmp/qkb-rholo-source
+          shared-key: qkb-runtime-20261113
+          cache-on-failure: true
+      - name: Build pinned node
+        working-directory: /tmp/qkb-rholo-source
+        run: cargo +1.95.0 build --locked -p rchain-node --bin rnode 2>&1 | tee "$GITHUB_WORKSPACE/receipts/build.log"
+      - name: Record executable identity
+        run: |
+          cp /tmp/qkb-rholo-source/target/debug/rnode receipts/rnode
+          sha256sum receipts/rnode > receipts/rnode.sha256
+          receipts/rnode --version > receipts/version.txt
+          rustc +1.95.0 --version > receipts/rustc.txt
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: qkb-rnode-79e5504
+          path: receipts/
+          if-no-files-found: error

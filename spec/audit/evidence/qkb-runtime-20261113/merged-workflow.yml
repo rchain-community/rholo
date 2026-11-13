@@ -1,0 +1,51 @@
+name: QKB merged-head runtime acceptance
+on:
+  push:
+    branches: [verify/qkb-merged-20261113]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+defaults:
+  run:
+    shell: bash
+jobs:
+  acceptance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Fetch the exact QLF input
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: rhovision-org/quantum-logical-framework
+          ref: 4bbe2012292ad40d1e01726bd24929f5a7ceb596
+          path: qlf-input
+      - name: Fetch source-pinned runtime artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run download 43466083379 --repo aixaria0/rchain-rust -n qkb-rnode-79e5504 -D runtime
+          test "$(cat runtime/source-sha.txt)" = "79e550400114b32a0292b9103cb5e83c6e1e1c72"
+          expected="$(cut -d' ' -f1 runtime/rnode.sha256)"
+          test "$(sha256sum runtime/rnode | cut -d' ' -f1)" = "$expected"
+          chmod +x runtime/rnode
+          python3 -m pip install pycryptodome==3.23.0
+      - name: Execute original QKB through signed deploys
+        run: |
+          mkdir -p target/qkb-merged
+          python3 tools/qkb-runtime-conformance.py --rnode runtime/rnode --expected-binary-sha256 2cffda31f4d7d03cb2e7644340449d153da40e9e5db39f5b4c407791c6504201 --rholo . --qlf qlf-input --qlf-revision 4bbe2012292ad40d1e01726bd24929f5a7ceb596 --contract qlf-input/rholang/QKB.rho --out target/qkb-merged 2>&1 | tee target/qkb-merged/suite.log
+      - name: Collect merged-head evidence
+        if: always()
+        run: |
+          rm -rf target/qkb-merged/node-data
+          rm -f target/qkb-merged/validator.hex
+          git rev-parse HEAD > target/qkb-merged/harness-sha.txt
+          git -C qlf-input rev-parse HEAD > target/qkb-merged/qlf-sha.txt
+          cp runtime/source-sha.txt runtime/rnode.sha256 runtime/version.txt target/qkb-merged/
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: qkb-merged-head
+          path: target/qkb-merged/
+          if-no-files-found: error

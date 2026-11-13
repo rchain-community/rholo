@@ -90,3 +90,16 @@ until M5-01's pinned inputs and M5-02's replay both exist. The 2026-10-29 record
 configured-input diagnosis, not an off-host positive. M5-02 is not strictly read-only (it appends a
 checkpoint). No candidate changes consensus validity, block encoding, attestation, finality or
 RCHIP-55.
+
+## Status, 2026-11-13
+
+- **M5-06 and M5-04 landed** in `9d985fc1a` (`MergeReport` now carries
+  `unapplied_kept_datums`/`_konts`, `final_scope_rejected_deploys` and `kept_effect_coverage`) and
+  were verified on the integrated tree: `n420_boundary_merge` 7/7 and the `merging` library tests
+  51/51. The packed record is
+  [`m5-06-m5-04-20261113`](../m5-06-m5-04-20261113/README.md). M5 is **not closed**: M5-01's
+  authenticated 840→841 bundle is still unavailable, and M5-02/M5-03 still depend on it.
+- **M3-02's locality lint landed** (`tools/check-evidence-locality.py`); the off-host positive
+  (M3-01/M3-03/M3-00) still needs a second host and remains Jim's envelope.
+- **C357's local operational arm is delivered** (`n564-natural-trigger-20261113`), which feeds M6/D
+  but does not advance M1–M4's candidate-binary acceptance.

@@ -2505,7 +2505,7 @@ where
     // fringe** (#583). The work's own height is not a substitute: #223's returning validator observed
     // its boundary work twenty-three heights late.
     let licence_age = work_licence_age(work_seen, newest_work.as_ref(), tip, log).await;
-    let (nothing_to_finalize, new_state_transition) = attestation_inputs(licence_age, tip);
+    let (nothing_to_finalize, new_state_transition) = attestation_inputs(licence_age);
     prune_work_seen(work_seen, dag_repr.as_ref(), work_seen_pruned, log).await;
     // The live weight set: the one liveness rule, shared with the finalizer through `liveness` (#70
     // increment 2). It decides who counts as *moving*; the quorum itself stays measured against the
@@ -4710,12 +4710,15 @@ fn block_needs_finalization(
 }
 
 /// The guard's two inputs, from the **newest work-bearing block this node has seen that the fringe it is
-/// building on does not yet cover** (`None`: there is none). The height passed in is the **first
-/// observation** of that work (#583), not the work's own height.
+/// building on does not yet cover**. The height passed in is the work's **age in heights**, measured
+/// from this node's first observation of it (#583), not the work's own height.
 ///
 /// - `nothing_to_finalize`: there is no such block.
 /// - `new_state_transition`: there is one, and its first observation is within
-///   [`ATTESTATION_HORIZON`] of the tip.
+///   [`ATTESTATION_HORIZON`] heights of the tip.
+///
+/// The input is an age rather than a height so that a fail-closed store error can be represented at
+/// every tip, including below the horizon.
 ///
 /// **The licence used to be "a parent carries deploys", and that is AUDIT C209.** With no autopropose the
 /// only proposal attempts are the deploy itself and the attestation tap, and each round's parents are the
@@ -4724,26 +4727,22 @@ fn block_needs_finalization(
 /// and the fringe stopped one layer short of the deploy: measured live (#214, criterion 1: 693 samples,
 /// finality `none` throughout) and in-process. A deploy-bearing block needs every bonded sender to speak
 /// for a few rounds after it, not one, and this is what licenses that.
-fn attestation_inputs(newest_unfinalized: Option<BlockHeight>, tip: BlockHeight) -> (bool, bool) {
-    match newest_unfinalized {
+fn attestation_inputs(newest_unfinalized_age: Option<i64>) -> (bool, bool) {
+    match newest_unfinalized_age {
         None => (true, false),
-        Some(h) => (
-            false,
-            liveness::heights_behind(tip, h) <= ATTESTATION_HORIZON,
-        ),
+        Some(age) => (false, age <= ATTESTATION_HORIZON),
     }
 }
 
-/// **The height the prompt-attestation licence is aged from** (#583): this node's first observation
-/// of the newest unfinalised work.
+/// **The age of the prompt-attestation licence** (#583): heights from this node's first observation
+/// of the newest unfinalised work to the current tip.
 ///
-/// The value is the tip height recorded when the work first entered `conflict_set`, and it is never
-/// rewritten while that work is unfinalised. An advancing fringe therefore cannot renew it, and the
-/// store is durable, so a restart cannot either. An absent row is a first observation; a read or
-/// write error is **fail-closed** (`tip − horizon − 1`), which withholds promptness only — the
-/// cadence path still attests when a quorum is reachable (W-N9-01). The work's own height is not a
-/// substitute: #223's returning validator observed its boundary work twenty-three heights late and
-/// had to be licensed immediately.
+/// The recorded first-seen tip is never rewritten while that work is unfinalised. An advancing
+/// fringe therefore cannot renew it, and the store is durable, so a restart cannot either. An absent
+/// row is a first observation; a read or write error is **fail-closed** (an age past the horizon),
+/// which withholds promptness only — the cadence path still attests when a quorum is reachable
+/// (W-N9-01). The work's own height is not a substitute: #223's returning validator observed its
+/// boundary work twenty-three heights late and had to be licensed immediately.
 ///
 /// The scan takes the **newest** work-bearing block, not the oldest: an expired side-branch block
 /// must not mask newer work that is still inside its own opportunity, which would be premature
@@ -4754,7 +4753,7 @@ async fn work_licence_age(
     newest_work: Option<&(BlockHash, BlockHeight)>,
     tip: BlockHeight,
     log: &Arc<dyn Log>,
-) -> Option<BlockHeight> {
+) -> Option<i64> {
     let (hash, _height) = newest_work?;
     let source = LogSource::new("casper.blocks.Proposer");
     let first_seen = match work_seen.get(std::slice::from_ref(hash)).await {
@@ -4798,13 +4797,12 @@ async fn work_licence_age(
             None
         }
     };
-    Some(first_seen.unwrap_or_else(|| expired_first_seen(tip)))
-}
-
-/// A first-seen height far enough behind the tip that the licence is past its horizon.
-fn expired_first_seen(tip: BlockHeight) -> BlockHeight {
-    BlockHeight::try_from((i64::from(tip) - (ATTESTATION_HORIZON + 1)).max(0))
-        .expect("a clamped height is non-negative")
+    match first_seen {
+        Some(first) => Some(liveness::heights_behind(tip, first)),
+        // Fail-closed: an age past the horizon, representable at every tip. (A synthetic *height*
+        // would clamp to zero below the horizon and read as licensed.)
+        None => Some(ATTESTATION_HORIZON + 1),
+    }
 }
 
 /// Delete first-seen rows for work at or below the last finalized block.
@@ -5975,7 +5973,7 @@ mod attestation_age_tests {
         tip: BlockHeight,
         log: &Arc<dyn Log>,
     ) -> (bool, bool) {
-        attestation_inputs(work_licence_age(store, Some(work), tip, log).await, tip)
+        attestation_inputs(work_licence_age(store, Some(work), tip, log).await)
     }
 
     #[tokio::test]
@@ -6081,6 +6079,13 @@ mod attestation_age_tests {
             licence(&store, &work, h(50), &log).await,
             (false, false),
             "a failed read is fail-closed, not a fresh sighting"
+        );
+        // The edge the age input exists for: below the horizon, a synthetic "expired" *height*
+        // would clamp to zero and read as licensed.
+        assert_eq!(
+            licence(&store, &work, h(5), &log).await,
+            (false, false),
+            "a failed read withholds promptness at a low tip too"
         );
     }
 }
@@ -6284,7 +6289,9 @@ mod quiet_chain_tests {
                         nothing_to_finalize,
                         parents.iter().any(|p| with_deploy.contains(&p.id)),
                     ),
-                    View::SeenWork | View::Seen => attestation_inputs(newest_first_seen, work_tip),
+                    View::SeenWork | View::Seen => attestation_inputs(
+                        newest_first_seen.map(|first| liveness::heights_behind(work_tip, first)),
+                    ),
                 };
                 let live = liveness::live_weight_set(
                     &bonds,
@@ -6563,20 +6570,16 @@ mod quiet_chain_tests {
     /// and only one of them withholds.
     #[test]
     fn the_licence_ends_at_the_horizon_and_the_work_does_not() {
-        let tip = BlockHeight::try_from(100).unwrap();
-        let at = |behind: i64| Some(BlockHeight::try_from(100 - behind).unwrap());
+        let age = |behind: i64| Some(behind);
         assert_eq!(
-            attestation_inputs(None, tip),
+            attestation_inputs(None),
             (true, false),
             "nothing seen is unfinalised"
         );
-        assert_eq!(attestation_inputs(at(0), tip), (false, true));
+        assert_eq!(attestation_inputs(age(0)), (false, true));
+        assert_eq!(attestation_inputs(age(ATTESTATION_HORIZON)), (false, true));
         assert_eq!(
-            attestation_inputs(at(ATTESTATION_HORIZON), tip),
-            (false, true)
-        );
-        assert_eq!(
-            attestation_inputs(at(ATTESTATION_HORIZON + 1), tip),
+            attestation_inputs(age(ATTESTATION_HORIZON + 1)),
             (false, false),
             "past the horizon the deploy no longer licenses a prompt attestation"
         );

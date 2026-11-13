@@ -1,0 +1,12 @@
+   Compiling rchain-block-storage v0.1.0 (/home/patrick/RNodeRust/.claude/worktrees/pr-567/block-storage)
+   Compiling rchain-casper v0.1.0 (/home/patrick/RNodeRust/.claude/worktrees/pr-567/casper)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 22.01s
+     Running unittests src/lib.rs (target/debug/deps/rchain_casper-f30259b6c576b39a)
+
+running 3 tests
+test blocks::proposer::proposer::attestation_age_tests::an_unreadable_store_withholds_the_prompt_licence ... ok
+test blocks::proposer::proposer::attestation_age_tests::expired_work_does_not_mask_newer_work ... ok
+test blocks::proposer::proposer::attestation_age_tests::late_work_is_licensed_from_its_first_observation_and_expires_at_the_horizon ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 632 filtered out; finished in 0.00s
+

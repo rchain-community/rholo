@@ -12720,7 +12720,7 @@ The two constraints reconcile only if the age is the node's **first observation*
 per-shard durable store (`block-storage/src/work_seen.rs`) records the tip height when the work first
 enters `conflict_set`; the row is written once and never rewritten, so no fringe advance,
 re-observation or restart renews it. An absent row is a first sighting; a read or write error is
-**fail-closed** (`tip − horizon − 1`), which withholds promptness only — the cadence path still
+**fail-closed** (an age past the horizon, withheld at every tip, including below it), which withholds promptness only — the cadence path still
 attests when a quorum is reachable (W-N9-01). Rows are pruned only for work at or below the last
 finalized block, which cannot re-enter the unfinalized region without a safety violation. The scan
 takes the **newest** work-bearing block, so an expired side branch cannot mask newer work still inside
@@ -12734,11 +12734,13 @@ as history). After the fixes both are green, with
 store's reopen test as the controls. The #223 live shape is the positive control in both: work first
 seen at tip 33 is licensed at once, and the late-but-uncovered block is not history.
 
-**Acceptance.** The issue's closing bar is the N=3 rejoin (the direct #223 regression) and an N=4
-quiet-finality arm at the source head. The run metadata, exit codes and raw logs are recorded in
-`spec/audit/evidence/n583-attestation-policy-<date>/README.md`; this pass is not evidence for them
-until that record exists. No live deployment, public validator, key use or consensus release is
-implied.
+**Acceptance.** Both arms ran at source head `2fe16f163` (image `rnode:local`
+`sha256:14bca137…`), recorded in `spec/audit/evidence/n583-attestation-policy-20261113/README.md`:
+the N=3 rejoin passes R1/R2/R3 (the returning validator reached the survivors' tip, its deploy
+finalised, no missing-justification refusals — the #223 shape kept live), and the N=4 arm
+(`devnet-fuzz` run 43518312643, `mode=final-gap-recovery recovery_case=n4`) records `n4=0` (the
+marker finalised on all four validators and retained through two epoch boundaries) and
+`n4-partition=0`. No live deployment, public validator, key use or consensus release is implied.
 
 **What this pass does not do.** It changes no block validity and no consensus interpretation of the
 proposer timestamp (#528). It does not persist the tap's per-sender `answered` map: that reset is a

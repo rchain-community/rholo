@@ -5,6 +5,7 @@ Requires a built rnode and pycryptodome (REV-address derivation only). The QLF
 reference is imported from an explicitly supplied, source-pinned checkout.
 """
 import argparse
+from datetime import datetime, timezone
 import hashlib
 import itertools
 import json
@@ -94,9 +95,16 @@ class Run:
         self.out = Path(args.out).resolve()
         self.out.mkdir(parents=True, exist_ok=True)
         self.binary = str(Path(args.rnode).resolve())
+        digest = hashlib.sha256(Path(self.binary).read_bytes()).hexdigest()
+        if digest != args.expected_binary_sha256:
+            raise ValueError("runtime executable does not match the expected artifact digest")
+        version = subprocess.check_output([self.binary, "--version"], text=True).strip()
+        if RHOLO not in version:
+            raise ValueError("runtime version does not identify the pinned Rholo revision")
         self.report = {
+            "started_utc": datetime.now(timezone.utc).isoformat(), "version": version,
             "result": "INCOMPLETE", "runtime_source": RHOLO, "qlf_source": QLF,
-            "binary_sha256": hashlib.sha256(Path(self.binary).read_bytes()).hexdigest(),
+            "binary_sha256": digest,
             "scope": "isolated-single-validator-loopback", "cases": [],
         }
         self.node = None
@@ -425,12 +433,14 @@ class Run:
             self.node_log.close()
         key = self.out / "validator.hex"
         key.unlink(missing_ok=True)
+        self.report["finished_utc"] = datetime.now(timezone.utc).isoformat()
         self.save("report.json", self.report)
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--rnode", required=True)
+    ap.add_argument("--expected-binary-sha256", required=True)
     ap.add_argument("--rholo", required=True)
     ap.add_argument("--qlf", required=True)
     ap.add_argument("--contract", required=True)

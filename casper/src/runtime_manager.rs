@@ -1096,6 +1096,23 @@ impl RuntimeManager {
         matches!(mode, EffectMode::Relaxed | EffectMode::RelaxedValidated)
     }
 
+    /// **The cost-accounting execution unit refuses the pure relaxed schedule** (Laws 20–22).
+    ///
+    /// The public entry guards (`process_deploy`, `play_deploys`, `compute_state_with_limit`) are
+    /// belt and braces; this is the unit every block and cost-accounting caller passes through, so
+    /// a future entry point cannot reintroduce the bypass. `RelaxedValidated` passes: it is
+    /// validated against the sequential oracle and may fall back, which is not the off-chain-only
+    /// mode.
+    fn refuse_relaxed_mode(runtime: &RhoRuntime) -> Result<(), RuntimeRunError> {
+        if runtime.effect_mode() == EffectMode::Relaxed {
+            return Err(RuntimeRunError::Other(
+                "relaxed effect scheduling is off-chain only: refusing block-path deploy execution"
+                    .to_string(),
+            ));
+        }
+        Ok(())
+    }
+
     /// The body of `play_deploy_with_cost_accounting`, parameterized on the runtime (the
     /// validation oracle runs it on a forked sequential runtime), with the Law 25 per-deploy
     /// fallback: if the certificate invalidates any commit of this deploy's unit, the whole
@@ -1106,6 +1123,7 @@ impl RuntimeManager {
         deploy: &SignedDeployData,
         rand: &Blake2b512Random,
     ) -> Result<UserDeployRuntimeResult, RuntimeRunError> {
+        Self::refuse_relaxed_mode(runtime)?;
         let mode = runtime.effect_mode();
         if !Self::cost_unit_needs_fallback(mode) {
             // Sequential/Gate cannot invalidate this unit. Running it directly is behaviorally the
@@ -1245,6 +1263,8 @@ impl RuntimeManager {
         terms: &[SignedDeployData],
         rand: &Blake2b512Random,
     ) -> Result<(Blake2b256Hash, Vec<UserDeployRuntimeResult>), RuntimeRunError> {
+        // Before the reset: a refused mode must not mutate the runtime either.
+        Self::refuse_relaxed_mode(runtime)?;
         runtime
             .reset(*start_hash)
             .await

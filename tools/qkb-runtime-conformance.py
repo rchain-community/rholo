@@ -227,6 +227,9 @@ class Run:
             f'for (QKB <- service) {{ QKB!({args}) | for (@actual <- reply) {{ '
             f'@"qkb-case-{label}"!((actual == {rho(expected)}, actual)) }} }} }}')
         block, sig = self.submit(label, term, signer)
+        self.finish_case(label, op, expected, block, sig)
+
+    def finish_case(self, label, op, expected, block, sig):
         reply = self.explore(f'for (@(ok, actual) <- @"qkb-case-{label}") {{ @"out"!(ok) }}', block)
         actual = self.explore(f'for (@(ok, actual) <- @"qkb-case-{label}") {{ @"out"!(actual) }}', block)
         passed = reply.get("replySource") == "out" and any(
@@ -239,6 +242,50 @@ class Run:
         print(json.dumps(row), flush=True)
         if not passed:
             raise AssertionError(label + ": runtime/reference mismatch: " + repr(actual))
+
+
+    def native_semantic_vector(self):
+        label = "native-aggregate-counterexample"
+        expected = (True, 1)
+        term = (
+            "new zfa(`rho:qucalc:zfa`), reply in { "
+            "zfa!([0, 0, 3, 3], *reply) | for (@actual <- reply) { "
+            '@"qkb-case-' + label + '"!((actual == (true, 1), actual)) } }')
+        block, sig = self.submit(label, term)
+        self.finish_case(label, "rho:qucalc:zfa", expected, block, sig)
+
+    def logic_batch(self, label, rows):
+        term = (
+            "new lookup(`rho:registry:lookup`), service, check in { "
+            "lookup!(" + rho(self.uri) + ", *service) | for (QKB <- service) { "
+            "contract check(@rows, @i) = { "
+            "if (i == rows.length()) { "
+            '@"qkb-case-' + label + '"!((true, i)) } else { '
+            "new reply in { let @row <- rows.nth(i) in { "
+            "QKB!(row.nth(0), row.nth(1), row.nth(2), *reply) | "
+            "for (@actual <- reply) { if (actual == row.nth(3)) { check!(rows, i + 1) } "
+            'else { @"qkb-case-' + label + '"!((false, (i, actual))) } } } } } } | '
+            "check!(" + rho(rows) + ", 0) } }")
+        block, sig = self.submit(label, term)
+        self.finish_case(label, "logic-vector-batch", len(rows), block, sig)
+
+    def gate_batch(self, label, rows):
+        term = (
+            "new lookup(`rho:registry:lookup`), deployerId(`rho:rchain:deployerId`), "
+            "zfa(`rho:qucalc:zfa`), service, check in { "
+            "lookup!(" + rho(self.uri) + ", *service) | for (QKB <- service) { "
+            "contract check(@rows, @i) = { "
+            "if (i == rows.length()) { "
+            '@"qkb-case-' + label + '"!((true, i)) } else { '
+            "new nativeReply, qkbReply in { let @row <- rows.nth(i) in { "
+            "zfa!(row.nth(0), *nativeReply) | "
+            'QKB!("assert", "gate-census", row.nth(0), *deployerId, *qkbReply) | '
+            "for (@native <- nativeReply & @actual <- qkbReply) { "
+            "if (actual == row.nth(1) and native == row.nth(2)) { check!(rows, i + 1) } "
+            'else { @"qkb-case-' + label + '"!((false, (i, native, actual))) } } } } } } | '
+            "check!(" + rho(rows) + ", 0) } }")
+        block, sig = self.submit(label, term)
+        self.finish_case(label, "native-vs-per-axis-gate-batch", len(rows), block, sig)
 
     def suite(self, ref):
         kb = ref.KB()
@@ -308,6 +355,60 @@ class Run:
         ]):
             apply(f"compatible-{i}", "compatible", [p, q_])
             apply(f"conjoin-{i}", "conjoin", [p, q_])
+
+        # All five reference seeds, with competing closures submitted out of priority order.
+        import qucalc_search as qs
+        self.native_semantic_vector()
+        for index, seed in enumerate(["^", "^>", "+^", "^<", "/+"]):
+            seed_ts = ref.from_str(seed)
+            qid = ref.question_id(seed_ts, 2)
+            apply(f"solver-{index}-ask", "ask", [seed_ts, 2])
+            candidates = [ref.from_str(x["cont"]) for x in
+                          qs.search(seed, max_depth=4, limit=None, absorbing=False)]
+            candidates.sort(key=lambda c: ref.cascade_key(seed_ts + c))
+            selected = []
+            for c in (candidates[-1], candidates[len(candidates)//2], candidates[0]):
+                if c not in selected:
+                    selected.append(c)
+            for j, c in enumerate(selected):
+                apply(f"solver-{index}-answer-{j}", "answer", [qid, c])
+            got = apply(f"solver-{index}-result", "solve", [qid])
+            oracle = qs.solve(seed, max_depth=4)
+            if not oracle["solved"] or got != ref.from_str(oracle["cont"]):
+                raise AssertionError(f"solver reference mismatch on {seed}")
+
+        # Runtime coverage of every length-4 history admitted by the native bit:
+        # 168 actual per-axis closures and all 216 aggregate-only false positives.
+        gate_rows = []
+        positives = 0
+        phase_code = {"+1": 1, "-1": -1, "+i": 2, "-i": -2}
+        for word in itertools.product(range(8), repeat=4):
+            ts = list(word)
+            if ref.rholo_native_zfa(ts):
+                expected = kb.assert_closure("gate-census", ts, identities[0])
+                positives += int(expected["ok"])
+                gate_rows.append([ts, expected_value(expected),
+                                  (True, phase_code[ref.phase(ts)])])
+        if len(gate_rows) != 384 or positives != 168:
+            raise AssertionError("unexpected native-positive census")
+        for offset in range(0, len(gate_rows), 48):
+            self.gate_batch(f"gate-census-{offset//48}", gate_rows[offset:offset+48])
+
+        # All 22 well-formed propositions, both operations on every ordered pair.
+        props = ["bot", "top"] + [(a, s) for a in range(4) for s in (1, -1)]
+        props += [("and", sp, g) for sp in ref.SPATIAL_ATOMS for g in [(3, 1), (3, -1)]]
+        if len(props) != 22:
+            raise AssertionError("unexpected proposition census")
+        logic_rows = []
+        for p, q_ in itertools.product(props, repeat=2):
+            logic_rows.append(["compatible", p, q_, ref.compatible(p, q_)])
+            logic_rows.append(["conjoin", p, q_, ref.conjoin(p, q_)])
+        for offset in range(0, len(logic_rows), 96):
+            self.logic_batch(f"logic-census-{offset//96}", logic_rows[offset:offset+96])
+        self.report["runtime_vectors"] = {
+            "native_positive_length4": 384, "per_axis_admitted": 168,
+            "aggregate_only_refused": 216, "proposition_pairs": 484,
+            "logic_comparisons": 968, "solver_seeds": 5}
         self.report["python_only_groups"] = {
             "f": "sharded model; current Rholang contract has one state cell",
             "j": "mutable queued callbacks; Rholang values are immutable"}
@@ -335,6 +436,11 @@ def main():
     ap.add_argument("--contract", required=True)
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
+
+    qlf_sha = subprocess.check_output(
+        ["git", "-C", args.qlf, "rev-parse", "HEAD"], text=True).strip()
+    if qlf_sha != QLF:
+        raise SystemExit("QLF checkout does not match the pinned reference")
     sys.path.insert(0, str(Path(args.qlf).resolve()))
     import qkb_reference as ref
     run = Run(args)

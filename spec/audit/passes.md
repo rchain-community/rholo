@@ -12517,3 +12517,38 @@ used sequence; #575's capture is that fork. A fail-closed guard or an operationa
 
 **Boundary.** One local four-validator devnet on one host; not the off-host M3 positive, not M3-00
 acceptance and not a candidate-binary result. No deployment is authorized.
+
+## 161. A key that equivocated stops proposing (C369, #576)
+
+C367 made an equivocation refusal a verdict so that one peer's offence could not stop an honest
+node. That left the *offending* node's own behaviour open: when the refused block was by the node's
+own key, nothing turned the proof into a stop, and the reset validator in §159's capture kept
+proposing into the fork. #576's second acceptance clause is exactly this.
+
+**The stop.** The block processor is given the node key. An H-1 refusal whose sender is that key
+records a permanent halt, and the proposer's top gate refuses every trigger with
+`KeyEquivocationHalted`, naming the refused block. A peer's refusal is unchanged — a verdict, not a
+stop (C367). The log sentence is one phrase everywhere, `this validator's key equivocated`, so the
+operator, the status surface and the arm read the same fact.
+
+**Durable by derivation.** The halt is not a stored flag: the C367 verdict row and the refused body
+are durable, so `own_key_equivocation_verdict` reads them at startup — one verdict row per offence,
+the body only for its sender — and seeds the halt. A restart therefore cannot silently resume a
+forked key, and an unreadable history fails closed with its reason rather than reading as clean. The
+operator resume deliberately does not clear it; the key is rotated or the bond withdrawn. The
+per-shard status carries `keyEquivocationHalted` with its sentence, and a metric carries the gauge.
+
+**The witness.** `spec/audit/evidence/n576-key-equivocation-guard-20261113/` (12 files,
+digest-verified, `local-devnet`, `execution_proven:false`): the supported arm is the regression
+control — passive catch-up 19.6 s, activation to round 19 in 4.3 s, anchor held, no halt, proposals
+at 15–16; the unsupported arm produces **one** refusal, the named halt, and **no block more than
+10 s afterwards**. Its second proposal completed 107 ms after the halt: that attempt was already in
+flight, which is why the arm's predicate is a settle window rather than line order, and why the
+predicate has its own unit test.
+
+**What this closes.** Both of #576's acceptance clauses are met on `local-devnet`: the supported
+reset converges without self-equivocation, and the unsupported shape refuses to propose with a
+named, operator-visible state. What it does **not** do: heal the fork (the guard stops the node; the
+operator rotates the key or withdraws the bond), or substitute for the supported procedure when the
+operator has a choice. The M3 off-host positive and candidate-binary acceptance remain the
+envelope's, and no run here is mainnet evidence. No deployment is authorized.

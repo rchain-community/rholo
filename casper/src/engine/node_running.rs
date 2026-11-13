@@ -596,11 +596,27 @@ pub(crate) async fn finalized_fringe_response(
     // that cannot be answered is a thing the joiner already has a terminal state for (AUDIT C181).
     let response = match req.anchor {
         Some(anchor) => match block_store.get(&[anchor]).await {
-            Ok(mut v) => v.pop().flatten().map(|b| FinalizedFringe {
-                hashes: vec![anchor],
-                state_hash: b.post_state_hash,
-                ancestry: Vec::new(),
-            }),
+            Ok(mut v) => match v.pop().flatten() {
+                Some(b) => Some(FinalizedFringe {
+                    hashes: vec![anchor],
+                    state_hash: b.post_state_hash,
+                    ancestry: Vec::new(),
+                }),
+                None => {
+                    // **An anchor this node does not hold is a refusal, not a substitution**
+                    // (C259/C181). Name the anchor in the log so the joiner's retry and this
+                    // refusal are joinable by the same value.
+                    log.warn(
+                        log_source,
+                        &format!(
+                            "Refusing a fringe response for anchor {}: this node does not hold the \
+                             block, so the ordinary/genesis fringe is not substituted (C259)",
+                            anchor.to_hex()
+                        ),
+                    );
+                    None
+                }
+            },
             Err(e) => {
                 log.error(
                     log_source,
@@ -617,23 +633,46 @@ pub(crate) async fn finalized_fringe_response(
     // **Filled only when the requester asks** (#139): a bounded addition to a message that already
     // exists, so a requester or responder that does not know the field simply gets the pre-#139
     // exchange rather than a failed sync.
-    match response {
+    let response = match response {
         Some(mut f) => {
             if req.include_fringe_metadata {
                 let hashes: BTreeSet<BlockHash> = f.hashes.iter().copied().collect();
                 f.ancestry = collect_fringe_ancestry(dag, &hashes, log, log_source).await;
-                log.info(
-                    log_source,
-                    &format!(
-                        "Included {} block fringe(s) in the fringe response (#139).",
-                        f.ancestry.len()
-                    ),
-                );
             }
             Some(f)
         }
         None => None,
+    };
+    // **The construction, not only the send** (M3-06, #428): the responder names the fringe's
+    // identity (first/last block, state root, ancestry size) and the anchor the requester asked for,
+    // so its answer is joinable with the requester's attempt by the same values.
+    if let Some(f) = &response {
+        let first = f
+            .hashes
+            .first()
+            .map(|h| h.to_hex())
+            .unwrap_or_else(|| "none".to_string());
+        let last = f
+            .hashes
+            .last()
+            .map(|h| h.to_hex())
+            .unwrap_or_else(|| "none".to_string());
+        log.info(
+            log_source,
+            &format!(
+                "Fringe response: {} block(s) [{} .. {}], state {}, requested anchor {}, {} ancestry block(s) (#139)",
+                f.hashes.len(),
+                first,
+                last,
+                rchain_shared::base16::encode(f.state_hash.as_bytes()),
+                req.anchor
+                    .map(|a| a.to_hex())
+                    .unwrap_or_else(|| "latest".to_string()),
+                f.ancestry.len()
+            ),
+        );
     }
+    response
 }
 
 /// Serve a peer's store-items (state-sync) request from the exporter (port of

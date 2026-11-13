@@ -1,0 +1,47 @@
+{
+  "blockInfo": {
+    "version": 1,
+    "shardId": "/root",
+    "blockHash": "feaa1e6060eae190cfc1cf3d42dd8c1e89b8f2fb70bd64beabb904b191be9e6b",
+    "blockNumber": 4,
+    "sender": "04f700a417754b775d95421973bdbdadb2d23c8a5af46f1829b1431f5c136e549e8a0d61aa0c793f1a614f8e437711c7758473c6ceb0859ac7e9e07911ca66b5c4",
+    "seqNum": 4,
+    "preStateHash": "9c42af870797d433ea6188235cee3228be73dbb70e50bc9bffce1c1efb9f294e",
+    "postStateHash": "0baef9ef4c6be9a0221fe665ea95d9f173dc7e8f888e2cff776cad5b53e45ddd",
+    "justifications": [
+      "84268891f071cac9c3cf0a3b31bb7d8b37eaa9c297593ef64ac5ff29065f4ca1",
+      "d0947edbc7fe04ef78a9f482d50e918ec3188e000fcbe01f18c936a9511f182d"
+    ],
+    "bonds": [
+      {
+        "validator": "04dbe32c2062240a4ba0bcad01d7edd98c78b51c77765d5e1e5e9fa3743d2f12a1f82f42cd7dc4f41445979117d790f23e9b3d08d0aa06d527c236172043e747fc",
+        "stake": 100
+      },
+      {
+        "validator": "04f700a417754b775d95421973bdbdadb2d23c8a5af46f1829b1431f5c136e549e8a0d61aa0c793f1a614f8e437711c7758473c6ceb0859ac7e9e07911ca66b5c4",
+        "stake": 100
+      }
+    ],
+    "sigAlgorithm": "secp256k1",
+    "sig": "3045022100992c0f808d010899b0bf976d7565cf167043d3bb4008e2c940e7d88bd56292b202204d91f1a8c039bbb9588f610b622972260a73993d6c32ea3e731b79e64d2cb729",
+    "blockSize": "10722",
+    "deployCount": 1,
+    "rejectedDeploys": [],
+    "timestamp": 1794580024412
+  },
+  "deploys": [
+    {
+      "deployer": "04f700a417754b775d95421973bdbdadb2d23c8a5af46f1829b1431f5c136e549e8a0d61aa0c793f1a614f8e437711c7758473c6ceb0859ac7e9e07911ca66b5c4",
+      "term": "new state in {\n  state!({}) |\n  contract @\"replay-order:registry\"(@action, @address, @payload, @resultName) = {\n    match action {\n      \"publish\" => {\n        for (@store <- state) {\n          state!(store.set(address, payload)) | @resultName!(\"OK\")\n        }\n      }\n      \"get\" => {\n        for (@store <<- state) {\n          match store.get(address) {\n            Nil => { @resultName!(\"MISS\") }\n            value => { @resultName!(value) }\n          }\n        }\n      }\n    }\n  }\n}\n",
+      "timestamp": 1794580024023,
+      "sig": "3045022100f5906c47b4bc06cd74050e100bed9f644c2e777c918ec967ba98429a1d4658060220666c5a167440024b6b532ccb00f126f12432a8de136a197becaddb8fe76f9ce4",
+      "sigAlgorithm": "secp256k1",
+      "phloPrice": 1,
+      "phloLimit": 1000000,
+      "validAfterBlockNumber": 4,
+      "cost": 13317,
+      "errored": false,
+      "systemDeployError": ""
+    }
+  ]
+}

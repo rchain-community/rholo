@@ -12392,3 +12392,36 @@ replay-order correction is merged, but its compatibility/operational acceptance
 remains open. Neither the synthetic drill nor the inventory test reproduces the
 historical 274-phlo trigger. No validator deployment or live chain mutation is
 authorized by this pass.
+
+## 158. The C357 operational arm: the natural trigger, the second node, and the integrated recovery (C357, #564)
+
+The RC-B correction (#570, §156) and the recovery ladder (#568, §156) were evidenced separately: an
+in-process regression, recovered historical inputs and an injected-refusal drill. C357's operational
+arm asked for the natural path — no injector — on the integrated build, with a second node: a
+corrected proposer must self-replay and broadcast the pending-request/peek block, a second corrected
+node must strictly replay that same serialized block at the same accounting, and the #568 recovery
+arms must run on the same build.
+
+**The natural trigger.** Four `get` requests are deployed to `@"replay-order:registry"` before the
+contract exists, leaving four pending requests; the registry contract is then deployed in the next
+manually proposed block. On the integrated build (`8cea0db`, image `b7ce2d60…`) the block is
+accepted by both validators at recorded cost **13317**, with identical pre/post-state
+(`9c42af87…` → `0baef9ef…`) and deploy accounting, and it finalizes on both; the proposer logs no
+self-replay refusal. On the pre-#570 image (`f4feb1a`, `7e1b5c5c…`) the same sequence refuses its
+own block #4 with `ReplayCostMismatch initial_cost=13317 replay_cost=11722` (recording 32 COMMs, 48
+matched, 200 filtered, 22 leftover), and #566's attestation fallback broadcasts instead; the
+registry deploy stays pooled.
+
+**The recovery half.** `tools/self-replay-drill.sh` re-ran the three #568 arms on the same integrated
+build: attestation recovery; reset to the finalised anchor with the automatic post-catch-up resume;
+and halt with the reset disabled plus the operator resume. All three pass.
+
+**Evidence.** `spec/audit/evidence/n564-natural-trigger-20261113/` (42 files) and
+`spec/audit/evidence/n564-self-replay-recovery-drill-20261113/` (35 files), both digest-verified,
+`locality: local-devnet`, `execution_proven:false`.
+
+**Boundary.** The workload is the synthetic pending-peek shape distilled from the recovered BYOID
+registry, not the incident's terms or block; the original rejected bytes/trace and the incident
+state remain unrecovered. This is not an incident reproduction and not a live or candidate-binary
+result. C357 and #564 stay open for the live/candidate operational acceptance and the §6
+compatibility/lockstep decision. No deployment is authorized.

@@ -1,0 +1,373 @@
+    Updating crates.io index
+   Compiling rchain-shared v0.1.0 (/home/runner/work/rchain-rust/rchain-rust/shared)
+   Compiling rchain-models v0.1.0 (/home/runner/work/rchain-rust/rchain-rust/models)
+   Compiling rchain-crypto v0.1.0 (/home/runner/work/rchain-rust/rchain-rust/crypto)
+   Compiling qucalc v0.1.0 (/home/runner/work/rchain-rust/rchain-rust/qucalc)
+   Compiling rchain-rspace v0.1.0 (/home/runner/work/rchain-rust/rchain-rust/rspace)
+   Compiling rchain-sdk v0.1.0 (/home/runner/work/rchain-rust/rchain-rust/sdk)
+   Compiling rchain-graphz v0.1.0 (/home/runner/work/rchain-rust/rchain-rust/graphz)
+   Compiling rchain-block-storage v0.1.0 (/home/runner/work/rchain-rust/rchain-rust/block-storage)
+   Compiling rchain-rholang v0.1.0 (/home/runner/work/rchain-rust/rchain-rust/rholang)
+   Compiling rchain-comm v0.1.0 (/home/runner/work/rchain-rust/rchain-rust/comm)
+   Compiling rchain-casper v0.1.0 (/home/runner/work/rchain-rust/rchain-rust/casper)
+    Finished `test` profile [unoptimized] target(s) in 14.57s
+     Running tests/omega_rcb_recovered.rs (target/debug/deps/omega_rcb_recovered-d5ed622ef1e3668c)
+
+running 1 test
+test omega_m26_observer_preserves_historical_results ... OMEGA_M25_PARENT sender=0410b8c59d04df768160eb97f8773db56a9e861f3b8c53ba4ef80a1d4f71bb2c6c9cc977b3c93d5cc3dbe9465fa7f501014be4238a5a74b2d2256f95321a0c3c73 sequence=1021 timestamp=1794159381826
+OMEGA_M25_FRINGE_PARTICIPATION {Validator([4, 16, 184, 197, 157, 4, 223, 118, 129, 96, 235, 151, 248, 119, 61, 181, 106, 158, 134, 31, 59, 140, 83, 186, 78, 248, 10, 29, 79, 113, 187, 44, 108, 156, 201, 119, 179, 201, 61, 92, 195, 219, 233, 70, 95, 167, 245, 1, 1, 75, 228, 35, 138, 90, 116, 178, 210, 37, 111, 149, 50, 26, 12, 60, 115]): BlockHeight(1067), Validator([4, 30, 210, 162, 88, 25, 173, 163, 90, 101, 219, 204, 227, 180, 44, 106, 3, 164, 20, 206, 108, 19, 205, 144, 138, 161, 105, 135, 98, 148, 191, 18, 16, 6, 152, 135, 107, 78, 165, 220, 160, 154, 254, 35, 173, 124, 226, 127, 107, 190, 122, 208, 236, 67, 48, 202, 39, 89, 100, 93, 196, 200, 179, 18, 102]): BlockHeight(1065), Validator([4, 215, 112, 124, 125, 49, 171, 193, 95, 150, 29, 167, 50, 247, 89, 49, 26, 36, 213, 255, 116, 49, 175, 42, 37, 247, 90, 189, 130, 161, 136, 190, 94, 54, 124, 204, 230, 129, 228, 68, 204, 139, 103, 30, 39, 202, 84, 77, 46, 74, 130, 77, 33, 54, 54, 103, 231, 108, 29, 76, 147, 124, 162, 91, 146]): BlockHeight(1066), Validator([4, 220, 229, 155, 87, 45, 166, 5, 185, 234, 165, 84, 222, 202, 141, 54, 78, 245, 65, 163, 111, 244, 56, 109, 123, 164, 144, 135, 216, 104, 102, 253, 60, 45, 20, 219, 107, 35, 122, 238, 228, 108, 247, 50, 232, 136, 4, 32, 254, 90, 245, 115, 79, 1, 232, 167, 21, 252, 127, 124, 141, 160, 139, 4, 92]): BlockHeight(1065)}
+OMEGA_M25_LOAD store=rspace-history records=52 all_hashes_valid=true
+OMEGA_M25_LOAD store=rspace-cold records=252 all_hashes_valid=true
+OMEGA_M26_PHASE play case=1073 repeat=1 observing=true
+OMEGA_M26_SET value=5000000 operation="deploy"
+OMEGA_M26_CHARGE value=1092 operation="parsing" previous=5000000 remaining=4998908
+OMEGA_M26_CHARGE value=12 operation="1 new bindings" previous=4998908 remaining=4998896
+OMEGA_M26_CHARGE value=11 operation="send eval" previous=4998896 remaining=4998885
+OMEGA_M26_CHARGE value=10 operation="var eval" previous=4998885 remaining=4998875
+OMEGA_M26_CHARGE value=38 operation="substitution" previous=4998875 remaining=4998837
+OMEGA_M26_CHARGE value=5 operation="substitution" previous=4998837 remaining=4998832
+OMEGA_M26_CHARGE value=11 operation="receive eval" previous=4998832 remaining=4998821
+OMEGA_M26_CHARGE value=22 operation="substitution" previous=4998821 remaining=4998799
+OMEGA_M26_CHARGE value=11 operation="substitution" previous=4998799 remaining=4998788
+OMEGA_M26_CHARGE value=11 operation="substitution" previous=4998788 remaining=4998777
+OMEGA_M26_CHARGE value=11 operation="substitution" previous=4998777 remaining=4998766
+OMEGA_M26_CHARGE value=11 operation="substitution" previous=4998766 remaining=4998755
+OMEGA_M26_CHARGE value=484 operation="substitution" previous=4998755 remaining=4998271
+OMEGA_M26_CHARGE value=43 operation="produces storage" previous=4998271 remaining=4998228
+OMEGA_M26_CHARGE value=64 operation="event storage cost" previous=4998228 remaining=4998164
+OMEGA_M26_CHARGE value=560 operation="consume storage" previous=4998164 remaining=4997604
+OMEGA_M26_CHARGE value=-560 operation="consume storage refund" previous=4997604 remaining=4998164
+OMEGA_M26_CHARGE value=-84 operation="produces storage refund" previous=4998164 remaining=4998248
+OMEGA_M26_CHARGE value=128 operation="comm event storage cost" previous=4998248 remaining=4998120
+OMEGA_M26_CHARGE value=12 operation="match eval" previous=4998120 remaining=4998108
+OMEGA_M26_CHARGE value=10 operation="var eval" previous=4998108 remaining=4998098
+OMEGA_M26_CHARGE value=7 operation="substitution" previous=4998098 remaining=4998091
+OMEGA_M26_CHARGE value=11 operation="substitution" previous=4998091 remaining=4998080
+OMEGA_M26_CHARGE value=7 operation="substitution" previous=4998080 remaining=4998073
+OMEGA_M26_CHARGE value=11 operation="receive eval" previous=4998073 remaining=4998062
+OMEGA_M26_CHARGE value=38 operation="substitution" previous=4998062 remaining=4998024
+OMEGA_M26_CHARGE value=11 operation="substitution" previous=4998024 remaining=4998013
+OMEGA_M26_CHARGE value=187 operation="substitution" previous=4998013 remaining=4997826
+OMEGA_M26_CHARGE value=240 operation="consume storage" previous=4997826 remaining=4997586
+OMEGA_M26_CHARGE value=-240 operation="consume storage refund" previous=4997586 remaining=4997826
+OMEGA_M26_CHARGE value=-43 operation="produces storage refund" previous=4997826 remaining=4997869
+OMEGA_M26_CHARGE value=64 operation="event storage cost" previous=4997869 remaining=4997805
+OMEGA_M26_CHARGE value=128 operation="comm event storage cost" previous=4997805 remaining=4997677
+OMEGA_M26_CHARGE value=12 operation="match eval" previous=4997677 remaining=4997665
+OMEGA_M26_CHARGE value=10 operation="method call" previous=4997665 remaining=4997655
+OMEGA_M26_CHARGE value=10 operation="var eval" previous=4997655 remaining=4997645
+OMEGA_M26_CHARGE value=0 operation="(lookup * 0)" previous=4997645 remaining=4997645
+OMEGA_M26_CHARGE value=0 operation="substitution" previous=4997645 remaining=4997645
+OMEGA_M26_CHARGE value=0 operation="substitution" previous=4997645 remaining=4997645
+OMEGA_M26_CHARGE value=11 operation="send eval" previous=4997645 remaining=4997634
+OMEGA_M26_CHARGE value=31 operation="substitution" previous=4997634 remaining=4997603
+OMEGA_M26_CHARGE value=8 operation="substitution" previous=4997603 remaining=4997595
+OMEGA_M26_CHARGE value=39 operation="produces storage" previous=4997595 remaining=4997556
+OMEGA_M26_CHARGE value=64 operation="event storage cost" previous=4997556 remaining=4997492
+OMEGA_M26_CHARGE value=43 operation="produces storage" previous=4997492 remaining=4997449
+OMEGA_M26_CHARGE value=64 operation="event storage cost" previous=4997449 remaining=4997385
+OMEGA_M26_CHARGE value=560 operation="consume storage" previous=4997385 remaining=4996825
+OMEGA_M26_CHARGE value=-560 operation="consume storage refund" previous=4996825 remaining=4997385
+OMEGA_M26_CHARGE value=-84 operation="produces storage refund" previous=4997385 remaining=4997469
+OMEGA_M26_CHARGE value=128 operation="comm event storage cost" previous=4997469 remaining=4997341
+OMEGA_M26_CHARGE value=12 operation="match eval" previous=4997341 remaining=4997329
+OMEGA_M26_CHARGE value=10 operation="var eval" previous=4997329 remaining=4997319
+OMEGA_M26_CHARGE value=7 operation="substitution" previous=4997319 remaining=4997312
+OMEGA_M26_CHARGE value=11 operation="substitution" previous=4997312 remaining=4997301
+OMEGA_M26_CHARGE value=7 operation="substitution" previous=4997301 remaining=4997294
+OMEGA_M26_CHARGE value=11 operation="receive eval" previous=4997294 remaining=4997283
+OMEGA_M26_CHARGE value=38 operation="substitution" previous=4997283 remaining=4997245
+OMEGA_M26_CHARGE value=11 operation="substitution" previous=4997245 remaining=4997234
+OMEGA_M26_CHARGE value=187 operation="substitution" previous=4997234 remaining=4997047
+OMEGA_M26_CHARGE value=240 operation="consume storage" previous=4997047 remaining=4996807
+OMEGA_M26_CHARGE value=-240 operation="consume storage refund" previous=4996807 remaining=4997047
+OMEGA_M26_CHARGE value=-43 operation="produces storage refund" previous=4997047 remaining=4997090
+OMEGA_M26_CHARGE value=64 operation="event storage cost" previous=4997090 remaining=4997026
+OMEGA_M26_CHARGE value=128 operation="comm event storage cost" previous=4997026 remaining=4996898
+OMEGA_M26_CHARGE value=12 operation="match eval" previous=4996898 remaining=4996886
+OMEGA_M26_CHARGE value=10 operation="method call" previous=4996886 remaining=4996876
+OMEGA_M26_CHARGE value=10 operation="var eval" previous=4996876 remaining=4996866
+OMEGA_M26_CHARGE value=0 operation="(lookup * 0)" previous=4996866 remaining=4996866
+OMEGA_M26_CHARGE value=0 operation="substitution" previous=4996866 remaining=4996866
+OMEGA_M26_CHARGE value=0 operation="substitution" previous=4996866 remaining=4996866
+OMEGA_M26_CHARGE value=11 operation="send eval" previous=4996866 remaining=4996855
+OMEGA_M26_CHARGE value=31 operation="substitution" previous=4996855 remaining=4996824
+OMEGA_M26_CHARGE value=8 operation="substitution" previous=4996824 remaining=4996816
+OMEGA_M26_CHARGE value=39 operation="produces storage" previous=4996816 remaining=4996777
+OMEGA_M26_CHARGE value=64 operation="event storage cost" previous=4996777 remaining=4996713
+OMEGA_M26_CHARGE value=43 operation="produces storage" previous=4996713 remaining=4996670
+OMEGA_M26_CHARGE value=64 operation="event storage cost" previous=4996670 remaining=4996606
+OMEGA_M26_CHARGE value=560 operation="consume storage" previous=4996606 remaining=4996046
+OMEGA_M26_CHARGE value=-560 operation="consume storage refund" previous=4996046 remaining=4996606
+OMEGA_M26_CHARGE value=-84 operation="produces storage refund" previous=4996606 remaining=4996690
+OMEGA_M26_CHARGE value=128 operation="comm event storage cost" previous=4996690 remaining=4996562
+OMEGA_M26_CHARGE value=12 operation="match eval" previous=4996562 remaining=4996550
+OMEGA_M26_CHARGE value=10 operation="var eval" previous=4996550 remaining=4996540
+OMEGA_M26_CHARGE value=7 operation="substitution" previous=4996540 remaining=4996533
+OMEGA_M26_CHARGE value=11 operation="substitution" previous=4996533 remaining=4996522
+OMEGA_M26_CHARGE value=7 operation="substitution" previous=4996522 remaining=4996515
+OMEGA_M26_CHARGE value=11 operation="receive eval" previous=4996515 remaining=4996504
+OMEGA_M26_CHARGE value=38 operation="substitution" previous=4996504 remaining=4996466
+OMEGA_M26_CHARGE value=11 operation="substitution" previous=4996466 remaining=4996455
+OMEGA_M26_CHARGE value=187 operation="substitution" previous=4996455 remaining=4996268
+OMEGA_M26_CHARGE value=240 operation="consume storage" previous=4996268 remaining=4996028
+OMEGA_M26_CHARGE value=-240 operation="consume storage refund" previous=4996028 remaining=4996268
+OMEGA_M26_CHARGE value=-43 operation="produces storage refund" previous=4996268 remaining=4996311
+OMEGA_M26_CHARGE value=64 operation="event storage cost" previous=4996311 remaining=4996247
+OMEGA_M26_CHARGE value=128 operation="comm event storage cost" previous=4996247 remaining=4996119
+OMEGA_M26_CHARGE value=12 operation="match eval" previous=4996119 remaining=4996107
+OMEGA_M26_CHARGE value=10 operation="method call" previous=4996107 remaining=4996097
+OMEGA_M26_CHARGE value=10 operation="var eval" previous=4996097 remaining=4996087
+OMEGA_M26_CHARGE value=0 operation="(lookup * 0)" previous=4996087 remaining=4996087
+OMEGA_M26_CHARGE value=0 operation="substitution" previous=4996087 remaining=4996087
+OMEGA_M26_CHARGE value=0 operation="substitution" previous=4996087 remaining=4996087
+OMEGA_M26_CHARGE value=11 operation="send eval" previous=4996087 remaining=4996076
+OMEGA_M26_CHARGE value=31 operation="substitution" previous=4996076 remaining=4996045
+OMEGA_M26_CHARGE value=8 operation="substitution" previous=4996045 remaining=4996037
+OMEGA_M26_CHARGE value=39 operation="produces storage" previous=4996037 remaining=4995998
+OMEGA_M26_CHARGE value=64 operation="event storage cost" previous=4995998 remaining=4995934
+OMEGA_M26_CHARGE value=43 operation="produces storage" previous=4995934 remaining=4995891
+OMEGA_M26_CHARGE value=64 operation="event storage cost" previous=4995891 remaining=4995827
+OMEGA_M26_CHARGE value=560 operation="consume storage" previous=4995827 remaining=4995267
+OMEGA_M26_CHARGE value=-560 operation="consume storage refund" previous=4995267 remaining=4995827
+OMEGA_M26_CHARGE value=-84 operation="produces storage refund" previous=4995827 remaining=4995911
+OMEGA_M26_CHARGE value=128 operation="comm event storage cost" previous=4995911 remaining=4995783
+OMEGA_M26_CHARGE value=12 operation="match eval" previous=4995783 remaining=4995771
+OMEGA_M26_CHARGE value=10 operation="var eval" previous=4995771 remaining=4995761
+OMEGA_M26_CHARGE value=7 operation="substitution" previous=4995761 remaining=4995754
+OMEGA_M26_CHARGE value=11 operation="substitution" previous=4995754 remaining=4995743
+OMEGA_M26_CHARGE value=7 operation="substitution" previous=4995743 remaining=4995736
+OMEGA_M26_CHARGE value=11 operation="receive eval" previous=4995736 remaining=4995725
+OMEGA_M26_CHARGE value=38 operation="substitution" previous=4995725 remaining=4995687
+OMEGA_M26_CHARGE value=11 operation="substitution" previous=4995687 remaining=4995676
+OMEGA_M26_CHARGE value=187 operation="substitution" previous=4995676 remaining=4995489
+OMEGA_M26_CHARGE value=240 operation="consume storage" previous=4995489 remaining=4995249
+OMEGA_M26_CHARGE value=-240 operation="consume storage refund" previous=4995249 remaining=4995489
+OMEGA_M26_CHARGE value=-43 operation="produces storage refund" previous=4995489 remaining=4995532
+OMEGA_M26_CHARGE value=64 operation="event storage cost" previous=4995532 remaining=4995468
+OMEGA_M26_CHARGE value=128 operation="comm event storage cost" previous=4995468 remaining=4995340
+OMEGA_M26_CHARGE value=12 operation="match eval" previous=4995340 remaining=4995328
+OMEGA_M26_CHARGE value=10 operation="method call" previous=4995328 remaining=4995318
+OMEGA_M26_CHARGE value=10 operation="var eval" previous=4995318 remaining=4995308
+OMEGA_M26_CHARGE value=0 operation="(lookup * 0)" previous=4995308 remaining=4995308
+OMEGA_M26_CHARGE value=0 operation="substitution" previous=4995308 remaining=4995308
+OMEGA_M26_CHARGE value=0 operation="substitution" previous=4995308 remaining=4995308
+OMEGA_M26_CHARGE value=11 operation="send eval" previous=4995308 remaining=4995297
+OMEGA_M26_CHARGE value=31 operation="substitution" previous=4995297 remaining=4995266
+OMEGA_M26_CHARGE value=8 operation="substitution" previous=4995266 remaining=4995258
+OMEGA_M26_CHARGE value=39 operation="produces storage" previous=4995258 remaining=4995219
+OMEGA_M26_CHARGE value=64 operation="event storage cost" previous=4995219 remaining=4995155
+OMEGA_M26_CHARGE value=43 operation="produces storage" previous=4995155 remaining=4995112
+OMEGA_M26_CHARGE value=64 operation="event storage cost" previous=4995112 remaining=4995048
+OMEGA_M26_CHARGE value=560 operation="consume storage" previous=4995048 remaining=4994488
+OMEGA_M26_CHARGE value=64 operation="event storage cost" previous=4994488 remaining=4994424
+[deploy] deployer=04bf50a43821ca96 ok cost=5576 
+[pos] close_block 1073 boundary=false epoch_length=10 max_active=4 bond=[1, 250]
+OMEGA_M25_TRACE height=1073 deploy=0 at=0 event=Consume(ConsumeEvent { channels_hashes: [[177, 9, 35, 136, 190, 77, 165, 62, 151, 65, 162, 207, 203, 106, 0, 250, 175, 239, 79, 173, 194, 249, 123, 184, 95, 121, 112, 44, 142, 36, 61, 101]], hash: [179, 25, 251, 136, 147, 17, 171, 247, 29, 47, 24, 204, 163, 114, 94, 223, 18, 225, 117, 70, 129, 5, 52, 207, 208, 54, 224, 4, 79, 102, 11, 133], persistent: true })
+OMEGA_M25_TRACE height=1073 deploy=0 at=1 event=Produce(ProduceEvent { channels_hash: [117, 69, 80, 247, 35, 196, 54, 62, 6, 77, 247, 217, 234, 31, 76, 87, 78, 71, 170, 63, 231, 171, 160, 37, 178, 6, 158, 196, 25, 84, 240, 190], hash: [132, 154, 20, 129, 120, 139, 136, 9, 15, 169, 133, 213, 123, 193, 135, 20, 210, 69, 192, 203, 177, 156, 144, 92, 92, 115, 30, 230, 178, 146, 159, 197], persistent: false, times_repeated: 0 })
+OMEGA_M25_TRACE height=1073 deploy=0 at=2 event=Produce(ProduceEvent { channels_hash: [223, 157, 13, 123, 49, 88, 193, 136, 154, 149, 179, 3, 239, 178, 36, 136, 83, 1, 145, 22, 212, 58, 50, 24, 26, 229, 111, 225, 19, 99, 138, 200], hash: [121, 17, 245, 143, 249, 25, 47, 135, 46, 88, 91, 232, 208, 76, 51, 173, 243, 156, 129, 197, 144, 141, 254, 59, 14, 223, 53, 137, 143, 95, 27, 83], persistent: false, times_repeated: 0 })
+OMEGA_M25_TRACE height=1073 deploy=0 at=3 event=Comm(CommEvent { consume: ConsumeEvent { channels_hashes: [[117, 69, 80, 247, 35, 196, 54, 62, 6, 77, 247, 217, 234, 31, 76, 87, 78, 71, 170, 63, 231, 171, 160, 37, 178, 6, 158, 196, 25, 84, 240, 190]], hash: [188, 76, 145, 18, 235, 119, 47, 96, 224, 61, 101, 70, 210, 224, 136, 109, 253, 251, 248, 51, 161, 130, 90, 72, 151, 113, 219, 13, 91, 247, 237, 104], persistent: false }, produces: [ProduceEvent { channels_hash: [117, 69, 80, 247, 35, 196, 54, 62, 6, 77, 247, 217, 234, 31, 76, 87, 78, 71, 170, 63, 231, 171, 160, 37, 178, 6, 158, 196, 25, 84, 240, 190], hash: [132, 154, 20, 129, 120, 139, 136, 9, 15, 169, 133, 213, 123, 193, 135, 20, 210, 69, 192, 203, 177, 156, 144, 92, 92, 115, 30, 230, 178, 146, 159, 197], persistent: false, times_repeated: 4 }], peeks: [Peek { channel_index: 0 }] })
+OMEGA_M25_TRACE height=1073 deploy=0 at=4 event=Consume(ConsumeEvent { channels_hashes: [[117, 69, 80, 247, 35, 196, 54, 62, 6, 77, 247, 217, 234, 31, 76, 87, 78, 71, 170, 63, 231, 171, 160, 37, 178, 6, 158, 196, 25, 84, 240, 190]], hash: [188, 76, 145, 18, 235, 119, 47, 96, 224, 61, 101, 70, 210, 224, 136, 109, 253, 251, 248, 51, 161, 130, 90, 72, 151, 113, 219, 13, 91, 247, 237, 104], persistent: false })
+OMEGA_M25_TRACE height=1073 deploy=0 at=5 event=Comm(CommEvent { consume: ConsumeEvent { channels_hashes: [[177, 9, 35, 136, 190, 77, 165, 62, 151, 65, 162, 207, 203, 106, 0, 250, 175, 239, 79, 173, 194, 249, 123, 184, 95, 121, 112, 44, 142, 36, 61, 101]], hash: [179, 25, 251, 136, 147, 17, 171, 247, 29, 47, 24, 204, 163, 114, 94, 223, 18, 225, 117, 70, 129, 5, 52, 207, 208, 54, 224, 4, 79, 102, 11, 133], persistent: true }, produces: [ProduceEvent { channels_hash: [177, 9, 35, 136, 190, 77, 165, 62, 151, 65, 162, 207, 203, 106, 0, 250, 175, 239, 79, 173, 194, 249, 123, 184, 95, 121, 112, 44, 142, 36, 61, 101], hash: [232, 27, 21, 116, 97, 121, 87, 8, 129, 170, 144, 178, 224, 163, 225, 162, 200, 8, 141, 203, 4, 31, 138, 225, 208, 44, 217, 195, 89, 236, 33, 125], persistent: false, times_repeated: 0 }], peeks: [] })
+OMEGA_M25_TRACE height=1073 deploy=0 at=6 event=Consume(ConsumeEvent { channels_hashes: [[177, 9, 35, 136, 190, 77, 165, 62, 151, 65, 162, 207, 203, 106, 0, 250, 175, 239, 79, 173, 194, 249, 123, 184, 95, 121, 112, 44, 142, 36, 61, 101]], hash: [179, 25, 251, 136, 147, 17, 171, 247, 29, 47, 24, 204, 163, 114, 94, 223, 18, 225, 117, 70, 129, 5, 52, 207, 208, 54, 224, 4, 79, 102, 11, 133], persistent: true })
+OMEGA_M25_TRACE height=1073 deploy=0 at=7 event=Produce(ProduceEvent { channels_hash: [117, 69, 80, 247, 35, 196, 54, 62, 6, 77, 247, 217, 234, 31, 76, 87, 78, 71, 170, 63, 231, 171, 160, 37, 178, 6, 158, 196, 25, 84, 240, 190], hash: [132, 154, 20, 129, 120, 139, 136, 9, 15, 169, 133, 213, 123, 193, 135, 20, 210, 69, 192, 203, 177, 156, 144, 92, 92, 115, 30, 230, 178, 146, 159, 197], persistent: false, times_repeated: 0 })
+OMEGA_M25_TRACE height=1073 deploy=0 at=8 event=Produce(ProduceEvent { channels_hash: [18, 75, 245, 214, 202, 211, 192, 243, 204, 73, 200, 196, 124, 57, 18, 90, 48, 50, 165, 222, 20, 132, 96, 120, 124, 227, 111, 117, 27, 50, 122, 240], hash: [141, 227, 230, 244, 124, 47, 168, 91, 18, 24, 201, 64, 134, 33, 51, 158, 8, 168, 102, 86, 240, 82, 6, 92, 14, 112, 182, 235, 240, 27, 55, 121], persistent: false, times_repeated: 0 })
+OMEGA_M25_TRACE height=1073 deploy=0 at=9 event=Comm(CommEvent { consume: ConsumeEvent { channels_hashes: [[117, 69, 80, 247, 35, 196, 54, 62, 6, 77, 247, 217, 234, 31, 76, 87, 78, 71, 170, 63, 231, 171, 160, 37, 178, 6, 158, 196, 25, 84, 240, 190]], hash: [102, 201, 108, 184, 10, 34, 84, 98, 178, 78, 130, 168, 31, 237, 62, 49, 70, 134, 159, 214, 10, 104, 21, 100, 71, 131, 220, 217, 7, 100, 184, 235], persistent: false }, produces: [ProduceEvent { channels_hash: [117, 69, 80, 247, 35, 196, 54, 62, 6, 77, 247, 217, 234, 31, 76, 87, 78, 71, 170, 63, 231, 171, 160, 37, 178, 6, 158, 196, 25, 84, 240, 190], hash: [132, 154, 20, 129, 120, 139, 136, 9, 15, 169, 133, 213, 123, 193, 135, 20, 210, 69, 192, 203, 177, 156, 144, 92, 92, 115, 30, 230, 178, 146, 159, 197], persistent: false, times_repeated: 3 }], peeks: [Peek { channel_index: 0 }] })
+OMEGA_M25_TRACE height=1073 deploy=0 at=10 event=Consume(ConsumeEvent { channels_hashes: [[117, 69, 80, 247, 35, 196, 54, 62, 6, 77, 247, 217, 234, 31, 76, 87, 78, 71, 170, 63, 231, 171, 160, 37, 178, 6, 158, 196, 25, 84, 240, 190]], hash: [102, 201, 108, 184, 10, 34, 84, 98, 178, 78, 130, 168, 31, 237, 62, 49, 70, 134, 159, 214, 10, 104, 21, 100, 71, 131, 220, 217, 7, 100, 184, 235], persistent: false })
+OMEGA_M25_TRACE height=1073 deploy=0 at=11 event=Comm(CommEvent { consume: ConsumeEvent { channels_hashes: [[177, 9, 35, 136, 190, 77, 165, 62, 151, 65, 162, 207, 203, 106, 0, 250, 175, 239, 79, 173, 194, 249, 123, 184, 95, 121, 112, 44, 142, 36, 61, 101]], hash: [179, 25, 251, 136, 147, 17, 171, 247, 29, 47, 24, 204, 163, 114, 94, 223, 18, 225, 117, 70, 129, 5, 52, 207, 208, 54, 224, 4, 79, 102, 11, 133], persistent: true }, produces: [ProduceEvent { channels_hash: [177, 9, 35, 136, 190, 77, 165, 62, 151, 65, 162, 207, 203, 106, 0, 250, 175, 239, 79, 173, 194, 249, 123, 184, 95, 121, 112, 44, 142, 36, 61, 101], hash: [110, 126, 32, 19, 145, 94, 161, 24, 77, 92, 94, 116, 100, 11, 73, 72, 178, 169, 190, 175, 119, 28, 32, 155, 62, 37, 72, 120, 138, 44, 56, 64], persistent: false, times_repeated: 0 }], peeks: [] })
+OMEGA_M25_TRACE height=1073 deploy=0 at=12 event=Consume(ConsumeEvent { channels_hashes: [[177, 9, 35, 136, 190, 77, 165, 62, 151, 65, 162, 207, 203, 106, 0, 250, 175, 239, 79, 173, 194, 249, 123, 184, 95, 121, 112, 44, 142, 36, 61, 101]], hash: [179, 25, 251, 136, 147, 17, 171, 247, 29, 47, 24, 204, 163, 114, 94, 223, 18, 225, 117, 70, 129, 5, 52, 207, 208, 54, 224, 4, 79, 102, 11, 133], persistent: true })
+OMEGA_M25_TRACE height=1073 deploy=0 at=13 event=Produce(ProduceEvent { channels_hash: [117, 69, 80, 247, 35, 196, 54, 62, 6, 77, 247, 217, 234, 31, 76, 87, 78, 71, 170, 63, 231, 171, 160, 37, 178, 6, 158, 196, 25, 84, 240, 190], hash: [132, 154, 20, 129, 120, 139, 136, 9, 15, 169, 133, 213, 123, 193, 135, 20, 210, 69, 192, 203, 177, 156, 144, 92, 92, 115, 30, 230, 178, 146, 159, 197], persistent: false, times_repeated: 0 })
+OMEGA_M25_TRACE height=1073 deploy=0 at=14 event=Produce(ProduceEvent { channels_hash: [2, 192, 154, 178, 222, 153, 206, 56, 203, 98, 151, 235, 201, 150, 191, 56, 146, 93, 83, 168, 150, 244, 112, 154, 81, 116, 115, 82, 176, 125, 69, 84], hash: [88, 53, 142, 54, 148, 175, 47, 24, 132, 150, 151, 191, 229, 254, 79, 44, 4, 7, 180, 187, 146, 42, 204, 246, 25, 141, 184, 183, 239, 68, 179, 160], persistent: false, times_repeated: 0 })
+OMEGA_M25_TRACE height=1073 deploy=0 at=15 event=Comm(CommEvent { consume: ConsumeEvent { channels_hashes: [[117, 69, 80, 247, 35, 196, 54, 62, 6, 77, 247, 217, 234, 31, 76, 87, 78, 71, 170, 63, 231, 171, 160, 37, 178, 6, 158, 196, 25, 84, 240, 190]], hash: [73, 158, 232, 97, 115, 201, 155, 154, 140, 214, 240, 224, 129, 126, 16, 74, 227, 194, 132, 41, 166, 66, 243, 245, 251, 141, 176, 93, 222, 254, 218, 249], persistent: false }, produces: [ProduceEvent { channels_hash: [117, 69, 80, 247, 35, 196, 54, 62, 6, 77, 247, 217, 234, 31, 76, 87, 78, 71, 170, 63, 231, 171, 160, 37, 178, 6, 158, 196, 25, 84, 240, 190], hash: [132, 154, 20, 129, 120, 139, 136, 9, 15, 169, 133, 213, 123, 193, 135, 20, 210, 69, 192, 203, 177, 156, 144, 92, 92, 115, 30, 230, 178, 146, 159, 197], persistent: false, times_repeated: 2 }], peeks: [Peek { channel_index: 0 }] })
+OMEGA_M25_TRACE height=1073 deploy=0 at=16 event=Consume(ConsumeEvent { channels_hashes: [[117, 69, 80, 247, 35, 196, 54, 62, 6, 77, 247, 217, 234, 31, 76, 87, 78, 71, 170, 63, 231, 171, 160, 37, 178, 6, 158, 196, 25, 84, 240, 190]], hash: [73, 158, 232, 97, 115, 201, 155, 154, 140, 214, 240, 224, 129, 126, 16, 74, 227, 194, 132, 41, 166, 66, 243, 245, 251, 141, 176, 93, 222, 254, 218, 249], persistent: false })
+OMEGA_M25_TRACE height=1073 deploy=0 at=17 event=Comm(CommEvent { consume: ConsumeEvent { channels_hashes: [[177, 9, 35, 136, 190, 77, 165, 62, 151, 65, 162, 207, 203, 106, 0, 250, 175, 239, 79, 173, 194, 249, 123, 184, 95, 121, 112, 44, 142, 36, 61, 101]], hash: [179, 25, 251, 136, 147, 17, 171, 247, 29, 47, 24, 204, 163, 114, 94, 223, 18, 225, 117, 70, 129, 5, 52, 207, 208, 54, 224, 4, 79, 102, 11, 133], persistent: true }, produces: [ProduceEvent { channels_hash: [177, 9, 35, 136, 190, 77, 165, 62, 151, 65, 162, 207, 203, 106, 0, 250, 175, 239, 79, 173, 194, 249, 123, 184, 95, 121, 112, 44, 142, 36, 61, 101], hash: [20, 65, 68, 44, 119, 141, 185, 200, 74, 209, 33, 146, 105, 102, 107, 86, 40, 113, 130, 186, 254, 135, 32, 67, 221, 228, 35, 176, 6, 116, 242, 103], persistent: false, times_repeated: 0 }], peeks: [] })
+OMEGA_M25_TRACE height=1073 deploy=0 at=18 event=Consume(ConsumeEvent { channels_hashes: [[177, 9, 35, 136, 190, 77, 165, 62, 151, 65, 162, 207, 203, 106, 0, 250, 175, 239, 79, 173, 194, 249, 123, 184, 95, 121, 112, 44, 142, 36, 61, 101]], hash: [179, 25, 251, 136, 147, 17, 171, 247, 29, 47, 24, 204, 163, 114, 94, 223, 18, 225, 117, 70, 129, 5, 52, 207, 208, 54, 224, 4, 79, 102, 11, 133], persistent: true })
+OMEGA_M25_TRACE height=1073 deploy=0 at=19 event=Produce(ProduceEvent { channels_hash: [117, 69, 80, 247, 35, 196, 54, 62, 6, 77, 247, 217, 234, 31, 76, 87, 78, 71, 170, 63, 231, 171, 160, 37, 178, 6, 158, 196, 25, 84, 240, 190], hash: [132, 154, 20, 129, 120, 139, 136, 9, 15, 169, 133, 213, 123, 193, 135, 20, 210, 69, 192, 203, 177, 156, 144, 92, 92, 115, 30, 230, 178, 146, 159, 197], persistent: false, times_repeated: 0 })
+OMEGA_M25_TRACE height=1073 deploy=0 at=20 event=Produce(ProduceEvent { channels_hash: [133, 134, 8, 227, 125, 64, 209, 210, 47, 91, 251, 5, 47, 71, 141, 224, 211, 250, 158, 198, 162, 213, 79, 44, 214, 138, 60, 69, 152, 68, 134, 25], hash: [168, 32, 241, 51, 226, 121, 101, 25, 202, 137, 81, 55, 213, 41, 242, 222, 225, 176, 156, 132, 82, 240, 26, 69, 48, 3, 131, 145, 226, 250, 167, 156], persistent: false, times_repeated: 0 })
+OMEGA_M25_TRACE height=1073 deploy=0 at=21 event=Comm(CommEvent { consume: ConsumeEvent { channels_hashes: [[117, 69, 80, 247, 35, 196, 54, 62, 6, 77, 247, 217, 234, 31, 76, 87, 78, 71, 170, 63, 231, 171, 160, 37, 178, 6, 158, 196, 25, 84, 240, 190]], hash: [100, 149, 66, 205, 27, 212, 155, 83, 167, 249, 77, 152, 88, 90, 223, 249, 8, 129, 0, 174, 61, 226, 112, 236, 193, 66, 78, 6, 153, 90, 171, 206], persistent: false }, produces: [ProduceEvent { channels_hash: [117, 69, 80, 247, 35, 196, 54, 62, 6, 77, 247, 217, 234, 31, 76, 87, 78, 71, 170, 63, 231, 171, 160, 37, 178, 6, 158, 196, 25, 84, 240, 190], hash: [132, 154, 20, 129, 120, 139, 136, 9, 15, 169, 133, 213, 123, 193, 135, 20, 210, 69, 192, 203, 177, 156, 144, 92, 92, 115, 30, 230, 178, 146, 159, 197], persistent: false, times_repeated: 1 }], peeks: [Peek { channel_index: 0 }] })
+OMEGA_M25_TRACE height=1073 deploy=0 at=22 event=Consume(ConsumeEvent { channels_hashes: [[117, 69, 80, 247, 35, 196, 54, 62, 6, 77, 247, 217, 234, 31, 76, 87, 78, 71, 170, 63, 231, 171, 160, 37, 178, 6, 158, 196, 25, 84, 240, 190]], hash: [100, 149, 66, 205, 27, 212, 155, 83, 167, 249, 77, 152, 88, 90, 223, 249, 8, 129, 0, 174, 61, 226, 112, 236, 193, 66, 78, 6, 153, 90, 171, 206], persistent: false })
+OMEGA_M25_TRACE height=1073 deploy=0 at=23 event=Comm(CommEvent { consume: ConsumeEvent { channels_hashes: [[177, 9, 35, 136, 190, 77, 165, 62, 151, 65, 162, 207, 203, 106, 0, 250, 175, 239, 79, 173, 194, 249, 123, 184, 95, 121, 112, 44, 142, 36, 61, 101]], hash: [179, 25, 251, 136, 147, 17, 171, 247, 29, 47, 24, 204, 163, 114, 94, 223, 18, 225, 117, 70, 129, 5, 52, 207, 208, 54, 224, 4, 79, 102, 11, 133], persistent: true }, produces: [ProduceEvent { channels_hash: [177, 9, 35, 136, 190, 77, 165, 62, 151, 65, 162, 207, 203, 106, 0, 250, 175, 239, 79, 173, 194, 249, 123, 184, 95, 121, 112, 44, 142, 36, 61, 101], hash: [15, 104, 253, 214, 151, 142, 200, 158, 196, 89, 24, 98, 103, 47, 187, 142, 241, 127, 213, 57, 24, 240, 224, 64, 67, 8, 109, 30, 166, 177, 186, 96], persistent: false, times_repeated: 0 }], peeks: [] })
+OMEGA_M25_TRACE height=1073 deploy=0 at=24 event=Consume(ConsumeEvent { channels_hashes: [[177, 9, 35, 136, 190, 77, 165, 62, 151, 65, 162, 207, 203, 106, 0, 250, 175, 239, 79, 173, 194, 249, 123, 184, 95, 121, 112, 44, 142, 36, 61, 101]], hash: [179, 25, 251, 136, 147, 17, 171, 247, 29, 47, 24, 204, 163, 114, 94, 223, 18, 225, 117, 70, 129, 5, 52, 207, 208, 54, 224, 4, 79, 102, 11, 133], persistent: true })
+OMEGA_M25_TRACE height=1073 deploy=0 at=25 event=Produce(ProduceEvent { channels_hash: [117, 69, 80, 247, 35, 196, 54, 62, 6, 77, 247, 217, 234, 31, 76, 87, 78, 71, 170, 63, 231, 171, 160, 37, 178, 6, 158, 196, 25, 84, 240, 190], hash: [132, 154, 20, 129, 120, 139, 136, 9, 15, 169, 133, 213, 123, 193, 135, 20, 210, 69, 192, 203, 177, 156, 144, 92, 92, 115, 30, 230, 178, 146, 159, 197], persistent: false, times_repeated: 0 })
+OMEGA_M26_PHASE replay case=1073 repeat=1 observing=true
+OMEGA_M26_SET value=5000000 operation="deploy-replay"
+OMEGA_M26_CHARGE value=1092 operation="parsing" previous=5000000 remaining=4998908
+OMEGA_M26_CHARGE value=12 operation="1 new bindings" previous=4998908 remaining=4998896
+OMEGA_M26_CHARGE value=11 operation="send eval" previous=4998896 remaining=4998885
+OMEGA_M26_CHARGE value=10 operation="var eval" previous=4998885 remaining=4998875
+OMEGA_M26_CHARGE value=38 operation="substitution" previous=4998875 remaining=4998837
+OMEGA_M26_CHARGE value=5 operation="substitution" previous=4998837 remaining=4998832
+OMEGA_M26_CHARGE value=11 operation="receive eval" previous=4998832 remaining=4998821
+OMEGA_M26_CHARGE value=22 operation="substitution" previous=4998821 remaining=4998799
+OMEGA_M26_CHARGE value=11 operation="substitution" previous=4998799 remaining=4998788
+OMEGA_M26_CHARGE value=11 operation="substitution" previous=4998788 remaining=4998777
+OMEGA_M26_CHARGE value=11 operation="substitution" previous=4998777 remaining=4998766
+OMEGA_M26_CHARGE value=11 operation="substitution" previous=4998766 remaining=4998755
+OMEGA_M26_CHARGE value=484 operation="substitution" previous=4998755 remaining=4998271
+OMEGA_M26_CHARGE value=43 operation="produces storage" previous=4998271 remaining=4998228
+OMEGA_M26_CHARGE value=64 operation="event storage cost" previous=4998228 remaining=4998164
+OMEGA_M26_CHARGE value=560 operation="consume storage" previous=4998164 remaining=4997604
+OMEGA_M26_CHARGE value=-560 operation="consume storage refund" previous=4997604 remaining=4998164
+OMEGA_M26_CHARGE value=-84 operation="produces storage refund" previous=4998164 remaining=4998248
+OMEGA_M26_CHARGE value=128 operation="comm event storage cost" previous=4998248 remaining=4998120
+OMEGA_M26_CHARGE value=12 operation="match eval" previous=4998120 remaining=4998108
+OMEGA_M26_CHARGE value=10 operation="var eval" previous=4998108 remaining=4998098
+OMEGA_M26_CHARGE value=7 operation="substitution" previous=4998098 remaining=4998091
+OMEGA_M26_CHARGE value=11 operation="substitution" previous=4998091 remaining=4998080
+OMEGA_M26_CHARGE value=7 operation="substitution" previous=4998080 remaining=4998073
+OMEGA_M26_CHARGE value=11 operation="receive eval" previous=4998073 remaining=4998062
+OMEGA_M26_CHARGE value=38 operation="substitution" previous=4998062 remaining=4998024
+OMEGA_M26_CHARGE value=11 operation="substitution" previous=4998024 remaining=4998013
+OMEGA_M26_CHARGE value=187 operation="substitution" previous=4998013 remaining=4997826
+OMEGA_M26_CHARGE value=240 operation="consume storage" previous=4997826 remaining=4997586
+OMEGA_M26_CHARGE value=64 operation="event storage cost" previous=4997586 remaining=4997522
+OMEGA_M26_CHARGE value=560 operation="consume storage" previous=4997522 remaining=4996962
+OMEGA_M26_CHARGE value=-560 operation="consume storage refund" previous=4996962 remaining=4997522
+OMEGA_M26_CHARGE value=-84 operation="produces storage refund" previous=4997522 remaining=4997606
+OMEGA_M26_CHARGE value=128 operation="comm event storage cost" previous=4997606 remaining=4997478
+OMEGA_M26_CHARGE value=12 operation="match eval" previous=4997478 remaining=4997466
+OMEGA_M26_CHARGE value=10 operation="var eval" previous=4997466 remaining=4997456
+OMEGA_M26_CHARGE value=7 operation="substitution" previous=4997456 remaining=4997449
+OMEGA_M26_CHARGE value=11 operation="substitution" previous=4997449 remaining=4997438
+OMEGA_M26_CHARGE value=7 operation="substitution" previous=4997438 remaining=4997431
+OMEGA_M26_CHARGE value=11 operation="receive eval" previous=4997431 remaining=4997420
+OMEGA_M26_CHARGE value=38 operation="substitution" previous=4997420 remaining=4997382
+OMEGA_M26_CHARGE value=11 operation="substitution" previous=4997382 remaining=4997371
+OMEGA_M26_CHARGE value=187 operation="substitution" previous=4997371 remaining=4997184
+OMEGA_M26_CHARGE value=240 operation="consume storage" previous=4997184 remaining=4996944
+OMEGA_M26_CHARGE value=64 operation="event storage cost" previous=4996944 remaining=4996880
+OMEGA_M26_CHARGE value=560 operation="consume storage" previous=4996880 remaining=4996320
+OMEGA_M26_CHARGE value=-560 operation="consume storage refund" previous=4996320 remaining=4996880
+OMEGA_M26_CHARGE value=-84 operation="produces storage refund" previous=4996880 remaining=4996964
+OMEGA_M26_CHARGE value=128 operation="comm event storage cost" previous=4996964 remaining=4996836
+OMEGA_M26_CHARGE value=12 operation="match eval" previous=4996836 remaining=4996824
+OMEGA_M26_CHARGE value=10 operation="var eval" previous=4996824 remaining=4996814
+OMEGA_M26_CHARGE value=7 operation="substitution" previous=4996814 remaining=4996807
+OMEGA_M26_CHARGE value=11 operation="substitution" previous=4996807 remaining=4996796
+OMEGA_M26_CHARGE value=7 operation="substitution" previous=4996796 remaining=4996789
+OMEGA_M26_CHARGE value=11 operation="receive eval" previous=4996789 remaining=4996778
+OMEGA_M26_CHARGE value=38 operation="substitution" previous=4996778 remaining=4996740
+OMEGA_M26_CHARGE value=11 operation="substitution" previous=4996740 remaining=4996729
+OMEGA_M26_CHARGE value=187 operation="substitution" previous=4996729 remaining=4996542
+OMEGA_M26_CHARGE value=240 operation="consume storage" previous=4996542 remaining=4996302
+OMEGA_M26_CHARGE value=64 operation="event storage cost" previous=4996302 remaining=4996238
+OMEGA_M26_CHARGE value=560 operation="consume storage" previous=4996238 remaining=4995678
+OMEGA_M26_CHARGE value=-560 operation="consume storage refund" previous=4995678 remaining=4996238
+OMEGA_M26_CHARGE value=-84 operation="produces storage refund" previous=4996238 remaining=4996322
+OMEGA_M26_CHARGE value=128 operation="comm event storage cost" previous=4996322 remaining=4996194
+OMEGA_M26_CHARGE value=12 operation="match eval" previous=4996194 remaining=4996182
+OMEGA_M26_CHARGE value=10 operation="var eval" previous=4996182 remaining=4996172
+OMEGA_M26_CHARGE value=7 operation="substitution" previous=4996172 remaining=4996165
+OMEGA_M26_CHARGE value=11 operation="substitution" previous=4996165 remaining=4996154
+OMEGA_M26_CHARGE value=7 operation="substitution" previous=4996154 remaining=4996147
+OMEGA_M26_CHARGE value=11 operation="receive eval" previous=4996147 remaining=4996136
+OMEGA_M26_CHARGE value=38 operation="substitution" previous=4996136 remaining=4996098
+OMEGA_M26_CHARGE value=11 operation="substitution" previous=4996098 remaining=4996087
+OMEGA_M26_CHARGE value=187 operation="substitution" previous=4996087 remaining=4995900
+OMEGA_M26_CHARGE value=240 operation="consume storage" previous=4995900 remaining=4995660
+OMEGA_M26_CHARGE value=-240 operation="consume storage refund" previous=4995660 remaining=4995900
+OMEGA_M26_CHARGE value=-43 operation="produces storage refund" previous=4995900 remaining=4995943
+OMEGA_M26_CHARGE value=64 operation="event storage cost" previous=4995943 remaining=4995879
+OMEGA_M26_CHARGE value=128 operation="comm event storage cost" previous=4995879 remaining=4995751
+OMEGA_M26_CHARGE value=12 operation="match eval" previous=4995751 remaining=4995739
+OMEGA_M26_CHARGE value=10 operation="method call" previous=4995739 remaining=4995729
+OMEGA_M26_CHARGE value=10 operation="var eval" previous=4995729 remaining=4995719
+OMEGA_M26_CHARGE value=0 operation="(lookup * 0)" previous=4995719 remaining=4995719
+OMEGA_M26_CHARGE value=0 operation="substitution" previous=4995719 remaining=4995719
+OMEGA_M26_CHARGE value=0 operation="substitution" previous=4995719 remaining=4995719
+OMEGA_M26_CHARGE value=11 operation="send eval" previous=4995719 remaining=4995708
+OMEGA_M26_CHARGE value=31 operation="substitution" previous=4995708 remaining=4995677
+OMEGA_M26_CHARGE value=8 operation="substitution" previous=4995677 remaining=4995669
+OMEGA_M26_CHARGE value=39 operation="produces storage" previous=4995669 remaining=4995630
+OMEGA_M26_CHARGE value=64 operation="event storage cost" previous=4995630 remaining=4995566
+OMEGA_M26_CHARGE value=43 operation="produces storage" previous=4995566 remaining=4995523
+OMEGA_M26_CHARGE value=-240 operation="consume storage refund" previous=4995523 remaining=4995763
+OMEGA_M26_CHARGE value=-43 operation="produces storage refund" previous=4995763 remaining=4995806
+OMEGA_M26_CHARGE value=64 operation="event storage cost" previous=4995806 remaining=4995742
+OMEGA_M26_CHARGE value=128 operation="comm event storage cost" previous=4995742 remaining=4995614
+OMEGA_M26_CHARGE value=12 operation="match eval" previous=4995614 remaining=4995602
+OMEGA_M26_CHARGE value=10 operation="method call" previous=4995602 remaining=4995592
+OMEGA_M26_CHARGE value=10 operation="var eval" previous=4995592 remaining=4995582
+OMEGA_M26_CHARGE value=0 operation="(lookup * 0)" previous=4995582 remaining=4995582
+OMEGA_M26_CHARGE value=0 operation="substitution" previous=4995582 remaining=4995582
+OMEGA_M26_CHARGE value=0 operation="substitution" previous=4995582 remaining=4995582
+OMEGA_M26_CHARGE value=11 operation="send eval" previous=4995582 remaining=4995571
+OMEGA_M26_CHARGE value=31 operation="substitution" previous=4995571 remaining=4995540
+OMEGA_M26_CHARGE value=8 operation="substitution" previous=4995540 remaining=4995532
+OMEGA_M26_CHARGE value=39 operation="produces storage" previous=4995532 remaining=4995493
+OMEGA_M26_CHARGE value=64 operation="event storage cost" previous=4995493 remaining=4995429
+OMEGA_M26_CHARGE value=43 operation="produces storage" previous=4995429 remaining=4995386
+OMEGA_M26_CHARGE value=64 operation="event storage cost" previous=4995386 remaining=4995322
+OMEGA_M26_CHARGE value=560 operation="consume storage" previous=4995322 remaining=4994762
+OMEGA_M26_CHARGE value=64 operation="event storage cost" previous=4994762 remaining=4994698
+OMEGA_M25_RESULT case=1073 repeat=1 scope=actual-historical-prestate timestamp_substitute=0 sequence_substitute=1022 participation_source=1073-fringe costs=[5576] post=daef89b3479de6730588948a8f035d3cc9a8067614cbbd58f18698347871100a declared_post_match=true verdict=REJECT ReplayCostMismatch { initial_cost: 5576, replay_cost: 5302 }
+OMEGA_M25_LOAD store=rspace-history records=52 all_hashes_valid=true
+OMEGA_M25_LOAD store=rspace-cold records=252 all_hashes_valid=true
+OMEGA_M26_PHASE play case=1073 repeat=2 observing=false
+[deploy] deployer=04bf50a43821ca96 ok cost=5576 
+[pos] close_block 1073 boundary=false epoch_length=10 max_active=4 bond=[1, 250]
+OMEGA_M26_PHASE replay case=1073 repeat=2 observing=false
+OMEGA_M25_RESULT case=1073 repeat=2 scope=actual-historical-prestate timestamp_substitute=0 sequence_substitute=1022 participation_source=1073-fringe costs=[5576] post=daef89b3479de6730588948a8f035d3cc9a8067614cbbd58f18698347871100a declared_post_match=true verdict=REJECT ReplayCostMismatch { initial_cost: 5576, replay_cost: 5302 }
+OMEGA_M25_LOAD store=rspace-history records=52 all_hashes_valid=true
+OMEGA_M25_LOAD store=rspace-cold records=252 all_hashes_valid=true
+OMEGA_M26_PHASE play case=1073 repeat=3 observing=false
+[deploy] deployer=04bf50a43821ca96 ok cost=5576 
+[pos] close_block 1073 boundary=false epoch_length=10 max_active=4 bond=[1, 250]
+OMEGA_M26_PHASE replay case=1073 repeat=3 observing=false
+OMEGA_M25_RESULT case=1073 repeat=3 scope=actual-historical-prestate timestamp_substitute=0 sequence_substitute=1022 participation_source=1073-fringe costs=[5576] post=daef89b3479de6730588948a8f035d3cc9a8067614cbbd58f18698347871100a declared_post_match=true verdict=REJECT ReplayCostMismatch { initial_cost: 5576, replay_cost: 5302 }
+OMEGA_M25_LOAD store=rspace-history records=52 all_hashes_valid=true
+OMEGA_M25_LOAD store=rspace-cold records=252 all_hashes_valid=true
+OMEGA_M26_PHASE play case=1115 repeat=1 observing=false
+[deploy] deployer=04bf50a43821ca96 ok cost=5576 
+[deploy] deployer=04bf50a43821ca96 ok cost=2460 
+[pos] close_block 1115 boundary=false epoch_length=10 max_active=4 bond=[1, 250]
+OMEGA_M25_TRACE height=1115 deploy=0 at=0 event=Consume(ConsumeEvent { channels_hashes: [[177, 9, 35, 136, 190, 77, 165, 62, 151, 65, 162, 207, 203, 106, 0, 250, 175, 239, 79, 173, 194, 249, 123, 184, 95, 121, 112, 44, 142, 36, 61, 101]], hash: [15, 235, 152, 215, 7, 123, 8, 91, 32, 215, 221, 66, 4, 164, 96, 153, 177, 99, 55, 83, 182, 114, 251, 139, 181, 89, 244, 101, 229, 132, 35, 165], persistent: true })
+OMEGA_M25_TRACE height=1115 deploy=0 at=1 event=Produce(ProduceEvent { channels_hash: [232, 55, 131, 251, 85, 210, 190, 150, 184, 75, 73, 106, 35, 27, 70, 22, 49, 237, 121, 103, 223, 2, 141, 252, 34, 156, 25, 53, 136, 109, 180, 227], hash: [146, 25, 69, 154, 172, 94, 158, 213, 250, 76, 231, 29, 86, 166, 25, 194, 199, 77, 254, 219, 27, 230, 209, 166, 28, 254, 237, 254, 114, 204, 103, 15], persistent: false, times_repeated: 0 })
+OMEGA_M25_TRACE height=1115 deploy=0 at=2 event=Produce(ProduceEvent { channels_hash: [223, 157, 13, 123, 49, 88, 193, 136, 154, 149, 179, 3, 239, 178, 36, 136, 83, 1, 145, 22, 212, 58, 50, 24, 26, 229, 111, 225, 19, 99, 138, 200], hash: [161, 146, 10, 193, 156, 228, 216, 92, 12, 123, 146, 143, 62, 6, 1, 254, 144, 204, 151, 85, 233, 117, 206, 130, 136, 54, 126, 69, 127, 27, 68, 203], persistent: false, times_repeated: 0 })
+OMEGA_M25_TRACE height=1115 deploy=0 at=3 event=Comm(CommEvent { consume: ConsumeEvent { channels_hashes: [[232, 55, 131, 251, 85, 210, 190, 150, 184, 75, 73, 106, 35, 27, 70, 22, 49, 237, 121, 103, 223, 2, 141, 252, 34, 156, 25, 53, 136, 109, 180, 227]], hash: [106, 170, 79, 193, 66, 127, 136, 181, 93, 21, 173, 27, 108, 61, 163, 91, 121, 45, 109, 43, 11, 157, 130, 244, 74, 20, 235, 4, 144, 36, 126, 46], persistent: false }, produces: [ProduceEvent { channels_hash: [232, 55, 131, 251, 85, 210, 190, 150, 184, 75, 73, 106, 35, 27, 70, 22, 49, 237, 121, 103, 223, 2, 141, 252, 34, 156, 25, 53, 136, 109, 180, 227], hash: [146, 25, 69, 154, 172, 94, 158, 213, 250, 76, 231, 29, 86, 166, 25, 194, 199, 77, 254, 219, 27, 230, 209, 166, 28, 254, 237, 254, 114, 204, 103, 15], persistent: false, times_repeated: 4 }], peeks: [Peek { channel_index: 0 }] })
+OMEGA_M25_TRACE height=1115 deploy=0 at=4 event=Consume(ConsumeEvent { channels_hashes: [[232, 55, 131, 251, 85, 210, 190, 150, 184, 75, 73, 106, 35, 27, 70, 22, 49, 237, 121, 103, 223, 2, 141, 252, 34, 156, 25, 53, 136, 109, 180, 227]], hash: [106, 170, 79, 193, 66, 127, 136, 181, 93, 21, 173, 27, 108, 61, 163, 91, 121, 45, 109, 43, 11, 157, 130, 244, 74, 20, 235, 4, 144, 36, 126, 46], persistent: false })
+OMEGA_M25_TRACE height=1115 deploy=0 at=5 event=Comm(CommEvent { consume: ConsumeEvent { channels_hashes: [[177, 9, 35, 136, 190, 77, 165, 62, 151, 65, 162, 207, 203, 106, 0, 250, 175, 239, 79, 173, 194, 249, 123, 184, 95, 121, 112, 44, 142, 36, 61, 101]], hash: [15, 235, 152, 215, 7, 123, 8, 91, 32, 215, 221, 66, 4, 164, 96, 153, 177, 99, 55, 83, 182, 114, 251, 139, 181, 89, 244, 101, 229, 132, 35, 165], persistent: true }, produces: [ProduceEvent { channels_hash: [177, 9, 35, 136, 190, 77, 165, 62, 151, 65, 162, 207, 203, 106, 0, 250, 175, 239, 79, 173, 194, 249, 123, 184, 95, 121, 112, 44, 142, 36, 61, 101], hash: [232, 27, 21, 116, 97, 121, 87, 8, 129, 170, 144, 178, 224, 163, 225, 162, 200, 8, 141, 203, 4, 31, 138, 225, 208, 44, 217, 195, 89, 236, 33, 125], persistent: false, times_repeated: 0 }], peeks: [] })
+OMEGA_M25_TRACE height=1115 deploy=0 at=6 event=Consume(ConsumeEvent { channels_hashes: [[177, 9, 35, 136, 190, 77, 165, 62, 151, 65, 162, 207, 203, 106, 0, 250, 175, 239, 79, 173, 194, 249, 123, 184, 95, 121, 112, 44, 142, 36, 61, 101]], hash: [15, 235, 152, 215, 7, 123, 8, 91, 32, 215, 221, 66, 4, 164, 96, 153, 177, 99, 55, 83, 182, 114, 251, 139, 181, 89, 244, 101, 229, 132, 35, 165], persistent: true })
+OMEGA_M25_TRACE height=1115 deploy=0 at=7 event=Produce(ProduceEvent { channels_hash: [232, 55, 131, 251, 85, 210, 190, 150, 184, 75, 73, 106, 35, 27, 70, 22, 49, 237, 121, 103, 223, 2, 141, 252, 34, 156, 25, 53, 136, 109, 180, 227], hash: [146, 25, 69, 154, 172, 94, 158, 213, 250, 76, 231, 29, 86, 166, 25, 194, 199, 77, 254, 219, 27, 230, 209, 166, 28, 254, 237, 254, 114, 204, 103, 15], persistent: false, times_repeated: 0 })
+OMEGA_M25_TRACE height=1115 deploy=0 at=8 event=Produce(ProduceEvent { channels_hash: [18, 75, 245, 214, 202, 211, 192, 243, 204, 73, 200, 196, 124, 57, 18, 90, 48, 50, 165, 222, 20, 132, 96, 120, 124, 227, 111, 117, 27, 50, 122, 240], hash: [59, 197, 227, 190, 247, 129, 173, 237, 175, 118, 158, 12, 89, 182, 130, 87, 219, 225, 5, 253, 95, 13, 1, 17, 76, 200, 136, 30, 231, 255, 24, 84], persistent: false, times_repeated: 0 })
+OMEGA_M25_TRACE height=1115 deploy=0 at=9 event=Comm(CommEvent { consume: ConsumeEvent { channels_hashes: [[232, 55, 131, 251, 85, 210, 190, 150, 184, 75, 73, 106, 35, 27, 70, 22, 49, 237, 121, 103, 223, 2, 141, 252, 34, 156, 25, 53, 136, 109, 180, 227]], hash: [195, 34, 176, 246, 149, 201, 18, 156, 160, 2, 195, 57, 149, 54, 165, 4, 254, 142, 134, 222, 88, 175, 130, 252, 92, 83, 150, 15, 228, 45, 157, 23], persistent: false }, produces: [ProduceEvent { channels_hash: [232, 55, 131, 251, 85, 210, 190, 150, 184, 75, 73, 106, 35, 27, 70, 22, 49, 237, 121, 103, 223, 2, 141, 252, 34, 156, 25, 53, 136, 109, 180, 227], hash: [146, 25, 69, 154, 172, 94, 158, 213, 250, 76, 231, 29, 86, 166, 25, 194, 199, 77, 254, 219, 27, 230, 209, 166, 28, 254, 237, 254, 114, 204, 103, 15], persistent: false, times_repeated: 3 }], peeks: [Peek { channel_index: 0 }] })
+OMEGA_M25_TRACE height=1115 deploy=0 at=10 event=Consume(ConsumeEvent { channels_hashes: [[232, 55, 131, 251, 85, 210, 190, 150, 184, 75, 73, 106, 35, 27, 70, 22, 49, 237, 121, 103, 223, 2, 141, 252, 34, 156, 25, 53, 136, 109, 180, 227]], hash: [195, 34, 176, 246, 149, 201, 18, 156, 160, 2, 195, 57, 149, 54, 165, 4, 254, 142, 134, 222, 88, 175, 130, 252, 92, 83, 150, 15, 228, 45, 157, 23], persistent: false })
+OMEGA_M25_TRACE height=1115 deploy=0 at=11 event=Comm(CommEvent { consume: ConsumeEvent { channels_hashes: [[177, 9, 35, 136, 190, 77, 165, 62, 151, 65, 162, 207, 203, 106, 0, 250, 175, 239, 79, 173, 194, 249, 123, 184, 95, 121, 112, 44, 142, 36, 61, 101]], hash: [15, 235, 152, 215, 7, 123, 8, 91, 32, 215, 221, 66, 4, 164, 96, 153, 177, 99, 55, 83, 182, 114, 251, 139, 181, 89, 244, 101, 229, 132, 35, 165], persistent: true }, produces: [ProduceEvent { channels_hash: [177, 9, 35, 136, 190, 77, 165, 62, 151, 65, 162, 207, 203, 106, 0, 250, 175, 239, 79, 173, 194, 249, 123, 184, 95, 121, 112, 44, 142, 36, 61, 101], hash: [110, 126, 32, 19, 145, 94, 161, 24, 77, 92, 94, 116, 100, 11, 73, 72, 178, 169, 190, 175, 119, 28, 32, 155, 62, 37, 72, 120, 138, 44, 56, 64], persistent: false, times_repeated: 0 }], peeks: [] })
+OMEGA_M25_TRACE height=1115 deploy=0 at=12 event=Consume(ConsumeEvent { channels_hashes: [[177, 9, 35, 136, 190, 77, 165, 62, 151, 65, 162, 207, 203, 106, 0, 250, 175, 239, 79, 173, 194, 249, 123, 184, 95, 121, 112, 44, 142, 36, 61, 101]], hash: [15, 235, 152, 215, 7, 123, 8, 91, 32, 215, 221, 66, 4, 164, 96, 153, 177, 99, 55, 83, 182, 114, 251, 139, 181, 89, 244, 101, 229, 132, 35, 165], persistent: true })
+OMEGA_M25_TRACE height=1115 deploy=0 at=13 event=Produce(ProduceEvent { channels_hash: [232, 55, 131, 251, 85, 210, 190, 150, 184, 75, 73, 106, 35, 27, 70, 22, 49, 237, 121, 103, 223, 2, 141, 252, 34, 156, 25, 53, 136, 109, 180, 227], hash: [146, 25, 69, 154, 172, 94, 158, 213, 250, 76, 231, 29, 86, 166, 25, 194, 199, 77, 254, 219, 27, 230, 209, 166, 28, 254, 237, 254, 114, 204, 103, 15], persistent: false, times_repeated: 0 })
+OMEGA_M25_TRACE height=1115 deploy=0 at=14 event=Produce(ProduceEvent { channels_hash: [2, 192, 154, 178, 222, 153, 206, 56, 203, 98, 151, 235, 201, 150, 191, 56, 146, 93, 83, 168, 150, 244, 112, 154, 81, 116, 115, 82, 176, 125, 69, 84], hash: [59, 187, 104, 121, 168, 213, 12, 249, 160, 54, 46, 231, 152, 194, 199, 73, 234, 204, 199, 171, 187, 142, 101, 254, 126, 93, 53, 171, 125, 161, 32, 103], persistent: false, times_repeated: 0 })
+OMEGA_M25_TRACE height=1115 deploy=0 at=15 event=Comm(CommEvent { consume: ConsumeEvent { channels_hashes: [[232, 55, 131, 251, 85, 210, 190, 150, 184, 75, 73, 106, 35, 27, 70, 22, 49, 237, 121, 103, 223, 2, 141, 252, 34, 156, 25, 53, 136, 109, 180, 227]], hash: [19, 75, 41, 223, 212, 243, 0, 136, 104, 195, 80, 121, 169, 25, 14, 93, 84, 165, 56, 132, 84, 76, 61, 180, 171, 39, 112, 153, 231, 168, 129, 18], persistent: false }, produces: [ProduceEvent { channels_hash: [232, 55, 131, 251, 85, 210, 190, 150, 184, 75, 73, 106, 35, 27, 70, 22, 49, 237, 121, 103, 223, 2, 141, 252, 34, 156, 25, 53, 136, 109, 180, 227], hash: [146, 25, 69, 154, 172, 94, 158, 213, 250, 76, 231, 29, 86, 166, 25, 194, 199, 77, 254, 219, 27, 230, 209, 166, 28, 254, 237, 254, 114, 204, 103, 15], persistent: false, times_repeated: 2 }], peeks: [Peek { channel_index: 0 }] })
+OMEGA_M25_TRACE height=1115 deploy=0 at=16 event=Consume(ConsumeEvent { channels_hashes: [[232, 55, 131, 251, 85, 210, 190, 150, 184, 75, 73, 106, 35, 27, 70, 22, 49, 237, 121, 103, 223, 2, 141, 252, 34, 156, 25, 53, 136, 109, 180, 227]], hash: [19, 75, 41, 223, 212, 243, 0, 136, 104, 195, 80, 121, 169, 25, 14, 93, 84, 165, 56, 132, 84, 76, 61, 180, 171, 39, 112, 153, 231, 168, 129, 18], persistent: false })
+OMEGA_M25_TRACE height=1115 deploy=0 at=17 event=Comm(CommEvent { consume: ConsumeEvent { channels_hashes: [[177, 9, 35, 136, 190, 77, 165, 62, 151, 65, 162, 207, 203, 106, 0, 250, 175, 239, 79, 173, 194, 249, 123, 184, 95, 121, 112, 44, 142, 36, 61, 101]], hash: [15, 235, 152, 215, 7, 123, 8, 91, 32, 215, 221, 66, 4, 164, 96, 153, 177, 99, 55, 83, 182, 114, 251, 139, 181, 89, 244, 101, 229, 132, 35, 165], persistent: true }, produces: [ProduceEvent { channels_hash: [177, 9, 35, 136, 190, 77, 165, 62, 151, 65, 162, 207, 203, 106, 0, 250, 175, 239, 79, 173, 194, 249, 123, 184, 95, 121, 112, 44, 142, 36, 61, 101], hash: [20, 65, 68, 44, 119, 141, 185, 200, 74, 209, 33, 146, 105, 102, 107, 86, 40, 113, 130, 186, 254, 135, 32, 67, 221, 228, 35, 176, 6, 116, 242, 103], persistent: false, times_repeated: 0 }], peeks: [] })
+OMEGA_M25_TRACE height=1115 deploy=0 at=18 event=Consume(ConsumeEvent { channels_hashes: [[177, 9, 35, 136, 190, 77, 165, 62, 151, 65, 162, 207, 203, 106, 0, 250, 175, 239, 79, 173, 194, 249, 123, 184, 95, 121, 112, 44, 142, 36, 61, 101]], hash: [15, 235, 152, 215, 7, 123, 8, 91, 32, 215, 221, 66, 4, 164, 96, 153, 177, 99, 55, 83, 182, 114, 251, 139, 181, 89, 244, 101, 229, 132, 35, 165], persistent: true })
+OMEGA_M25_TRACE height=1115 deploy=0 at=19 event=Produce(ProduceEvent { channels_hash: [232, 55, 131, 251, 85, 210, 190, 150, 184, 75, 73, 106, 35, 27, 70, 22, 49, 237, 121, 103, 223, 2, 141, 252, 34, 156, 25, 53, 136, 109, 180, 227], hash: [146, 25, 69, 154, 172, 94, 158, 213, 250, 76, 231, 29, 86, 166, 25, 194, 199, 77, 254, 219, 27, 230, 209, 166, 28, 254, 237, 254, 114, 204, 103, 15], persistent: false, times_repeated: 0 })
+OMEGA_M25_TRACE height=1115 deploy=0 at=20 event=Produce(ProduceEvent { channels_hash: [133, 134, 8, 227, 125, 64, 209, 210, 47, 91, 251, 5, 47, 71, 141, 224, 211, 250, 158, 198, 162, 213, 79, 44, 214, 138, 60, 69, 152, 68, 134, 25], hash: [92, 59, 123, 161, 208, 210, 249, 115, 83, 66, 209, 152, 176, 92, 15, 214, 73, 47, 141, 82, 213, 29, 43, 8, 175, 176, 93, 69, 136, 184, 84, 95], persistent: false, times_repeated: 0 })
+OMEGA_M25_TRACE height=1115 deploy=0 at=21 event=Comm(CommEvent { consume: ConsumeEvent { channels_hashes: [[232, 55, 131, 251, 85, 210, 190, 150, 184, 75, 73, 106, 35, 27, 70, 22, 49, 237, 121, 103, 223, 2, 141, 252, 34, 156, 25, 53, 136, 109, 180, 227]], hash: [169, 131, 64, 225, 217, 152, 247, 242, 234, 80, 61, 88, 116, 202, 247, 70, 4, 129, 98, 202, 0, 60, 24, 43, 219, 248, 175, 86, 131, 253, 235, 237], persistent: false }, produces: [ProduceEvent { channels_hash: [232, 55, 131, 251, 85, 210, 190, 150, 184, 75, 73, 106, 35, 27, 70, 22, 49, 237, 121, 103, 223, 2, 141, 252, 34, 156, 25, 53, 136, 109, 180, 227], hash: [146, 25, 69, 154, 172, 94, 158, 213, 250, 76, 231, 29, 86, 166, 25, 194, 199, 77, 254, 219, 27, 230, 209, 166, 28, 254, 237, 254, 114, 204, 103, 15], persistent: false, times_repeated: 1 }], peeks: [Peek { channel_index: 0 }] })
+OMEGA_M25_TRACE height=1115 deploy=0 at=22 event=Consume(ConsumeEvent { channels_hashes: [[232, 55, 131, 251, 85, 210, 190, 150, 184, 75, 73, 106, 35, 27, 70, 22, 49, 237, 121, 103, 223, 2, 141, 252, 34, 156, 25, 53, 136, 109, 180, 227]], hash: [169, 131, 64, 225, 217, 152, 247, 242, 234, 80, 61, 88, 116, 202, 247, 70, 4, 129, 98, 202, 0, 60, 24, 43, 219, 248, 175, 86, 131, 253, 235, 237], persistent: false })
+OMEGA_M25_TRACE height=1115 deploy=0 at=23 event=Comm(CommEvent { consume: ConsumeEvent { channels_hashes: [[177, 9, 35, 136, 190, 77, 165, 62, 151, 65, 162, 207, 203, 106, 0, 250, 175, 239, 79, 173, 194, 249, 123, 184, 95, 121, 112, 44, 142, 36, 61, 101]], hash: [15, 235, 152, 215, 7, 123, 8, 91, 32, 215, 221, 66, 4, 164, 96, 153, 177, 99, 55, 83, 182, 114, 251, 139, 181, 89, 244, 101, 229, 132, 35, 165], persistent: true }, produces: [ProduceEvent { channels_hash: [177, 9, 35, 136, 190, 77, 165, 62, 151, 65, 162, 207, 203, 106, 0, 250, 175, 239, 79, 173, 194, 249, 123, 184, 95, 121, 112, 44, 142, 36, 61, 101], hash: [15, 104, 253, 214, 151, 142, 200, 158, 196, 89, 24, 98, 103, 47, 187, 142, 241, 127, 213, 57, 24, 240, 224, 64, 67, 8, 109, 30, 166, 177, 186, 96], persistent: false, times_repeated: 0 }], peeks: [] })
+OMEGA_M25_TRACE height=1115 deploy=0 at=24 event=Consume(ConsumeEvent { channels_hashes: [[177, 9, 35, 136, 190, 77, 165, 62, 151, 65, 162, 207, 203, 106, 0, 250, 175, 239, 79, 173, 194, 249, 123, 184, 95, 121, 112, 44, 142, 36, 61, 101]], hash: [15, 235, 152, 215, 7, 123, 8, 91, 32, 215, 221, 66, 4, 164, 96, 153, 177, 99, 55, 83, 182, 114, 251, 139, 181, 89, 244, 101, 229, 132, 35, 165], persistent: true })
+OMEGA_M25_TRACE height=1115 deploy=0 at=25 event=Produce(ProduceEvent { channels_hash: [232, 55, 131, 251, 85, 210, 190, 150, 184, 75, 73, 106, 35, 27, 70, 22, 49, 237, 121, 103, 223, 2, 141, 252, 34, 156, 25, 53, 136, 109, 180, 227], hash: [146, 25, 69, 154, 172, 94, 158, 213, 250, 76, 231, 29, 86, 166, 25, 194, 199, 77, 254, 219, 27, 230, 209, 166, 28, 254, 237, 254, 114, 204, 103, 15], persistent: false, times_repeated: 0 })
+OMEGA_M25_TRACE height=1115 deploy=1 at=0 event=Consume(ConsumeEvent { channels_hashes: [[177, 9, 35, 136, 190, 77, 165, 62, 151, 65, 162, 207, 203, 106, 0, 250, 175, 239, 79, 173, 194, 249, 123, 184, 95, 121, 112, 44, 142, 36, 61, 101]], hash: [127, 69, 125, 130, 199, 114, 60, 161, 177, 153, 25, 76, 186, 135, 122, 156, 8, 59, 58, 121, 51, 70, 150, 97, 191, 188, 64, 219, 174, 168, 49, 133], persistent: true })
+OMEGA_M25_TRACE height=1115 deploy=1 at=1 event=Produce(ProduceEvent { channels_hash: [108, 146, 124, 231, 228, 32, 147, 114, 235, 15, 116, 152, 69, 208, 198, 243, 85, 217, 53, 117, 89, 242, 240, 63, 149, 153, 101, 175, 87, 205, 20, 215], hash: [157, 115, 79, 135, 255, 31, 46, 145, 0, 152, 133, 12, 170, 194, 231, 21, 224, 162, 147, 116, 255, 68, 12, 160, 142, 203, 49, 36, 8, 154, 112, 71], persistent: false, times_repeated: 0 })
+OMEGA_M26_PHASE replay case=1115 repeat=1 observing=false
+OMEGA_M25_RESULT case=1115 repeat=1 scope=actual-historical-prestate timestamp_substitute=0 sequence_substitute=1022 participation_source=1073-fringe costs=[5576, 2460] post=14cbed18ffb12ac22ab5253fe9dd8f0bc72ccf3cefb2bd4282fa16a86b4447f2 declared_post_match=true verdict=REJECT ReplayCostMismatch { initial_cost: 5576, replay_cost: 5302 }
+OMEGA_M25_LOAD store=rspace-history records=52 all_hashes_valid=true
+OMEGA_M25_LOAD store=rspace-cold records=252 all_hashes_valid=true
+OMEGA_M26_PHASE play case=1115 repeat=2 observing=false
+[deploy] deployer=04bf50a43821ca96 ok cost=5576 
+[deploy] deployer=04bf50a43821ca96 ok cost=2460 
+[pos] close_block 1115 boundary=false epoch_length=10 max_active=4 bond=[1, 250]
+OMEGA_M26_PHASE replay case=1115 repeat=2 observing=false
+OMEGA_M25_RESULT case=1115 repeat=2 scope=actual-historical-prestate timestamp_substitute=0 sequence_substitute=1022 participation_source=1073-fringe costs=[5576, 2460] post=14cbed18ffb12ac22ab5253fe9dd8f0bc72ccf3cefb2bd4282fa16a86b4447f2 declared_post_match=true verdict=REJECT ReplayCostMismatch { initial_cost: 5576, replay_cost: 5302 }
+OMEGA_M25_LOAD store=rspace-history records=52 all_hashes_valid=true
+OMEGA_M25_LOAD store=rspace-cold records=252 all_hashes_valid=true
+OMEGA_M26_PHASE play case=1115 repeat=3 observing=false
+[deploy] deployer=04bf50a43821ca96 ok cost=5576 
+[deploy] deployer=04bf50a43821ca96 ok cost=2460 
+[pos] close_block 1115 boundary=false epoch_length=10 max_active=4 bond=[1, 250]
+OMEGA_M26_PHASE replay case=1115 repeat=3 observing=false
+OMEGA_M25_RESULT case=1115 repeat=3 scope=actual-historical-prestate timestamp_substitute=0 sequence_substitute=1022 participation_source=1073-fringe costs=[5576, 2460] post=14cbed18ffb12ac22ab5253fe9dd8f0bc72ccf3cefb2bd4282fa16a86b4447f2 declared_post_match=true verdict=REJECT ReplayCostMismatch { initial_cost: 5576, replay_cost: 5302 }
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.46s
+

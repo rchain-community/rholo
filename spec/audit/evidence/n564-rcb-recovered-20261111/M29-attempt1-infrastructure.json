@@ -1,0 +1,22 @@
+{
+  "run": 43104341321,
+  "attempt": 1,
+  "job": 130803604188,
+  "source_head": "50934152e27730901be03e6e0d47ba2f2b7a5bc4",
+  "tests_executed": false,
+  "annotations": [
+    {
+      "path": ".github",
+      "blob_href": "https://github.com/aixaria0/rchain-rust/blob/50934152e27730901be03e6e0d47ba2f2b7a5bc4/.github",
+      "start_line": 1,
+      "start_column": null,
+      "end_line": 1,
+      "end_column": null,
+      "annotation_level": "failure",
+      "title": "",
+      "message": "The job was not acquired by Runner of type hosted even after multiple attempts",
+      "raw_details": ""
+    }
+  ],
+  "retry_reason": "hosted runner was not acquired; no test step started"
+}

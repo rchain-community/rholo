@@ -1,0 +1,24 @@
+diff --git a/rholang/src/accounting.rs b/rholang/src/accounting.rs
+index bf6cbb1..07aeba2 100644
+--- a/rholang/src/accounting.rs
++++ b/rholang/src/accounting.rs
+@@ -544,6 +544,9 @@ impl CostAccounting {
+ 
+     /// Set the current cost balance (port of `_cost.set`).
+     pub fn set(&self, cost: Cost) {
++        if std::env::var_os("OMEGA_RCB_COST_TRACE").is_some() {
++            eprintln!("OMEGA_M26_SET value={} operation={:?}", cost.value, cost.operation);
++        }
+         self.value.store(cost.value, Ordering::SeqCst);
+     }
+ 
+@@ -568,6 +571,9 @@ impl CostAccounting {
+                 }
+             }) {
+             Ok(prev) => {
++                if std::env::var_os("OMEGA_RCB_COST_TRACE").is_some() {
++                    eprintln!("OMEGA_M26_CHARGE value={} operation={:?} previous={} remaining={}", amount_value, amount.operation, prev, (prev - amount_value).max(0));
++                }
+                 self.total.fetch_add(amount_value, Ordering::SeqCst);
+                 if prev - amount_value < 0 {
+                     Err(RholangError::OutOfPhlogistonsError)

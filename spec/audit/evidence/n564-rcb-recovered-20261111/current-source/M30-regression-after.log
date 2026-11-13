@@ -1,0 +1,22 @@
+   Compiling rchain-rspace v0.1.0 (/home/runner/work/rchain-rust/rchain-rust/rspace)
+   Compiling rchain-rholang v0.1.0 (/home/runner/work/rchain-rust/rchain-rust/rholang)
+   Compiling rchain-casper v0.1.0 (/home/runner/work/rchain-rust/rchain-rust/casper)
+    Finished `test` profile [unoptimized] target(s) in 17.55s
+     Running tests/replay_trace_order.rs (target/debug/deps/replay_trace_order-753973367ccbaa5d)
+
+running 1 test
+test pending_peeks_replay_with_exact_cost_and_state ... [deploy] deployer=0000000000000000 ok cost=1860 
+REPLAY_ORDER pending=0 play_cost=1860 trace_events=2
+[deploy] deployer=0000000000000000 ok cost=282 
+[deploy] deployer=0000000000000000 ok cost=2606 
+REPLAY_ORDER pending=1 play_cost=2606 trace_events=8
+[deploy] deployer=0000000000000000 ok cost=282 
+[deploy] deployer=0000000000000000 ok cost=282 
+[deploy] deployer=0000000000000000 ok cost=282 
+[deploy] deployer=0000000000000000 ok cost=282 
+[deploy] deployer=0000000000000000 ok cost=4844 
+REPLAY_ORDER pending=4 play_cost=4844 trace_events=26
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.56s
+

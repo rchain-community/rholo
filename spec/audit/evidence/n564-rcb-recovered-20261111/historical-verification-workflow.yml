@@ -1,0 +1,78 @@
+name: RC-B recovered deploy evidence on incident source
+on:
+  push:
+    branches: [verify/n564-recovered-20261111]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CARGO_INCREMENTAL: "0"
+      CARGO_BUILD_JOBS: "2"
+      CARGO_PROFILE_TEST_DEBUG: "0"
+      CARGO_PROFILE_DEV_DEBUG: "0"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Pin incident source and verify recovered fixture integrity
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p n564-recovered-logs/inputs
+          cp spec/audit/evidence/n564-rcb-recovered-20261111/omega_rcb_recovered.rs n564-recovered-logs/
+          cp spec/audit/evidence/n564-rcb-recovered-20261111/apply_replay_order_correction.py n564-recovered-logs/
+          cp spec/audit/evidence/n564-rcb-modes-20261111/omega_rcb_modes.rs n564-recovered-logs/
+          cp spec/audit/evidence/n564-rcb-recovered-20261111/deploys/* n564-recovered-logs/inputs/
+          (cd n564-recovered-logs/inputs && sha256sum -c SHA256SUMS)
+          git rev-parse HEAD > n564-recovered-logs/harness-source.txt
+          git fetch --no-tags --depth=1 https://github.com/rhovision-org/rholo.git 0a1e02362a7c34e474e068ffd47469c8d4be707a
+          git checkout --detach 0a1e02362a7c34e474e068ffd47469c8d4be707a
+          test "$(git rev-parse HEAD)" = 0a1e02362a7c34e474e068ffd47469c8d4be707a
+          git rev-parse HEAD > n564-recovered-logs/incident-source.txt
+          cp n564-recovered-logs/omega_rcb_recovered.rs casper/tests/omega_rcb_recovered.rs
+          mkdir -p casper/tests/rcb_recovered
+          cp n564-recovered-logs/inputs/*.bin casper/tests/rcb_recovered/
+          gzip -dc n564-recovered-logs/inputs/historical-state.bin.gz > casper/tests/rcb_recovered/historical-state.bin
+          cp n564-recovered-logs/omega_rcb_modes.rs casper/tests/omega_rcb_modes.rs
+          python3 n564-recovered-logs/apply_replay_order_correction.py | tee n564-recovered-logs/correction-provenance.json
+          git diff -- rspace/src/replay_rspace.rs > n564-recovered-logs/correction.patch
+      - name: Pinned compiler
+        run: |
+          rustup toolchain install 1.95.0 --profile minimal
+          rustc +1.95.0 --version
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0
+        with:
+          cache-on-failure: true
+      - name: Checksum-pinned protoc
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --silent --show-error --retry 2 --max-time 60 https://github.com/protocolbuffers/protobuf/releases/download/v21.12/protoc-21.12-linux-x86_64.zip -o /tmp/protoc.zip
+          python3 - <<'PY'
+          import pathlib,hashlib,zipfile,os
+          p=pathlib.Path('/tmp/protoc.zip')
+          assert hashlib.sha256(p.read_bytes()).hexdigest()=="3a4c1e5f2516c639d3079b1586e703fc7bcfa2136d58bda24d1d54f949c315e8"
+          with zipfile.ZipFile(p) as z: z.extractall('/tmp/omega-protoc')
+          with open(os.environ["GITHUB_ENV"],"a") as f:
+              f.write("PROTOC=/tmp/omega-protoc/bin/protoc\nPROTOC_INCLUDE=/tmp/omega-protoc/include\n")
+          PY
+          chmod +x /tmp/omega-protoc/bin/protoc
+      - name: M27 single-variable correction and strict negative controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo +1.95.0 test --locked -p rchain-casper --test omega_rcb_recovered omega_m27 -- --nocapture --test-threads=1 2>&1 | tee n564-recovered-logs/M27.log
+          cargo +1.95.0 test --locked -p rchain-casper --test omega_rcb_modes omega_m21 -- --nocapture --test-threads=1 2>&1 | tee n564-recovered-logs/M28-strict-trace-controls.log
+          cargo +1.95.0 test --locked -p rchain-rspace 2>&1 | tee n564-recovered-logs/M28-rspace-suite.log
+          git diff --exit-code -- casper/src rholang/src models/src crypto/src
+          test "$(git diff --name-only)" = rspace/src/replay_rspace.rs
+          (cd n564-recovered-logs && sha256sum M27.log M28-strict-trace-controls.log M28-rspace-suite.log incident-source.txt harness-source.txt omega_rcb_recovered.rs correction.patch correction-provenance.json > SHA256SUMS)
+      - if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: n564-recovered-deploy-historical-source
+          path: n564-recovered-logs/
+          retention-days: 30

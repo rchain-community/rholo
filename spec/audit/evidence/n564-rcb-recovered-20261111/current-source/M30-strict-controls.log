@@ -1,0 +1,25 @@
+   Compiling rchain-casper v0.1.0 (/home/runner/work/rchain-rust/rchain-rust/casper)
+    Finished `test` profile [unoptimized] target(s) in 1.41s
+     Running tests/omega_rcb_modes.rs (target/debug/deps/omega_rcb_modes-93f6feade78390cb)
+
+running 1 test
+test omega_m21_trace_integrity_falsifier ... [deploy] deployer=0000000000000000 FAILED (state changes reverted) cost=599 Error: Operator `+` is not defined on String.
+OMEGA_M21 shape=failed-comm mutation=remove-comm trace=3->2 recorded_cost=599 play_failed=true verdict=REJECT ReplayStatusMismatch { initial_failed: true, replay_failed: false }
+[deploy] deployer=0000000000000000 FAILED (state changes reverted) cost=599 Error: Operator `+` is not defined on String.
+OMEGA_M21 shape=failed-comm mutation=remove-produce trace=3->2 recorded_cost=599 play_failed=true verdict=ACCEPT state_match=true
+[deploy] deployer=0000000000000000 FAILED (state changes reverted) cost=599 Error: Operator `+` is not defined on String.
+OMEGA_M21 shape=failed-comm mutation=remove-consume trace=3->2 recorded_cost=599 play_failed=true verdict=REJECT ReplayStatusMismatch { initial_failed: true, replay_failed: false }
+[deploy] deployer=0000000000000000 FAILED (state changes reverted) cost=599 Error: Operator `+` is not defined on String.
+OMEGA_M21 shape=failed-comm mutation=remove-all-comm trace=3->2 recorded_cost=599 play_failed=true verdict=REJECT ReplayStatusMismatch { initial_failed: true, replay_failed: false }
+[deploy] deployer=0000000000000000 ok cost=986 
+OMEGA_M21 shape=transfer-comm mutation=remove-comm trace=5->4 recorded_cost=986 play_failed=false verdict=REJECT ReplayCostMismatch { initial_cost: 986, replay_cost: 947 }
+[deploy] deployer=0000000000000000 ok cost=986 
+OMEGA_M21 shape=transfer-comm mutation=remove-produce trace=5->4 recorded_cost=986 play_failed=false verdict=ACCEPT state_match=true
+[deploy] deployer=0000000000000000 ok cost=986 
+OMEGA_M21 shape=transfer-comm mutation=remove-consume trace=5->4 recorded_cost=986 play_failed=false verdict=REJECT ReplayCostMismatch { initial_cost: 986, replay_cost: 947 }
+[deploy] deployer=0000000000000000 ok cost=986 
+OMEGA_M21 shape=transfer-comm mutation=remove-all-comm trace=5->3 recorded_cost=986 play_failed=false verdict=REJECT ReplayCostMismatch { initial_cost: 986, replay_cost: 910 }
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 1.13s
+

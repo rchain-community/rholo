@@ -1,0 +1,38 @@
+
+A¿P¤8!Ê–r€Šy(¦j¢÷Aã fÔiev(píµ¥Šmíu(§‘–‘(I3—nŸEğ´Zà÷Ù‹xošÄ// BYOID public REV proof registry.
+//
+// Deploy once per writable rholo network. The contract stores the latest
+// signed proof-card string for each REV address. Readers verify the DID and REV
+// signatures themselves; the contract is an index, not a trust anchor.
+//
+// Publish:
+//   @"byoid:rev:registry"!("publish", "<revAddress>", "<card>", "<resultName>")
+// Get:
+//   @"byoid:rev:registry"!("get", "<revAddress>", "unused", "<resultName>")
+//
+// The result name is a public name chosen by the caller. The app also writes
+// the card to byoid:rev:<address> so reads do not require a deploy.
+
+new state in {
+  state!({}) |
+  contract @"byoid:rev:registry"(@action, @address, @payload, @resultName) = {
+    match action {
+      "publish" => {
+        for (@store <- state) {
+          state!(store.set(address, payload)) |
+          @resultName!("OK")
+        }
+      }
+      "get" => {
+        for (@store <<- state) {
+          match store.get(address) {
+            Nil => { @resultName!("MISS") }
+            value => { @resultName!(value) }
+          }
+        }
+      }
+    }
+  }
+}
+À†ôá›4"F0D Ot~~Ç±,!ë£ q¥ôfj"GQµ
+*Ò-š [PhHSv	_'Èg…!’LAĞ‹Ãåç&°]d*	secp256k18@À„=PÚZ/testnet

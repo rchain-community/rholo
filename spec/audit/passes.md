@@ -390,6 +390,7 @@ literal surface, reducer dispatch and the cost model remain outside the law and 
 AC10 (operator/new-genesis acceptance) remains a release step.
 | **Liveness enforcement is a new PoS boundary rule (RCHIP #55, Law 89).** | Pos.rhox has no liveness jail, vote or ejection; the port adds five genesis parameters, five `pos:` leaves and the `voteSlash`/`unvoteSlash`/`getLiveness`/`getVotes` methods. | A chain that arms liveness enforcement changes its boundary post-state: a jailed validator is not drawn and earns nothing, and a passing >2/3 active-stake vote slashes and bans. Default-off and the format-2 params encoding keep unarmed chains byte-identical; arming requires a new genesis and is a hard fork. Pre-launch category A; every validator must run the binary; no live evidence yet. RCHIP #55, HAZOP U21, C344 |
 | **Cost charges track the work of collection canonicalisation, union, set insertion, the tallies and `rho:gov:censure`.** | Archived `legacy/rholang/src/main/scala/coop/rchain/rholang/interpreter/accounting/Costs.scala` at `1b7583649` charges `unionCost(other.size)` — the right operand only — a flat `KEYS_METHOD_COST = 10`, a flat `ADD_COST` for a set insertion that re-canonicalises the set, no charge on a tally's option lists at all, and no canonicalisation charge beyond the method call; the Rust-native `rho:gov:*` folds have no Scala oracle. | Rust charges `canonicalization_cost(n) = 3n` for the conversions, `set`, `keys` and `add` output, both union operands, `(u+1)^3` for censure and the scanned entries for a tally (Law 91, `spec/Rchain/Cost.lean`; C345/C346, pass §149, and C353/C354, pass §150, whose cost register found the last two). **Hard fork (#51 category A):** `refund_amount`/`burned_amount` and every post-state hash move; a pre-fork block containing a conversion, a set insertion, a tally or a censure does not replay under the new code (`replay_cost_mismatch`); every network's genesis post-state hash moves; the block-version activation gate is owed. |
+| **Replay COMM candidates are bound in chronological execution order** (`ReplayRSpace::build_replay_data`, `log.iter().rev()`). | Earlier Rust releases traversed the newest-first RSpace log directly; no new claim about the archived Scala replay implementation is made. | **Consensus-critical acceptance change; treat as hard-fork class / category-A candidate.** Strict replay verdicts can differ for blocks with order-sensitive multiple COMM candidates, including ambiguous pending-request/peek patterns, even if accepted before the fix. The recovered rejected cases demonstrate old refusal / corrected acceptance, not compatibility of all accepted history; no recorded-chain compatibility sweep has been completed. Wire fields, recorded traces and cost/status/state/counter checks are unchanged. **All validators must upgrade in lockstep:** this loop is ungated, with no height/version activation switch. An unswept chain must use a coordinated new genesis; continuation from an existing checkpoint requires an independently accepted historical replay/compatibility sweep and coordinated activation before production resumes. Mixed corrected/uncorrected validation on an affected block can split the chain. C357 and #564 remain open for compatibility and operational acceptance: corrected proposer self-replay under pending peeks, a second node strictly replaying that same block, and the #568 recovery arms on the integrated build. See [RC-B evidence](evidence/n564-rcb-recovered-20261111/README.md#compatibility-and-rollout) and the existing #51 `Audit:section6-categoryA` obligation. PR #570; AUDIT **C357**. |
 
 **Correction, 2026-10-31 — the decimal row is superseded.** Issue #527 (option R) removed the
 `GDecimal` value type before mainnet. Wire tag 35 is now `reserved` (with `reserved "g_decimal"`) and
@@ -12346,6 +12347,17 @@ operator route. The packed, digest-verified record is
 `spec/audit/evidence/n564-self-replay-recovery-drill-20261111/raw/drill-readout.md`; each arm's surface
 snapshot carries the 786-byte refused body and the reset anchor.
 
-**RC-B remains open.** The injected refusal has the incident's shape (`ReplayCostMismatch`), not its
-cause. The 274-phlo trigger is Aria's, and the one measurement that moves it is validator A's
-runtime environment.
+**RC-B continuation (#570).** Authenticated BYOID deploys and complete Merkle-verified historical
+states reproduce the 5576/5302 refusal on source `0a1e02362`. Reversing only the COMM-binding
+iteration restores the original costs and both declared post-state roots under strict replay.
+The trace is regenerated: the original rejected `BlockMessage` and processed-trace bytes remain
+unrecovered, and no executable SHA-256 was captured for those historical runs. See the
+[recovered-instance evidence](evidence/n564-rcb-recovered-20261111/README.md).
+
+**C357 remains open.** Section 6 records the consensus compatibility boundary and mandatory
+lockstep rollout. No complete accepted-history sweep is supplied. Operational acceptance still
+requires a corrected devnet/live proposer to self-replay and broadcast an incident-shaped
+pending-peek block, a second corrected node to strictly replay that same serialized block at its
+recorded costs and post-state, and the #568 attestation/reset/catch-up/halt recovery arms on the
+integrated build. Retain source and executable digests, block/pre-state identity, both nodes'
+verdicts and the recovery receipts. This continuation does not claim that operational run.

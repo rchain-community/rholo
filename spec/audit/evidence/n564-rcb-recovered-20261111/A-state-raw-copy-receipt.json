@@ -1,0 +1,73 @@
+{
+  "observed_at_utc": "2026-11-11T20:56:11.398408+00:00",
+  "host": "testnet-A",
+  "source_root": "/var/lib/rnode",
+  "files": [
+    {
+      "name": "blockstorage/data.mdb",
+      "bytes": 3772416,
+      "sha256": "e88398c3dd88e97c039031670a371e42573e513dc088984ff4335af63bdd66ca",
+      "before": {
+        "inode": 260599,
+        "size": 3772416,
+        "mtime_ns": 1794324111681608244
+      },
+      "after": {
+        "inode": 260599,
+        "size": 3772416,
+        "mtime_ns": 1794324111681608244
+      }
+    },
+    {
+      "name": "dagstorage/data.mdb",
+      "bytes": 3620864,
+      "sha256": "d730facfe9cc6e75b125ff7f9e9b66891dcf6bb6ad1d3e110d4ba2fa937f723e",
+      "before": {
+        "inode": 260602,
+        "size": 3620864,
+        "mtime_ns": 1794324112125608202
+      },
+      "after": {
+        "inode": 260602,
+        "size": 3620864,
+        "mtime_ns": 1794324112125608202
+      }
+    },
+    {
+      "name": "rspace/history/data.mdb",
+      "bytes": 1830912,
+      "sha256": "e02bb218d6dae8e9327f373b4f19e6387c446b3172d4ea3f80104bef5fd67c1a",
+      "before": {
+        "inode": 260616,
+        "size": 1830912,
+        "mtime_ns": 1794324123961607073
+      },
+      "after": {
+        "inode": 260616,
+        "size": 1830912,
+        "mtime_ns": 1794324123961607073
+      }
+    },
+    {
+      "name": "rspace/cold/data.mdb",
+      "bytes": 1093632,
+      "sha256": "d8da8867c9ee570632c161e2a1f3bd5613760466ece6668f33a173486223fb05",
+      "before": {
+        "inode": 260619,
+        "size": 1093632,
+        "mtime_ns": 1794324095641609741
+      },
+      "after": {
+        "inode": 260619,
+        "size": 1093632,
+        "mtime_ns": 1794324095641609741
+      }
+    }
+  ],
+  "all_stable": true,
+  "read_flags": "O_RDONLY|O_CLOEXEC|O_NOATIME",
+  "lmdb_api_opened": false,
+  "scope": "raw file copies only; no transaction-consistent snapshot claim",
+  "tar_gz_sha256": "068f933b8442bf1446cb072f644d9647771a543e1188a917b1b36bb914d61002",
+  "tar_gz_bytes": 3390953
+}

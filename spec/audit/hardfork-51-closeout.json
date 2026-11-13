@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "tracker": "https://github.com/rhovision-org/rholo/issues/51",
-  "source_dev_sha": "ad77fb442de28df39ce913b79dde59973aae05b2",
-  "observed_date": "2026-10-31",
+  "source_dev_sha": "e33125f65a95cff4f12baf8139a7361c7d158e43",
+  "observed_date": "2026-11-12",
   "closure_requested": false,
   "policy": "Every \u00a7A/\u00a7B and every \u00a76 consensus-changing row must be landed on dev or deferred with a named decision owner and a one-line reason. Release execution evidence remains separately accountable; a green test run alone is not closure.",
   "items": [
@@ -389,9 +389,12 @@
       "decision_owner": "Jim / auditors",
       "references": [
         "spec/audit/passes.md",
-        "#51"
+        "#51",
+        "#570",
+        "#564",
+        "C357"
       ],
-      "blocker": "All 92 current \u00a76 rows are enumerated with exact row hashes, including the changed Decimal decision and five additional rows. Independent classification and construct-specific historical replay remain open."
+      "blocker": "All 94 section 6 rows are enumerated with exact row hashes. The #570 COMM replay-order row is a consensus-critical category-A candidate: accepted ambiguous pending-request/peek blocks may change replay verdict; no full history sweep is supplied. Independent classification, mandatory lockstep rollout at the recorded boundary, natural-trigger proposer/second-node same-block replay and integrated #568 recovery acceptance remain open under C357."
     },
     {
       "id": "Audit:law52-partition",
@@ -574,6 +577,6 @@
   ],
   "close_clause_evidence": "https://github.com/rhovision-org/rholo/issues/51#issuecomment-6316299117",
   "deferral_decision_evidence": "https://github.com/rhovision-org/rholo/issues/51#issuecomment-6317072399",
-  "source_dev_base_sha": "ad77fb442de28df39ce913b79dde59973aae05b2",
+  "source_dev_base_sha": "87583050ceb1d908516e67bdbfffb16defa72e2e",
   "acceptance_records": []
 }

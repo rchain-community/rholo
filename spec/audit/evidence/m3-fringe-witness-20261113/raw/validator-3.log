@@ -1,0 +1,885 @@
+2026-11-13T15:11:14.393Z INFO  [coop.rchain.node.runtime.NodeRuntime] trying to open ports using UPnP....
+2026-11-13T15:11:14.393Z INFO  [coop.rchain.node.runtime.NodeRuntime] INFO - No gateway devices found
+2026-11-13T15:11:14.393Z INFO  [coop.rchain.node.runtime.NodeRuntime] No need to open any port
+2026-11-13T15:11:14.485Z INFO  [operator-risk] validator operator risk notice: an invalid block or proven equivocation can cost a stated share of your bond; an absent validator is not currently slashed but forfeits income and can stall finality, and enough silence stops the >2/3 quorum. Read TERMS.md.
+2026-11-13T15:11:14.486Z INFO  [resource-preflight] host resources: 29160 MiB available, cgroup v2, data dir 150086 MiB free, 1 rnode process(es), 24 CPU(s), 0 persisted block(s)
+2026-11-13T15:11:14.486Z WARN  [resource-preflight] no CPU quota is set for the node's cgroup; a busy host can starve it
+2026-11-13T15:11:14.666Z INFO  [casper.engine.NodeLaunch] Starting from bootstrap node, syncing LFS...
+2026-11-13T15:11:14.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is not-running and is not producing (resource fallback,                      unit C)
+2026-11-13T15:11:14.708Z INFO  [casper.protocol.CommUtil] LFS fringe request 1/10 sent to peer 2af731786bf8fa574344f9a33f16e52e63a2543b (anchor latest); awaiting admitted reply
+replay complete — starting listeners; the API answers once they are up
+2026-11-13T15:11:14.716Z INFO  [casper.engine.NodeSyncing] Received finalized fringe from bootstrap node (b57bd4411ed4f87d6d874ad89de80363505ad795b14d25710b2bf236aef77482) 0d34a5c00ef0dbeb395582404619df42fd40721e4a272970761a0b7171ee5292 8cac6782038c550e81394e927db5bdcc5fa74864c322c92565c9c700ca9916c7 f1430d96542e31b6f9523dbf28df45dc3bac625ac70aa8182e37e00d6843e686 fc3f6e9f5e4966470aa783b279b2d5323d4fdc66d9764442a38a71490cf41972.
+2026-11-13T15:11:14.716Z INFO  [casper.protocol.CommUtil] LFS fringe reply admitted for peer 2af731786bf8fa574344f9a33f16e52e63a2543b (anchor latest) on attempt 1/10
+2026-11-13T15:11:14.739Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([181, 123, 212, 65, 30, 212, 248, 125, 109, 135, 74, 216, 157, 232, 3, 99, 80, 90, 215, 149, 177, 77, 37, 113, 11, 43, 242, 54, 174, 247, 116, 130])), None)]
+2026-11-13T15:11:14.812Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:14.853Z INFO  [casper.engine.NodeSyncing] BlockMessage received #13 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:14.853Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path []
+2026-11-13T15:11:14.936Z INFO  [casper.engine.NodeSyncing] BlockMessage received #12 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:14.978Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 0, data: 0) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:15.020Z INFO  [casper.engine.NodeSyncing] BlockMessage received #13 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:15.062Z INFO  [casper.engine.NodeSyncing] BlockMessage received #13 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:15.062Z INFO  [casper.engine.LfsBlockRequester] Latest blocks downloaded.
+2026-11-13T15:11:15.149Z INFO  [casper.engine.NodeSyncing] BlockMessage received #12 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:15.191Z INFO  [casper.engine.NodeSyncing] BlockMessage received #12 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:15.233Z INFO  [casper.engine.NodeSyncing] BlockMessage received #12 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:15.274Z INFO  [casper.engine.NodeSyncing] BlockMessage received #11 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:15.316Z INFO  [casper.engine.NodeSyncing] BlockMessage received #11 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:15.358Z INFO  [casper.engine.NodeSyncing] BlockMessage received #11 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:15.399Z INFO  [casper.engine.NodeSyncing] BlockMessage received #11 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:15.441Z INFO  [casper.engine.NodeSyncing] BlockMessage received #10 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:15.482Z INFO  [casper.engine.NodeSyncing] BlockMessage received #10 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:15.524Z INFO  [casper.engine.NodeSyncing] BlockMessage received #10 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:15.565Z INFO  [casper.engine.NodeSyncing] BlockMessage received #10 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:15.617Z INFO  [casper.engine.NodeSyncing] BlockMessage received #9 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:15.660Z INFO  [casper.engine.NodeSyncing] BlockMessage received #9 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:15.702Z INFO  [casper.engine.NodeSyncing] BlockMessage received #9 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:15.743Z INFO  [casper.engine.NodeSyncing] BlockMessage received #9 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:15.790Z INFO  [casper.engine.NodeSyncing] BlockMessage received #8 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:15.831Z INFO  [casper.engine.NodeSyncing] BlockMessage received #8 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:15.873Z INFO  [casper.engine.NodeSyncing] BlockMessage received #8 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:15.914Z INFO  [casper.engine.NodeSyncing] BlockMessage received #8 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:15.960Z INFO  [casper.engine.NodeSyncing] BlockMessage received #7 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:16.002Z INFO  [casper.engine.NodeSyncing] BlockMessage received #7 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:16.043Z INFO  [casper.engine.NodeSyncing] BlockMessage received #7 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:16.084Z INFO  [casper.engine.NodeSyncing] BlockMessage received #7 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:16.181Z INFO  [casper.engine.NodeSyncing] BlockMessage received #6 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:16.223Z INFO  [casper.engine.NodeSyncing] BlockMessage received #6 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:16.265Z INFO  [casper.engine.NodeSyncing] BlockMessage received #6 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:16.308Z INFO  [casper.engine.NodeSyncing] BlockMessage received #6 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:16.350Z INFO  [casper.engine.NodeSyncing] BlockMessage received #5 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:16.392Z INFO  [casper.engine.NodeSyncing] BlockMessage received #5 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:16.434Z INFO  [casper.engine.NodeSyncing] BlockMessage received #5 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:16.476Z INFO  [casper.engine.NodeSyncing] BlockMessage received #5 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:16.518Z INFO  [casper.engine.NodeSyncing] BlockMessage received #4 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:16.560Z INFO  [casper.engine.NodeSyncing] BlockMessage received #4 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:16.602Z INFO  [casper.engine.NodeSyncing] BlockMessage received #4 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:16.644Z INFO  [casper.engine.NodeSyncing] BlockMessage received #4 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:16.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is not-running and is not producing (resource fallback,                      unit C)
+2026-11-13T15:11:16.686Z INFO  [casper.engine.NodeSyncing] BlockMessage received #3 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:16.727Z INFO  [casper.engine.NodeSyncing] BlockMessage received #3 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:16.769Z INFO  [casper.engine.NodeSyncing] BlockMessage received #3 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:16.811Z INFO  [casper.engine.NodeSyncing] BlockMessage received #3 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:17.017Z INFO  [casper.engine.NodeSyncing] BlockMessage received #2 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:17.060Z INFO  [casper.engine.NodeSyncing] BlockMessage received #2 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:17.101Z INFO  [casper.engine.NodeSyncing] BlockMessage received #2 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:17.143Z INFO  [casper.engine.NodeSyncing] BlockMessage received #2 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:17.185Z INFO  [casper.engine.NodeSyncing] BlockMessage received #1 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:17.227Z INFO  [casper.engine.NodeSyncing] BlockMessage received #1 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:17.269Z INFO  [casper.engine.NodeSyncing] BlockMessage received #1 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:17.310Z INFO  [casper.engine.NodeSyncing] BlockMessage received #1 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:17.325Z INFO  [casper.engine.NodeSyncing] BlockMessage received #0 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:17.350Z INFO  [casper.engine.NodeSyncing] Requesting tuple-space data for 36 approved block state roots.
+2026-11-13T15:11:18.006Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([9, 115, 50, 102, 131, 110, 123, 141, 186, 240, 115, 81, 114, 94, 114, 155, 66, 213, 28, 197, 29, 5, 19, 125, 102, 69, 225, 179, 53, 236, 181, 61])), None)]
+2026-11-13T15:11:18.047Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([13, 42, 105, 103, 181, 210, 208, 215, 43, 63, 17, 134, 28, 246, 124, 97, 169, 54, 129, 4, 74, 93, 26, 80, 207, 185, 36, 198, 132, 31, 39, 154])), None)]
+2026-11-13T15:11:18.076Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:18.118Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:18.127Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([14, 87, 81, 192, 38, 229, 67, 178, 232, 171, 46, 176, 96, 153, 218, 161, 209, 229, 223, 71, 119, 143, 119, 135, 250, 171, 69, 205, 241, 47, 227, 168])), None)]
+2026-11-13T15:11:18.169Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([16, 193, 143, 110, 72, 242, 152, 196, 49, 82, 87, 102, 199, 116, 192, 247, 50, 139, 42, 93, 178, 78, 146, 12, 213, 96, 213, 86, 218, 202, 172, 232])), None)]
+2026-11-13T15:11:18.210Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 0, data: 0) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:18.210Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([21, 48, 255, 72, 111, 244, 57, 105, 13, 12, 131, 51, 51, 146, 22, 250, 241, 182, 80, 89, 187, 19, 39, 62, 174, 21, 103, 255, 54, 247, 119, 202])), None)]
+2026-11-13T15:11:18.241Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:18.251Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([21, 229, 166, 69, 72, 233, 65, 239, 172, 70, 212, 4, 156, 207, 132, 244, 139, 151, 153, 66, 109, 96, 38, 213, 221, 117, 1, 169, 242, 156, 171, 24])), None)]
+2026-11-13T15:11:18.292Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([24, 117, 206, 181, 240, 213, 246, 65, 250, 61, 141, 14, 73, 12, 121, 172, 118, 172, 145, 177, 43, 109, 177, 30, 243, 75, 67, 74, 214, 205, 23, 105])), None)]
+2026-11-13T15:11:18.322Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:18.333Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([34, 49, 82, 43, 96, 198, 251, 115, 251, 232, 94, 214, 112, 86, 163, 201, 250, 152, 71, 145, 125, 214, 231, 104, 121, 25, 230, 108, 129, 189, 206, 135])), None)]
+2026-11-13T15:11:18.351Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:18.374Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([74, 6, 20, 51, 62, 35, 81, 85, 102, 35, 148, 51, 70, 158, 160, 31, 75, 167, 203, 69, 119, 66, 232, 142, 40, 201, 198, 16, 36, 40, 61, 134])), None)]
+2026-11-13T15:11:18.415Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([90, 115, 41, 13, 109, 109, 105, 245, 254, 66, 145, 84, 98, 60, 169, 29, 168, 242, 38, 128, 208, 64, 1, 23, 3, 91, 143, 184, 238, 85, 97, 27])), None)]
+2026-11-13T15:11:18.428Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:18.457Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([91, 189, 179, 139, 38, 211, 115, 184, 117, 42, 60, 85, 206, 73, 144, 194, 162, 142, 213, 62, 207, 73, 160, 199, 29, 84, 133, 237, 11, 237, 161, 171])), None)]
+2026-11-13T15:11:18.458Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:18.498Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([101, 11, 80, 20, 155, 228, 48, 28, 185, 96, 112, 210, 83, 240, 133, 206, 78, 254, 177, 65, 148, 20, 228, 12, 103, 84, 156, 102, 138, 164, 188, 101])), None)]
+2026-11-13T15:11:18.519Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:18.541Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([102, 127, 25, 67, 116, 170, 135, 23, 72, 88, 198, 242, 2, 132, 75, 130, 105, 245, 34, 77, 30, 74, 186, 23, 195, 51, 220, 155, 223, 52, 18, 14])), None)]
+2026-11-13T15:11:18.582Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([112, 99, 126, 107, 131, 166, 100, 87, 77, 213, 186, 119, 58, 16, 179, 210, 196, 188, 7, 164, 113, 220, 51, 208, 141, 84, 119, 142, 235, 182, 241, 163])), None)]
+2026-11-13T15:11:18.623Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([113, 214, 251, 160, 99, 90, 48, 11, 70, 107, 12, 11, 126, 234, 173, 17, 227, 156, 121, 75, 95, 66, 66, 89, 167, 60, 79, 79, 175, 162, 155, 226])), None)]
+2026-11-13T15:11:18.627Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:18.656Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:18.664Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([113, 237, 13, 65, 46, 228, 97, 51, 236, 219, 111, 52, 54, 62, 163, 194, 178, 93, 70, 166, 148, 86, 118, 233, 179, 160, 177, 138, 7, 25, 216, 255])), None)]
+2026-11-13T15:11:18.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is not-running and is not producing (resource fallback,                      unit C)
+2026-11-13T15:11:18.705Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([114, 101, 160, 222, 182, 189, 1, 33, 234, 143, 191, 26, 139, 130, 121, 212, 44, 97, 167, 98, 134, 207, 251, 230, 95, 78, 144, 110, 173, 87, 184, 226])), None)]
+2026-11-13T15:11:18.747Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([133, 90, 50, 35, 4, 17, 196, 80, 243, 187, 213, 120, 69, 72, 210, 73, 48, 121, 144, 41, 56, 166, 187, 3, 223, 244, 122, 180, 59, 225, 205, 105])), None)]
+2026-11-13T15:11:18.765Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:18.788Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([135, 44, 146, 101, 205, 74, 95, 252, 11, 85, 187, 157, 76, 178, 234, 36, 50, 113, 157, 226, 5, 171, 14, 126, 240, 65, 67, 110, 35, 83, 182, 178])), None)]
+2026-11-13T15:11:18.795Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:18.829Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([152, 164, 133, 38, 123, 37, 66, 110, 254, 35, 175, 94, 205, 164, 94, 249, 184, 188, 159, 244, 46, 158, 229, 184, 4, 117, 223, 171, 208, 181, 219, 189])), None)]
+2026-11-13T15:11:18.870Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([154, 147, 226, 234, 173, 16, 41, 26, 200, 44, 234, 27, 191, 207, 65, 122, 26, 66, 189, 178, 233, 32, 85, 229, 136, 200, 230, 127, 189, 109, 196, 55])), None)]
+2026-11-13T15:11:18.906Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:18.912Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([157, 182, 243, 29, 63, 73, 52, 172, 110, 135, 204, 136, 212, 29, 97, 186, 203, 172, 192, 228, 75, 51, 191, 127, 138, 107, 47, 104, 67, 237, 236, 171])), None)]
+2026-11-13T15:11:18.934Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:18.953Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([161, 53, 144, 167, 169, 71, 2, 18, 30, 213, 191, 228, 251, 50, 16, 176, 61, 17, 104, 27, 220, 150, 165, 187, 142, 61, 19, 139, 228, 13, 86, 190])), None)]
+2026-11-13T15:11:18.962Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:18.990Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:18.995Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([167, 191, 246, 36, 178, 34, 201, 30, 196, 72, 184, 118, 235, 33, 111, 42, 143, 252, 112, 74, 97, 95, 218, 47, 79, 90, 109, 132, 115, 17, 210, 128])), None)]
+2026-11-13T15:11:19.019Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:19.036Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([169, 213, 13, 67, 241, 194, 197, 44, 111, 199, 15, 91, 224, 180, 16, 147, 138, 118, 147, 178, 11, 170, 58, 204, 194, 135, 13, 193, 230, 56, 34, 168])), None)]
+2026-11-13T15:11:19.077Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([183, 165, 54, 183, 190, 239, 83, 32, 130, 132, 65, 235, 145, 88, 253, 50, 128, 113, 252, 18, 127, 168, 50, 70, 225, 12, 72, 178, 159, 165, 69, 117])), None)]
+2026-11-13T15:11:19.118Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([195, 253, 238, 206, 252, 226, 132, 95, 82, 7, 58, 59, 20, 70, 226, 96, 117, 17, 151, 78, 3, 7, 182, 254, 166, 137, 62, 236, 170, 97, 17, 63])), None)]
+2026-11-13T15:11:19.127Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:19.152Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:19.159Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([201, 207, 66, 29, 145, 47, 128, 212, 221, 182, 225, 16, 204, 178, 210, 213, 51, 74, 78, 179, 125, 102, 230, 178, 157, 42, 66, 92, 141, 164, 46, 255])), None)]
+2026-11-13T15:11:19.200Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([207, 80, 219, 24, 176, 197, 40, 3, 0, 133, 149, 169, 84, 81, 212, 136, 224, 215, 133, 92, 147, 17, 13, 139, 27, 208, 50, 56, 214, 107, 26, 207])), None)]
+2026-11-13T15:11:19.209Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:19.226Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:19.241Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([210, 142, 15, 217, 235, 183, 190, 203, 111, 155, 6, 198, 198, 64, 191, 137, 191, 70, 215, 239, 190, 172, 203, 110, 228, 212, 126, 74, 126, 220, 8, 195])), None)]
+2026-11-13T15:11:19.254Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:19.282Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([213, 31, 71, 231, 205, 185, 80, 91, 107, 108, 185, 5, 32, 32, 231, 247, 142, 122, 189, 64, 65, 223, 62, 221, 28, 78, 148, 205, 206, 127, 210, 196])), None)]
+2026-11-13T15:11:19.282Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:19.323Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([214, 164, 176, 172, 234, 102, 175, 164, 182, 218, 174, 154, 203, 211, 117, 67, 14, 176, 20, 13, 95, 254, 79, 90, 62, 121, 103, 151, 208, 32, 105, 24])), None)]
+2026-11-13T15:11:19.366Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([215, 132, 99, 204, 221, 69, 118, 70, 150, 212, 54, 58, 84, 168, 136, 20, 174, 8, 31, 113, 194, 211, 137, 26, 86, 72, 64, 105, 105, 173, 227, 69])), None)]
+2026-11-13T15:11:19.391Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:19.410Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([219, 117, 244, 176, 20, 118, 103, 254, 62, 236, 139, 192, 17, 85, 76, 171, 111, 198, 112, 56, 104, 185, 230, 255, 249, 239, 148, 123, 185, 135, 204, 232])), None)]
+2026-11-13T15:11:19.410Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:19.451Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([240, 74, 239, 219, 217, 120, 247, 229, 240, 84, 173, 239, 181, 132, 122, 28, 10, 244, 227, 159, 125, 141, 151, 31, 101, 193, 207, 65, 130, 170, 86, 230])), None)]
+2026-11-13T15:11:19.492Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path [(Blake2b256Hash(Hash32([249, 165, 116, 140, 172, 166, 64, 211, 111, 8, 183, 157, 131, 198, 129, 54, 224, 132, 175, 109, 78, 99, 215, 98, 152, 101, 23, 109, 219, 128, 133, 23])), None)]
+2026-11-13T15:11:19.515Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:19.533Z INFO  [casper.engine.LfsTupleSpaceRequester] Sending StoreItemsRequest to bootstrap for path []
+2026-11-13T15:11:19.543Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:19.572Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:19.597Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:19.633Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:19.735Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:19.754Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:19.812Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:19.871Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:19.888Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 29, data: 230) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:19.929Z INFO  [casper.engine.NodeSyncing] Received StoreItems(history: 0, data: 0) from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404.
+2026-11-13T15:11:20.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is not-running and is not producing (resource fallback,                      unit C)
+2026-11-13T15:11:21.753Z WARN  [casper.interpreter.validate] finality did not advance at tip 0: a layer exists but its supporting stake is not a supermajority — 0 of 400 (0 full partition(s) among 0 candidate(s) of a 1-sender partition)
+[pos] close_block 1 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:21.835Z WARN  [casper.interpreter.validate] a finality-stall episode was counted but not recorded: this DAG storage has no durable-records store attached, so this shard's health counters would be forgotten by the next process — this shard will under-report its stall history in the next process
+[pos] close_block 1 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 1 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 1 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:22.071Z WARN  [casper.interpreter.validate] finality did not advance at tip 1: a layer exists but its supporting stake is not a supermajority — 0 of 400 (0 full partition(s) among 0 candidate(s) of a 4-sender partition)
+[pos] close_block 2 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 2 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 2 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:22.339Z WARN  [casper.interpreter.validate] a finality-stall episode was counted but not recorded: this DAG storage has no durable-records store attached, so this shard's health counters would be forgotten by the next process — this shard will under-report its stall history in the next process
+[pos] close_block 2 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:22.421Z WARN  [casper.interpreter.validate] finality did not advance at tip 2: a layer exists but its supporting stake is not a supermajority — 0 of 400 (0 full partition(s) among 4 candidate(s) of a 4-sender partition)
+[pos] close_block 3 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 3 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 3 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:22.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is not-running and is not producing (resource fallback,                      unit C)
+[pos] close_block 3 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+["#define $Kudos", `rho:id:9spnmtw9g3qdi1kpxcbgbuyuukbkryp1wfdwsy6iunb9g44icrjy`]
+"begin"
+["#define $Inbox", `rho:id:3spfkanxkeq3d1s6wdbjz5gpy4oio5uzd9hnsmfbukjeakyiubky`]
+["#define $Directory", `rho:id:zcn8i36nea5u7sgkkuoh38nomzcg9gpfi4qs3c5ou7bmp6ygasio`]
+["#define $Issue", `rho:id:netuaaypr6ryw3ab5yk8e7fjhqx1gfxnnkm9mdif7wswmgkegfxo`]
+["#define $Ballot", `rho:id:kuhtaexp36f3rjygs8t5oosxfhx7m6kuy9iwi3ew5jz63fppbroy`]
+`rho:id:kuhtaexp36f3rjygs8t5oosxfhx7m6kuy9iwi3ew5jz63fppbroy`
+"starting"
+["#define $Chat", `rho:id:twqdgghs4dz3sd8ronngpg1kdwrtikq8pdgmjzd7z9d1k5kt1poy`]
+"request"
+["#define $Group", `rho:id:s9hd3eoq1trqjsbeay3j1ihsue6zfz6tauy1wyii3zwj1pkh7r3o`]
+["MCAread", bundle+ {   Unforgeable(0x7ab62ea39c23346344dedf8aa6548802c0432374b6a4a4d81a357a6ec284915e) }]
+["GetMe", ("published", "11112VYAt8rUGNRRZX3eJdgagaAhtWTK8Js7F7X5iqddMVqyDTtYau/GetMe", 0), "SendThem", ("published", "11112VYAt8rUGNRRZX3eJdgagaAhtWTK8Js7F7X5iqddMVqyDTtYau/SendThem", 0)]
+["getting deployer rev address"]
+["got pub key", "04f700a417754b775d95421973bdbdadb2d23c8a5af46f1829b1431f5c136e549e8a0d61aa0c793f1a614f8e437711c7758473c6ceb0859ac7e9e07911ca66b5c4".hexToBytes()]
+["got revaddr", {"deployer REV address" : "11112VYAt8rUGNRRZX3eJdgagaAhtWTK8Js7F7X5iqddMVqyDTtYau", "deployerId" : DeployerId(0x04f700a417754b775d95421973bdbdadb2d23c8a5af46f1829b1431f5c136e549e8a0d61aa0c793f1a614f8e437711c7758473c6ceb0859ac7e9e07911ca66b5c4), "pubKeyBytes" : "04f700a417754b775d95421973bdbdadb2d23c8a5af46f1829b1431f5c136e549e8a0d61aa0c793f1a614f8e437711c7758473c6ceb0859ac7e9e07911ca66b5c4".hexToBytes()}]
+["getMe", "11112VYAt8rUGNRRZX3eJdgagaAhtWTK8Js7F7X5iqddMVqyDTtYau", "everyone size", 0]
+["creating your stuff", "11112VYAt8rUGNRRZX3eJdgagaAhtWTK8Js7F7X5iqddMVqyDTtYau"]
+["inbox creation", bundle+ {   Unforgeable(0x109d074f7ca037d43d4a42c063c37bf3a6980cb86a5ed9c242e23ec27277d088) }, "dir creation", bundle+ {   Unforgeable(0x74206e9f2a2fd1d16e885372201da64ffc57070d693c85556af5cb2811852e94) }]
+["read", bundle+ {   Unforgeable(0x9c3e3fa972dc564a5fed48f03053fb0376f6d9bc91d745f33cfdc1710d55c10b) }, "write", bundle+ {   Unforgeable(0x67945f3348c4e24133e4ac67f8cdbf94600c1dedeba8820d27c50fc01cfa9662) }, "peek", bundle+ {   Unforgeable(0xdd2e50727b44423dbb4fb121bbd77046322b47fff7f310d5562600e92172edb1) }, "dirMap", {"grant" : bundle+ {   Unforgeable(0x930d5e796b482da0445c99179ca84aaeb5712c0b4f986b15dbb9f34c1835b2a1) }, "read" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "write" : bundle+ {   Unforgeable(0xb2eacb8ed80f56f0a20860e77f960e22be12aeba0b087f33047cd9b4d37a66ef) }}]
+["creating you", "11112VYAt8rUGNRRZX3eJdgagaAhtWTK8Js7F7X5iqddMVqyDTtYau", "with your stuff", {"claimed" : false, "dictionary" : {"grant" : bundle+ {   Unforgeable(0x930d5e796b482da0445c99179ca84aaeb5712c0b4f986b15dbb9f34c1835b2a1) }, "read" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "write" : bundle+ {   Unforgeable(0xb2eacb8ed80f56f0a20860e77f960e22be12aeba0b087f33047cd9b4d37a66ef) }}, "inbox" : {"URI" : `rho:id:1dowt16ek6squ9iycd3iyz8gtzn8wfp8wzef59qtwuyqz5z5cgby`, "dict" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "inbox" : bundle+ {   Unforgeable(0x67945f3348c4e24133e4ac67f8cdbf94600c1dedeba8820d27c50fc01cfa9662) }, "peek" : bundle+ {   Unforgeable(0xdd2e50727b44423dbb4fb121bbd77046322b47fff7f310d5562600e92172edb1) }, "receive" : bundle+ {   Unforgeable(0x9c3e3fa972dc564a5fed48f03053fb0376f6d9bc91d745f33cfdc1710d55c10b) }}}]
+["Inbox returning", bundle+ {   Unforgeable(0x9c3e3fa972dc564a5fed48f03053fb0376f6d9bc91d745f33cfdc1710d55c10b) }, bundle+ {   Unforgeable(0x67945f3348c4e24133e4ac67f8cdbf94600c1dedeba8820d27c50fc01cfa9662) }, bundle+ {   Unforgeable(0xdd2e50727b44423dbb4fb121bbd77046322b47fff7f310d5562600e92172edb1) }]
+["you don't exist", "11112VYAt8rUGNRRZX3eJdgagaAhtWTK8Js7F7X5iqddMVqyDTtYau"]
+["your inserted stuff", {"claimed" : false, "dictionary" : {"grant" : bundle+ {   Unforgeable(0x930d5e796b482da0445c99179ca84aaeb5712c0b4f986b15dbb9f34c1835b2a1) }, "read" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "write" : bundle+ {   Unforgeable(0xb2eacb8ed80f56f0a20860e77f960e22be12aeba0b087f33047cd9b4d37a66ef) }}, "inbox" : {"URI" : `rho:id:1dowt16ek6squ9iycd3iyz8gtzn8wfp8wzef59qtwuyqz5z5cgby`, "dict" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "inbox" : bundle+ {   Unforgeable(0x67945f3348c4e24133e4ac67f8cdbf94600c1dedeba8820d27c50fc01cfa9662) }, "peek" : bundle+ {   Unforgeable(0xdd2e50727b44423dbb4fb121bbd77046322b47fff7f310d5562600e92172edb1) }, "receive" : bundle+ {   Unforgeable(0x9c3e3fa972dc564a5fed48f03053fb0376f6d9bc91d745f33cfdc1710d55c10b) }}}, "everyone size", 1]
+["inbox", {"URI" : `rho:id:1dowt16ek6squ9iycd3iyz8gtzn8wfp8wzef59qtwuyqz5z5cgby`, "dict" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "inbox" : bundle+ {   Unforgeable(0x67945f3348c4e24133e4ac67f8cdbf94600c1dedeba8820d27c50fc01cfa9662) }, "peek" : bundle+ {   Unforgeable(0xdd2e50727b44423dbb4fb121bbd77046322b47fff7f310d5562600e92172edb1) }, "receive" : bundle+ {   Unforgeable(0x9c3e3fa972dc564a5fed48f03053fb0376f6d9bc91d745f33cfdc1710d55c10b) }}]
+["x", {"claimed" : false, "dictionary" : {"grant" : bundle+ {   Unforgeable(0x930d5e796b482da0445c99179ca84aaeb5712c0b4f986b15dbb9f34c1835b2a1) }, "read" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "write" : bundle+ {   Unforgeable(0xb2eacb8ed80f56f0a20860e77f960e22be12aeba0b087f33047cd9b4d37a66ef) }}, "inbox" : {"URI" : `rho:id:1dowt16ek6squ9iycd3iyz8gtzn8wfp8wzef59qtwuyqz5z5cgby`, "dict" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "inbox" : bundle+ {   Unforgeable(0x67945f3348c4e24133e4ac67f8cdbf94600c1dedeba8820d27c50fc01cfa9662) }, "peek" : bundle+ {   Unforgeable(0xdd2e50727b44423dbb4fb121bbd77046322b47fff7f310d5562600e92172edb1) }, "receive" : bundle+ {   Unforgeable(0x9c3e3fa972dc564a5fed48f03053fb0376f6d9bc91d745f33cfdc1710d55c10b) }}}]
+["writing inbox and dictionary for bootstrap", {"URI" : `rho:id:1dowt16ek6squ9iycd3iyz8gtzn8wfp8wzef59qtwuyqz5z5cgby`, "dict" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "inbox" : bundle+ {   Unforgeable(0x67945f3348c4e24133e4ac67f8cdbf94600c1dedeba8820d27c50fc01cfa9662) }, "peek" : bundle+ {   Unforgeable(0xdd2e50727b44423dbb4fb121bbd77046322b47fff7f310d5562600e92172edb1) }, "receive" : bundle+ {   Unforgeable(0x9c3e3fa972dc564a5fed48f03053fb0376f6d9bc91d745f33cfdc1710d55c10b) }}, {"grant" : bundle+ {   Unforgeable(0x930d5e796b482da0445c99179ca84aaeb5712c0b4f986b15dbb9f34c1835b2a1) }, "read" : bundle+ {   Unforgeable(0x1c4de4b28717d075e2a7bcee6aa8e480352a38e8836cf276abc6e3c9ba0d4ba7) }, "write" : bundle+ {   Unforgeable(0xb2eacb8ed80f56f0a20860e77f960e22be12aeba0b087f33047cd9b4d37a66ef) }}]
+["everyone size", 0]
+[pos] close_block 4 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 4 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 4 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 4 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 5 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 5 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:24.666Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is not-running and is not producing (resource fallback,                      unit C)
+[pos] close_block 5 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 5 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:24.942Z WARN  [casper.interpreter.validate] a non-quiet merge report was counted but not recorded: this DAG storage has no durable-records store attached, so this shard's health counters would be forgotten by the next process — this shard will under-report its merge history in the next process
+2026-11-13T15:11:24.942Z WARN  [casper.interpreter.validate] merge: 26 chains in scope (25 kept, 1 rejected; 1 rejected a cost-accounted chain)
+[pos] close_block 6 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:25.050Z WARN  [casper.interpreter.validate] a non-quiet merge report was counted but not recorded: this DAG storage has no durable-records store attached, so this shard's health counters would be forgotten by the next process — this shard will under-report its merge history in the next process
+2026-11-13T15:11:25.050Z WARN  [casper.interpreter.validate] merge: 26 chains in scope (25 kept, 1 rejected; 1 rejected a cost-accounted chain)
+[pos] close_block 6 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:25.167Z WARN  [casper.interpreter.validate] a non-quiet merge report was counted but not recorded: this DAG storage has no durable-records store attached, so this shard's health counters would be forgotten by the next process — this shard will under-report its merge history in the next process
+2026-11-13T15:11:25.167Z WARN  [casper.interpreter.validate] merge: 26 chains in scope (25 kept, 1 rejected; 1 rejected a cost-accounted chain)
+[pos] close_block 6 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:25.305Z WARN  [casper.interpreter.validate] a non-quiet merge report was counted but not recorded: this DAG storage has no durable-records store attached, so this shard's health counters would be forgotten by the next process — this shard will under-report its merge history in the next process
+2026-11-13T15:11:25.305Z WARN  [casper.interpreter.validate] merge: 26 chains in scope (25 kept, 1 rejected; 1 rejected a cost-accounted chain)
+[pos] close_block 6 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:25.473Z WARN  [casper.interpreter.validate] a non-quiet merge report was counted but not recorded: this DAG storage has no durable-records store attached, so this shard's health counters would be forgotten by the next process — this shard will under-report its merge history in the next process
+2026-11-13T15:11:25.473Z WARN  [casper.interpreter.validate] merge: 26 chains in scope (25 kept, 1 rejected; 1 rejected a cost-accounted chain)
+[pos] close_block 7 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:25.701Z WARN  [casper.interpreter.validate] a non-quiet merge report was counted but not recorded: this DAG storage has no durable-records store attached, so this shard's health counters would be forgotten by the next process — this shard will under-report its merge history in the next process
+2026-11-13T15:11:25.701Z WARN  [casper.interpreter.validate] merge: 26 chains in scope (25 kept, 1 rejected; 1 rejected a cost-accounted chain)
+[pos] close_block 7 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:25.874Z WARN  [casper.interpreter.validate] a non-quiet merge report was counted but not recorded: this DAG storage has no durable-records store attached, so this shard's health counters would be forgotten by the next process — this shard will under-report its merge history in the next process
+2026-11-13T15:11:25.874Z WARN  [casper.interpreter.validate] merge: 26 chains in scope (25 kept, 1 rejected; 1 rejected a cost-accounted chain)
+[pos] close_block 7 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:26.020Z WARN  [casper.interpreter.validate] a non-quiet merge report was counted but not recorded: this DAG storage has no durable-records store attached, so this shard's health counters would be forgotten by the next process — this shard will under-report its merge history in the next process
+2026-11-13T15:11:26.020Z WARN  [casper.interpreter.validate] merge: 26 chains in scope (25 kept, 1 rejected; 1 rejected a cost-accounted chain)
+[pos] close_block 7 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:26.164Z WARN  [casper.interpreter.validate] a non-quiet merge report was counted but not recorded: this DAG storage has no durable-records store attached, so this shard's health counters would be forgotten by the next process — this shard will under-report its merge history in the next process
+2026-11-13T15:11:26.164Z WARN  [casper.interpreter.validate] merge: 26 chains in scope (25 kept, 1 rejected; 1 rejected a cost-accounted chain)
+[pos] close_block 8 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:26.285Z WARN  [casper.interpreter.validate] a non-quiet merge report was counted but not recorded: this DAG storage has no durable-records store attached, so this shard's health counters would be forgotten by the next process — this shard will under-report its merge history in the next process
+2026-11-13T15:11:26.285Z WARN  [casper.interpreter.validate] merge: 26 chains in scope (25 kept, 1 rejected; 1 rejected a cost-accounted chain)
+[pos] close_block 8 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:26.476Z WARN  [casper.interpreter.validate] a non-quiet merge report was counted but not recorded: this DAG storage has no durable-records store attached, so this shard's health counters would be forgotten by the next process — this shard will under-report its merge history in the next process
+2026-11-13T15:11:26.476Z WARN  [casper.interpreter.validate] merge: 26 chains in scope (25 kept, 1 rejected; 1 rejected a cost-accounted chain)
+[pos] close_block 8 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:26.619Z WARN  [casper.interpreter.validate] a non-quiet merge report was counted but not recorded: this DAG storage has no durable-records store attached, so this shard's health counters would be forgotten by the next process — this shard will under-report its merge history in the next process
+2026-11-13T15:11:26.619Z WARN  [casper.interpreter.validate] merge: 26 chains in scope (25 kept, 1 rejected; 1 rejected a cost-accounted chain)
+[pos] close_block 8 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:26.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is not-running and is not producing (resource fallback,                      unit C)
+[pos] close_block 9 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:26.876Z WARN  [casper.interpreter.validate] merge search: 52 merges · widest scope 18 chains / 2 conflict pairs / 0 asymmetric · most states expanded on one merge 19 · width buckets [30, 22, 0, 0, 0] · cost buckets [52, 0, 0, 0, 0]
+[pos] close_block 9 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 9 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 9 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:27.087Z WARN  [casper.interpreter.validate] a non-quiet merge report was counted but not recorded: this DAG storage has no durable-records store attached, so this shard's health counters would be forgotten by the next process — this shard will under-report its merge history in the next process
+2026-11-13T15:11:27.087Z WARN  [casper.interpreter.validate] merge: 26 chains in scope (26 kept, 0 rejected; 0 rejected a cost-accounted chain); **2 chain(s) of the final scope rejected**: recorded final-scope rejection decisions retained in the merge base (C260); 1 deploy(s) rode on a final-scope rejected chain (3045022100b5c098033295af99f98b2bc721b8588d6829f81c45187d3deb1de46273bbd969022025372e942608d67158782edfb5e9c36ea9213db67fc56efaa749931dea5ad5de)
+[pos] close_block 10 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:27.191Z WARN  [casper.interpreter.validate] a non-quiet merge report was counted but not recorded: this DAG storage has no durable-records store attached, so this shard's health counters would be forgotten by the next process — this shard will under-report its merge history in the next process
+2026-11-13T15:11:27.191Z WARN  [casper.interpreter.validate] merge: 26 chains in scope (26 kept, 0 rejected; 0 rejected a cost-accounted chain); **2 chain(s) of the final scope rejected**: recorded final-scope rejection decisions retained in the merge base (C260); 1 deploy(s) rode on a final-scope rejected chain (3045022100b5c098033295af99f98b2bc721b8588d6829f81c45187d3deb1de46273bbd969022025372e942608d67158782edfb5e9c36ea9213db67fc56efaa749931dea5ad5de)
+[pos] close_block 10 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:27.248Z WARN  [casper.interpreter.validate] a non-quiet merge report was counted but not recorded: this DAG storage has no durable-records store attached, so this shard's health counters would be forgotten by the next process — this shard will under-report its merge history in the next process
+2026-11-13T15:11:27.248Z WARN  [casper.interpreter.validate] merge: 26 chains in scope (26 kept, 0 rejected; 0 rejected a cost-accounted chain); **2 chain(s) of the final scope rejected**: recorded final-scope rejection decisions retained in the merge base (C260); 1 deploy(s) rode on a final-scope rejected chain (3045022100b5c098033295af99f98b2bc721b8588d6829f81c45187d3deb1de46273bbd969022025372e942608d67158782edfb5e9c36ea9213db67fc56efaa749931dea5ad5de)
+[pos] close_block 10 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:27.302Z WARN  [casper.interpreter.validate] a non-quiet merge report was counted but not recorded: this DAG storage has no durable-records store attached, so this shard's health counters would be forgotten by the next process — this shard will under-report its merge history in the next process
+2026-11-13T15:11:27.302Z WARN  [casper.interpreter.validate] merge: 26 chains in scope (26 kept, 0 rejected; 0 rejected a cost-accounted chain); **2 chain(s) of the final scope rejected**: recorded final-scope rejection decisions retained in the merge base (C260); 1 deploy(s) rode on a final-scope rejected chain (3045022100b5c098033295af99f98b2bc721b8588d6829f81c45187d3deb1de46273bbd969022025372e942608d67158782edfb5e9c36ea9213db67fc56efaa749931dea5ad5de)
+[pos] close_block 10 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:27.368Z WARN  [casper.interpreter.validate] a non-quiet merge report was counted but not recorded: this DAG storage has no durable-records store attached, so this shard's health counters would be forgotten by the next process — this shard will under-report its merge history in the next process
+2026-11-13T15:11:27.368Z WARN  [casper.interpreter.validate] merge: 26 chains in scope (26 kept, 0 rejected; 0 rejected a cost-accounted chain); **2 chain(s) of the final scope rejected**: recorded final-scope rejection decisions retained in the merge base (C260); 1 deploy(s) rode on a final-scope rejected chain (3045022100b5c098033295af99f98b2bc721b8588d6829f81c45187d3deb1de46273bbd969022025372e942608d67158782edfb5e9c36ea9213db67fc56efaa749931dea5ad5de)
+[pos] close_block 11 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:27.432Z WARN  [casper.interpreter.validate] a non-quiet merge report was counted but not recorded: this DAG storage has no durable-records store attached, so this shard's health counters would be forgotten by the next process — this shard will under-report its merge history in the next process
+2026-11-13T15:11:27.432Z WARN  [casper.interpreter.validate] merge: 26 chains in scope (26 kept, 0 rejected; 0 rejected a cost-accounted chain); **2 chain(s) of the final scope rejected**: recorded final-scope rejection decisions retained in the merge base (C260); 1 deploy(s) rode on a final-scope rejected chain (3045022100b5c098033295af99f98b2bc721b8588d6829f81c45187d3deb1de46273bbd969022025372e942608d67158782edfb5e9c36ea9213db67fc56efaa749931dea5ad5de)
+[pos] close_block 11 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:27.486Z WARN  [casper.interpreter.validate] a non-quiet merge report was counted but not recorded: this DAG storage has no durable-records store attached, so this shard's health counters would be forgotten by the next process — this shard will under-report its merge history in the next process
+2026-11-13T15:11:27.486Z WARN  [casper.interpreter.validate] merge: 26 chains in scope (26 kept, 0 rejected; 0 rejected a cost-accounted chain); **2 chain(s) of the final scope rejected**: recorded final-scope rejection decisions retained in the merge base (C260); 1 deploy(s) rode on a final-scope rejected chain (3045022100b5c098033295af99f98b2bc721b8588d6829f81c45187d3deb1de46273bbd969022025372e942608d67158782edfb5e9c36ea9213db67fc56efaa749931dea5ad5de)
+[pos] close_block 11 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:27.547Z WARN  [casper.interpreter.validate] a non-quiet merge report was counted but not recorded: this DAG storage has no durable-records store attached, so this shard's health counters would be forgotten by the next process — this shard will under-report its merge history in the next process
+2026-11-13T15:11:27.547Z WARN  [casper.interpreter.validate] merge: 26 chains in scope (26 kept, 0 rejected; 0 rejected a cost-accounted chain); **2 chain(s) of the final scope rejected**: recorded final-scope rejection decisions retained in the merge base (C260); 1 deploy(s) rode on a final-scope rejected chain (3045022100b5c098033295af99f98b2bc721b8588d6829f81c45187d3deb1de46273bbd969022025372e942608d67158782edfb5e9c36ea9213db67fc56efaa749931dea5ad5de)
+[pos] close_block 11 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 12 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 12 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 12 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 12 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 13 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 13 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 13 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:28.032Z INFO  [casper.engine.RecoveryReplay] Independently replayed 52 recovery blocks; all supplied fringe claims match.
+2026-11-13T15:11:28.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is not-running and is not producing (resource fallback,                      unit C)
+2026-11-13T15:11:29.158Z INFO  [casper.engine.NodeSyncing] LFS state is successfully restored.
+2026-11-13T15:11:29.162Z INFO  [casper.engine.NodeLaunch] republished CURRENT_ROOT at the latest accepted block d7eac847c413dafdd9b1bb4b3ad171b9968a772be72672ed87f570e9fe0778b9
+2026-11-13T15:11:29.171Z INFO  [casper.blocks.BlockDisposition] start-up disposition audit: 0 unsettled block(s) re-offered, 0 skipped for missing parents, 0 already inserted, 0 quarantined, 0 unreadable
+2026-11-13T15:11:29.171Z INFO  [casper.engine.NodeLaunch] start-up disposition audit: 0 pre-ledger body/bodies adopted, 0 re-offered, 0 skipped for missing parents, 0 still pending when the drain closed
+2026-11-13T15:11:29.171Z INFO  [casper.engine.NodeLaunch] Making a transition to Running state.
+2026-11-13T15:11:29.213Z INFO  [casper.protocol.CommUtil] Requested fork tip from peers
+2026-11-13T15:11:29.254Z INFO  [casper.blocks.BlockRetriever] Adding 6ee16c344f131d205ae734b3a4637b1b5f4f00079890dda895828b3dcdd5ed83 hash to RequestedBlocks because of HasBlockMessageReceived.
+2026-11-13T15:11:29.295Z INFO  [casper.blocks.BlockRetriever] Adding fd47515589f2b722071c0dfd8fd5866874129815df794252650db6d07a48d8b0 hash to RequestedBlocks because of HasBlockMessageReceived.
+2026-11-13T15:11:29.337Z INFO  [casper.blocks.BlockRetriever] Adding 1436a719f8c60208ae0f5a1c241e3634a9fa61e28fca4584f88698c7f8724261 hash to RequestedBlocks because of HasBlockMessageReceived.
+2026-11-13T15:11:29.378Z INFO  [casper.blocks.BlockRetriever] Adding 4e70e0445abc3ea509b8892aff7cf03c466882aa7ef1b207ea33625dae7a1cb9 hash to RequestedBlocks because of HasBlockMessageReceived.
+2026-11-13T15:11:29.426Z INFO  [casper.blocks.BlockRetriever] Block 6ee16c344f131d205ae734b3a4637b1b5f4f00079890dda895828b3dcdd5ed83 marked as received.
+2026-11-13T15:11:29.426Z INFO  [casper.blocks.BlockRetriever] Adding 6bc703d729a7fddaa1f785820d925d1c0ff62ae53f2daf3f2f1f20856e29023f hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:11:29.468Z INFO  [casper.blocks.BlockRetriever] Adding 6bd5367f6cdd63fd5d105dcbaea4dc3ebbe857d1d225f83c330adca2ff4b737d hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:11:29.503Z WARN  [casper.engine.NodeRunning] There is another node rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404 proposing using the same private key as you. Or did you restart your node?
+2026-11-13T15:11:29.509Z INFO  [casper.blocks.BlockRetriever] Adding 9ac2d6ce9dae4fd0648532e1dbeb637b24e2c9d2fafd4560f97a0e01a89fcdfe hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:11:29.557Z INFO  [casper.blocks.BlockRetriever] Block fd47515589f2b722071c0dfd8fd5866874129815df794252650db6d07a48d8b0 marked as received.
+2026-11-13T15:11:29.557Z INFO  [casper.blocks.BlockRetriever] Adding 247c685c74a55ed63d16bef5c48bff45baa203e1289c30f2a4f1db321e0311bd hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:11:29.600Z INFO  [casper.blocks.BlockRetriever] Adding bda7b283cc1e55340639ad3e5317bf8a13128609172a0834d1e6d2af30948a29 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:11:29.653Z INFO  [casper.blocks.BlockRetriever] Block 1436a719f8c60208ae0f5a1c241e3634a9fa61e28fca4584f88698c7f8724261 marked as received.
+2026-11-13T15:11:29.653Z INFO  [casper.blocks.BlockRetriever] Adding ea190ae2f071ee8c65bbc54f03f25d549a8a4f25c6413575aeb270e04c047cd0 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:11:29.711Z INFO  [casper.blocks.BlockRetriever] Adding ecb2df289f265a41949ce35ae675c4872675f9ff66309a16c83a5763da63e8c9 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:11:29.712Z INFO  [casper.blocks.BlockRetriever] Adding ef7d6965c88f78b399cd314cd66dc958cddeecd9e3d8e994cca0340f803e6763 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:11:29.754Z INFO  [casper.blocks.BlockRetriever] Adding f3d1452e1615c821be8bbbad4cf92a88daf39b423880e8fe69f18a414e6438bf hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:11:29.800Z INFO  [casper.blocks.BlockRetriever] Block 4e70e0445abc3ea509b8892aff7cf03c466882aa7ef1b207ea33625dae7a1cb9 marked as received.
+2026-11-13T15:11:29.800Z INFO  [casper.blocks.BlockRetriever] Adding 5fe692454f4d7ad50b2fdb6b1a60c9bae76b82e85e4a059d0d2e23af03457417 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:11:29.845Z INFO  [casper.blocks.BlockRetriever] Block 6bc703d729a7fddaa1f785820d925d1c0ff62ae53f2daf3f2f1f20856e29023f marked as received.
+2026-11-13T15:11:29.850Z INFO  [casper.blocks.BlockRetriever] Block 6bd5367f6cdd63fd5d105dcbaea4dc3ebbe857d1d225f83c330adca2ff4b737d marked as received.
+2026-11-13T15:11:29.882Z INFO  [casper.blocks.BlockRetriever] Block 9ac2d6ce9dae4fd0648532e1dbeb637b24e2c9d2fafd4560f97a0e01a89fcdfe marked as received.
+2026-11-13T15:11:30.007Z INFO  [casper.blocks.BlockRetriever] Block 247c685c74a55ed63d16bef5c48bff45baa203e1289c30f2a4f1db321e0311bd marked as received.
+2026-11-13T15:11:30.176Z INFO  [casper.blocks.BlockRetriever] Block bda7b283cc1e55340639ad3e5317bf8a13128609172a0834d1e6d2af30948a29 marked as received.
+2026-11-13T15:11:30.257Z INFO  [casper.blocks.BlockRetriever] Block ea190ae2f071ee8c65bbc54f03f25d549a8a4f25c6413575aeb270e04c047cd0 marked as received.
+2026-11-13T15:11:30.258Z INFO  [casper.blocks.BlockRetriever] Adding 3745a4d5482caaad27d692a6c105003c5a90f5c8573a3fd6b7810587e4d1ffd1 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:11:30.303Z INFO  [casper.blocks.BlockRetriever] Block ecb2df289f265a41949ce35ae675c4872675f9ff66309a16c83a5763da63e8c9 marked as received.
+2026-11-13T15:11:30.337Z WARN  [casper.engine.NodeRunning] There is another node rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404 proposing using the same private key as you. Or did you restart your node?
+2026-11-13T15:11:30.342Z INFO  [casper.blocks.BlockRetriever] Block ef7d6965c88f78b399cd314cd66dc958cddeecd9e3d8e994cca0340f803e6763 marked as received.
+2026-11-13T15:11:30.383Z INFO  [casper.blocks.BlockRetriever] Block f3d1452e1615c821be8bbbad4cf92a88daf39b423880e8fe69f18a414e6438bf marked as received.
+2026-11-13T15:11:30.426Z INFO  [casper.blocks.BlockRetriever] Block 5fe692454f4d7ad50b2fdb6b1a60c9bae76b82e85e4a059d0d2e23af03457417 marked as received.
+2026-11-13T15:11:30.549Z INFO  [casper.blocks.BlockRetriever] Block 3745a4d5482caaad27d692a6c105003c5a90f5c8573a3fd6b7810587e4d1ffd1 marked as received.
+[pos] close_block 13 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:30.667Z INFO  [coop.rchain.node.runtime.BlockIndex] block indexing: 1500 blocks indexed, 1 replay fallbacks (1118 ms, 0 not persisted), index cache 25 entries, 28 pruned, cap 64, 0 capacity evicted
+2026-11-13T15:11:30.680Z INFO  [casper.blocks.Proposer] attestation at tip 13: licensed — nothing_to_finalize=false new_state_transition=true quorum_reachable=true cadence_due=false paced=true round=[04d8b6c3 04dbe32c 04ea3ce0 04f700a4] blocked_attempts=0 escape=false
+No pooled deploys; injecting dummy deploy for block #14
+2026-11-13T15:11:30.681Z INFO  [casper.protocol.CommUtil] Block hash 3745a4d5482caaad27d692a6c105003c5a90f5c8573a3fd6b7810587e4d1ffd1: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+[deploy] deployer=04f700a417754b77 ok cost=3 
+[pos] close_block 14 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 14 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 14 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 14 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 14 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+[pos] close_block 14 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:11:30.866Z INFO  [casper.protocol.CommUtil] Block hash ea190ae2f071ee8c65bbc54f03f25d549a8a4f25c6413575aeb270e04c047cd0: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-13T15:11:30.881Z ERROR [casper.blocks.BlockProcessor] Block #14 ef7d6965c88f78b399cd314cd66dc958cddeecd9e3d8e994cca0340f803e6763 faulted at dag insert (equivocation detected: sender produced two blocks with the same sequence number); recorded for retry 1/8
+2026-11-13T15:11:30.917Z INFO  [casper.protocol.CommUtil] Block hash ecb2df289f265a41949ce35ae675c4872675f9ff66309a16c83a5763da63e8c9: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-13T15:11:30.917Z INFO  [casper.protocol.CommUtil] Block hash 852e11dc9f6096d50ce0c057e52cbe26241e1c65d476e02a25e8468b2d6db4e9: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-13T15:11:30.917Z INFO  [coop.rchain.node.instances.ProposerInstance] proposed and added block #14 (seq 13)
+2026-11-13T15:11:30.917Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:11:30.918Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:11:30.960Z INFO  [casper.engine.NodeRunning] Received request for block 852e11dc9f6096d50ce0c057e52cbe26241e1c65d476e02a25e8468b2d6db4e9 from rnode://2af731786bf8fa574344f9a33f16e52e63a2543b@n457join-bootstrap?protocol=40400&discovery=40404. Response sent.
+2026-11-13T15:11:30.960Z INFO  [casper.protocol.CommUtil] Block hash f3d1452e1615c821be8bbbad4cf92a88daf39b423880e8fe69f18a414e6438bf: transport accepted 1 initial, 0 retry; 0 failed of 1 peers (transport acceptance is not remote DAG admission)
+2026-11-13T15:11:32.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:11:34.666Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:11:36.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:11:38.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:11:40.666Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:11:41.624Z INFO  [casper.blocks.BlockRetriever] Adding b7200d0fe9a4c124f7ca10a3fdf6b8795215e78c4225d3d876d3be12687e1cd5 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:11:41.712Z INFO  [casper.blocks.BlockRetriever] Block b7200d0fe9a4c124f7ca10a3fdf6b8795215e78c4225d3d876d3be12687e1cd5 marked as received.
+2026-11-13T15:11:42.206Z INFO  [casper.blocks.BlockRetriever] Adding 2b67a6bb5d67e7f51d4727322e005f36fa5c8e4c298ace40aca0bd81fba97ca0 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:11:42.303Z INFO  [casper.blocks.BlockRetriever] Block 2b67a6bb5d67e7f51d4727322e005f36fa5c8e4c298ace40aca0bd81fba97ca0 marked as received.
+2026-11-13T15:11:42.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:11:44.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:11:46.137Z INFO  [casper.engine.NodeRunning] Received ForkChoiceTipRequest from n457join-bootstrap
+2026-11-13T15:11:46.302Z INFO  [casper.engine.NodeRunning] Sending tips ecb2df289f265a41949ce35ae675c4872675f9ff66309a16c83a5763da63e8c9 f3d1452e1615c821be8bbbad4cf92a88daf39b423880e8fe69f18a414e6438bf 852e11dc9f6096d50ce0c057e52cbe26241e1c65d476e02a25e8468b2d6db4e9 ea190ae2f071ee8c65bbc54f03f25d549a8a4f25c6413575aeb270e04c047cd0 to n457join-bootstrap
+2026-11-13T15:11:46.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:11:46.918Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:11:48.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:11:50.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:11:52.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:11:54.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:11:56.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:11:58.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:11:59.256Z INFO  [casper.protocol.CommUtil] Requested fork tip from peers
+2026-11-13T15:12:00.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:02.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:04.666Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:06.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:08.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:10.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:12.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:14.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:16.137Z INFO  [casper.engine.NodeRunning] Received ForkChoiceTipRequest from n457join-bootstrap
+2026-11-13T15:12:16.301Z INFO  [casper.engine.NodeRunning] Sending tips ecb2df289f265a41949ce35ae675c4872675f9ff66309a16c83a5763da63e8c9 f3d1452e1615c821be8bbbad4cf92a88daf39b423880e8fe69f18a414e6438bf 852e11dc9f6096d50ce0c057e52cbe26241e1c65d476e02a25e8468b2d6db4e9 ea190ae2f071ee8c65bbc54f03f25d549a8a4f25c6413575aeb270e04c047cd0 to n457join-bootstrap
+2026-11-13T15:12:16.630Z WARN  [casper.blocks.BlockDisposition] re-offering faulted block #14 ef7d6965c88f78b399cd314cd66dc958cddeecd9e3d8e994cca0340f803e6763 (attempt 2 of 8, stage dag insert)
+2026-11-13T15:12:16.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:17.764Z WARN  [casper.interpreter.validate] merge search: 102 merges · widest scope 18 chains / 2 conflict pairs / 0 asymmetric · most states expanded on one merge 19 · width buckets [55, 47, 0, 0, 0] · cost buckets [102, 0, 0, 0, 0]
+[pos] close_block 14 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:12:18.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:19.167Z ERROR [casper.blocks.BlockProcessor] Block #14 ef7d6965c88f78b399cd314cd66dc958cddeecd9e3d8e994cca0340f803e6763 faulted at dag insert (equivocation detected: sender produced two blocks with the same sequence number); recorded for retry 2/8
+2026-11-13T15:12:20.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:22.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:24.666Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:26.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:28.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:29.256Z INFO  [casper.protocol.CommUtil] Requested fork tip from peers
+2026-11-13T15:12:30.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:32.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:34.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:36.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:38.666Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:40.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:42.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:44.173Z INFO  [casper.blocks.BlockRetriever] Adding ef7d6965c88f78b399cd314cd66dc958cddeecd9e3d8e994cca0340f803e6763 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:12:44.216Z INFO  [casper.blocks.BlockRetriever] Adding 1436a719f8c60208ae0f5a1c241e3634a9fa61e28fca4584f88698c7f8724261 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:12:44.257Z INFO  [casper.blocks.BlockRetriever] Adding 247c685c74a55ed63d16bef5c48bff45baa203e1289c30f2a4f1db321e0311bd hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:12:44.298Z INFO  [casper.blocks.BlockRetriever] Adding 6bc703d729a7fddaa1f785820d925d1c0ff62ae53f2daf3f2f1f20856e29023f hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:12:44.339Z INFO  [casper.blocks.BlockRetriever] Adding 9ac2d6ce9dae4fd0648532e1dbeb637b24e2c9d2fafd4560f97a0e01a89fcdfe hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:12:44.380Z INFO  [casper.blocks.BlockRetriever] Adding 5fe692454f4d7ad50b2fdb6b1a60c9bae76b82e85e4a059d0d2e23af03457417 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:12:44.421Z INFO  [casper.blocks.BlockRetriever] Adding 6bd5367f6cdd63fd5d105dcbaea4dc3ebbe857d1d225f83c330adca2ff4b737d hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:12:44.462Z INFO  [casper.blocks.BlockRetriever] Adding bda7b283cc1e55340639ad3e5317bf8a13128609172a0834d1e6d2af30948a29 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:12:44.503Z INFO  [casper.blocks.BlockRetriever] Adding fd47515589f2b722071c0dfd8fd5866874129815df794252650db6d07a48d8b0 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:12:44.544Z INFO  [casper.blocks.BlockRetriever] Adding 6ee16c344f131d205ae734b3a4637b1b5f4f00079890dda895828b3dcdd5ed83 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:12:44.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:46.137Z INFO  [casper.engine.NodeRunning] Received ForkChoiceTipRequest from n457join-bootstrap
+2026-11-13T15:12:46.301Z INFO  [casper.engine.NodeRunning] Sending tips ecb2df289f265a41949ce35ae675c4872675f9ff66309a16c83a5763da63e8c9 f3d1452e1615c821be8bbbad4cf92a88daf39b423880e8fe69f18a414e6438bf 852e11dc9f6096d50ce0c057e52cbe26241e1c65d476e02a25e8468b2d6db4e9 ea190ae2f071ee8c65bbc54f03f25d549a8a4f25c6413575aeb270e04c047cd0 to n457join-bootstrap
+2026-11-13T15:12:46.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:47.602Z INFO  [casper.blocks.BlockRetriever] Adding f4d6980c40ce61abafe7a9076da00123021a782b30f869153dd759cd0b82c455 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:12:47.704Z INFO  [casper.blocks.BlockRetriever] Block f4d6980c40ce61abafe7a9076da00123021a782b30f869153dd759cd0b82c455 marked as received.
+2026-11-13T15:12:47.803Z INFO  [casper.blocks.BlockRetriever] Adding 9727b7922bc1effecce0a4b217838bdd3d12f0574f2d58e1677991497a618ef1 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:12:47.969Z INFO  [casper.blocks.BlockRetriever] Block 9727b7922bc1effecce0a4b217838bdd3d12f0574f2d58e1677991497a618ef1 marked as received.
+2026-11-13T15:12:48.209Z INFO  [casper.blocks.BlockRetriever] Adding 5950a040d1ba3157a9c2231157697e88e9370c959442f5ff61feca15aa785316 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:12:48.354Z INFO  [casper.blocks.BlockRetriever] Block 5950a040d1ba3157a9c2231157697e88e9370c959442f5ff61feca15aa785316 marked as received.
+2026-11-13T15:12:48.437Z INFO  [casper.blocks.BlockRetriever] Adding 0dd387548c1f9f5438dae202cd40c2f558b50475cc742f9ceda26dbb6b00e6a4 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:12:48.545Z INFO  [casper.blocks.BlockRetriever] Block 0dd387548c1f9f5438dae202cd40c2f558b50475cc742f9ceda26dbb6b00e6a4 marked as received.
+2026-11-13T15:12:48.644Z INFO  [casper.blocks.BlockRetriever] Adding 2cd21f138a0fc3e3c9d705e73e4645b62d72f4d35214a82363e07aef601089ba hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:12:48.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:48.776Z INFO  [casper.blocks.BlockRetriever] Block 2cd21f138a0fc3e3c9d705e73e4645b62d72f4d35214a82363e07aef601089ba marked as received.
+2026-11-13T15:12:50.666Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:52.637Z INFO  [casper.blocks.BlockRetriever] Adding 35f67c96b39de8d413e359edc03efedb8bdc5cbfc743142f22b5df8be2f1287c hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:12:52.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:52.770Z INFO  [casper.blocks.BlockRetriever] Block 35f67c96b39de8d413e359edc03efedb8bdc5cbfc743142f22b5df8be2f1287c marked as received.
+2026-11-13T15:12:54.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:56.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:58.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:12:59.258Z INFO  [casper.protocol.CommUtil] Requested fork tip from peers
+2026-11-13T15:13:00.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:02.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:04.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:06.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:08.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:10.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:12.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:14.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:16.137Z INFO  [casper.engine.NodeRunning] Received ForkChoiceTipRequest from n457join-bootstrap
+2026-11-13T15:13:16.301Z INFO  [casper.engine.NodeRunning] Sending tips ecb2df289f265a41949ce35ae675c4872675f9ff66309a16c83a5763da63e8c9 f3d1452e1615c821be8bbbad4cf92a88daf39b423880e8fe69f18a414e6438bf 852e11dc9f6096d50ce0c057e52cbe26241e1c65d476e02a25e8468b2d6db4e9 ea190ae2f071ee8c65bbc54f03f25d549a8a4f25c6413575aeb270e04c047cd0 to n457join-bootstrap
+2026-11-13T15:13:16.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:18.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:20.512Z INFO  [casper.blocks.BlockRetriever] Adding c3701d37e3a3312402dbe2f3b6523ba80981a1e6a088909fda966bec2a17c70e hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:13:20.600Z INFO  [casper.blocks.BlockRetriever] Block c3701d37e3a3312402dbe2f3b6523ba80981a1e6a088909fda966bec2a17c70e marked as received.
+2026-11-13T15:13:20.635Z INFO  [casper.blocks.BlockRetriever] Adding 4cce50c107ac3255383292132a4e5d91ebd3609f916be4fc98b3575dff6adf67 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:13:20.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:20.852Z INFO  [casper.blocks.BlockRetriever] Block 4cce50c107ac3255383292132a4e5d91ebd3609f916be4fc98b3575dff6adf67 marked as received.
+2026-11-13T15:13:21.263Z INFO  [casper.blocks.BlockRetriever] Adding 8424f597a8efe3e12e4c78682e2621c70a02e2c86e1db04300f0657af4eab3f5 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:13:21.352Z INFO  [casper.blocks.BlockRetriever] Block 8424f597a8efe3e12e4c78682e2621c70a02e2c86e1db04300f0657af4eab3f5 marked as received.
+2026-11-13T15:13:22.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:24.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:24.720Z INFO  [casper.blocks.BlockRetriever] Adding 2abc5b4c6d76f4785dc355a2c5a7a07ee37cd0887cfe0d6e9e6c088b2913d94f hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:13:24.860Z INFO  [casper.blocks.BlockRetriever] Block 2abc5b4c6d76f4785dc355a2c5a7a07ee37cd0887cfe0d6e9e6c088b2913d94f marked as received.
+2026-11-13T15:13:26.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:28.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:29.178Z WARN  [casper.blocks.BlockDisposition] re-offering faulted block #14 ef7d6965c88f78b399cd314cd66dc958cddeecd9e3d8e994cca0340f803e6763 (attempt 3 of 8, stage dag insert)
+2026-11-13T15:13:29.248Z WARN  [casper.interpreter.validate] merge search: 104 merges · widest scope 18 chains / 2 conflict pairs / 0 asymmetric · most states expanded on one merge 19 · width buckets [56, 48, 0, 0, 0] · cost buckets [104, 0, 0, 0, 0]
+2026-11-13T15:13:29.256Z INFO  [casper.protocol.CommUtil] Requested fork tip from peers
+[pos] close_block 14 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:13:29.369Z ERROR [casper.blocks.BlockProcessor] Block #14 ef7d6965c88f78b399cd314cd66dc958cddeecd9e3d8e994cca0340f803e6763 faulted at dag insert (equivocation detected: sender produced two blocks with the same sequence number); recorded for retry 3/8
+2026-11-13T15:13:30.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:32.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:34.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:35.762Z INFO  [casper.blocks.BlockRetriever] Adding 1bc84fa0a7605b86d445be86fc21f3cfd6c6d58899c077607285f8c9653a175c hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:13:35.908Z INFO  [casper.blocks.BlockRetriever] Block 1bc84fa0a7605b86d445be86fc21f3cfd6c6d58899c077607285f8c9653a175c marked as received.
+2026-11-13T15:13:36.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:38.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:40.658Z INFO  [casper.blocks.BlockRetriever] Adding cee0491709aedb376f61293c04f302623b2565f4c5f19b6409b94777b11eac7e hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:13:40.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:40.745Z INFO  [casper.blocks.BlockRetriever] Block cee0491709aedb376f61293c04f302623b2565f4c5f19b6409b94777b11eac7e marked as received.
+2026-11-13T15:13:42.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:44.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:46.137Z INFO  [casper.engine.NodeRunning] Received ForkChoiceTipRequest from n457join-bootstrap
+2026-11-13T15:13:46.301Z INFO  [casper.engine.NodeRunning] Sending tips ecb2df289f265a41949ce35ae675c4872675f9ff66309a16c83a5763da63e8c9 f3d1452e1615c821be8bbbad4cf92a88daf39b423880e8fe69f18a414e6438bf 852e11dc9f6096d50ce0c057e52cbe26241e1c65d476e02a25e8468b2d6db4e9 ea190ae2f071ee8c65bbc54f03f25d549a8a4f25c6413575aeb270e04c047cd0 to n457join-bootstrap
+2026-11-13T15:13:46.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:48.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:50.666Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:51.664Z INFO  [casper.blocks.BlockRetriever] Adding 35b5bccfa36b430d6fd3cc662d89077587702438992048f5bbc76d242e3debd4 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:13:51.808Z INFO  [casper.blocks.BlockRetriever] Block 35b5bccfa36b430d6fd3cc662d89077587702438992048f5bbc76d242e3debd4 marked as received.
+2026-11-13T15:13:52.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:54.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:56.665Z INFO  [casper.blocks.BlockRetriever] Adding a958ac666b6ed00c4627bcf10627a5b9595371a10221ea039acc062a9b76792b hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:13:56.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:56.754Z INFO  [casper.blocks.BlockRetriever] Block a958ac666b6ed00c4627bcf10627a5b9595371a10221ea039acc062a9b76792b marked as received.
+2026-11-13T15:13:58.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:13:59.174Z INFO  [casper.blocks.BlockRetriever] Adding 2b67a6bb5d67e7f51d4727322e005f36fa5c8e4c298ace40aca0bd81fba97ca0 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:13:59.215Z INFO  [casper.blocks.BlockRetriever] Adding b7200d0fe9a4c124f7ca10a3fdf6b8795215e78c4225d3d876d3be12687e1cd5 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:13:59.257Z INFO  [casper.blocks.BlockRetriever] Adding 9727b7922bc1effecce0a4b217838bdd3d12f0574f2d58e1677991497a618ef1 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:13:59.257Z INFO  [casper.protocol.CommUtil] Requested fork tip from peers
+2026-11-13T15:13:59.298Z INFO  [casper.blocks.BlockRetriever] Adding f4d6980c40ce61abafe7a9076da00123021a782b30f869153dd759cd0b82c455 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:13:59.339Z INFO  [casper.blocks.BlockRetriever] Adding 5950a040d1ba3157a9c2231157697e88e9370c959442f5ff61feca15aa785316 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:13:59.380Z INFO  [casper.blocks.BlockRetriever] Adding 0dd387548c1f9f5438dae202cd40c2f558b50475cc742f9ceda26dbb6b00e6a4 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:14:00.666Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:02.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:04.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:06.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:07.685Z INFO  [casper.blocks.BlockRetriever] Adding d2d7adb4b9835d691661986430bcc81bd9afa5fec76d9f445120c37648bc52f4 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:14:07.817Z INFO  [casper.blocks.BlockRetriever] Block d2d7adb4b9835d691661986430bcc81bd9afa5fec76d9f445120c37648bc52f4 marked as received.
+2026-11-13T15:14:08.668Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:10.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:12.643Z INFO  [casper.blocks.BlockRetriever] Adding 64ec8b019a6828bbe6677c2a9a998fba85d694d8142c874a894a6c0f5d929dcd hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:14:12.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:12.733Z INFO  [casper.blocks.BlockRetriever] Block 64ec8b019a6828bbe6677c2a9a998fba85d694d8142c874a894a6c0f5d929dcd marked as received.
+2026-11-13T15:14:14.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:16.137Z INFO  [casper.engine.NodeRunning] Received ForkChoiceTipRequest from n457join-bootstrap
+2026-11-13T15:14:16.302Z INFO  [casper.engine.NodeRunning] Sending tips ecb2df289f265a41949ce35ae675c4872675f9ff66309a16c83a5763da63e8c9 f3d1452e1615c821be8bbbad4cf92a88daf39b423880e8fe69f18a414e6438bf 852e11dc9f6096d50ce0c057e52cbe26241e1c65d476e02a25e8468b2d6db4e9 ea190ae2f071ee8c65bbc54f03f25d549a8a4f25c6413575aeb270e04c047cd0 to n457join-bootstrap
+2026-11-13T15:14:16.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:18.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:20.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:22.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:23.603Z INFO  [casper.blocks.BlockRetriever] Adding 2e922c575dd40169a5a86965e31b54979b5028bb1465667ccd467863d45e374e hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:14:23.734Z INFO  [casper.blocks.BlockRetriever] Block 2e922c575dd40169a5a86965e31b54979b5028bb1465667ccd467863d45e374e marked as received.
+2026-11-13T15:14:24.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:26.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:28.585Z INFO  [casper.blocks.BlockRetriever] Adding fde07896c10b039ce33d4d56e775150c129a770e3c240875484b6b69976362f1 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:14:28.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:28.671Z INFO  [casper.blocks.BlockRetriever] Block fde07896c10b039ce33d4d56e775150c129a770e3c240875484b6b69976362f1 marked as received.
+2026-11-13T15:14:29.216Z INFO  [casper.protocol.CommUtil] Requested fork tip from peers
+2026-11-13T15:14:29.421Z INFO  [casper.blocks.BlockRetriever] Adding 35f67c96b39de8d413e359edc03efedb8bdc5cbfc743142f22b5df8be2f1287c hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:14:29.462Z INFO  [casper.blocks.BlockRetriever] Adding 2cd21f138a0fc3e3c9d705e73e4645b62d72f4d35214a82363e07aef601089ba hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:14:29.504Z INFO  [casper.blocks.BlockRetriever] Adding 4cce50c107ac3255383292132a4e5d91ebd3609f916be4fc98b3575dff6adf67 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:14:29.545Z INFO  [casper.blocks.BlockRetriever] Adding c3701d37e3a3312402dbe2f3b6523ba80981a1e6a088909fda966bec2a17c70e hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:14:30.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:32.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:34.666Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:36.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:38.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:39.612Z INFO  [casper.blocks.BlockRetriever] Adding eed480acdf1a9061c1837c61462b4aafbf29751d5bab0a534791c959e95434fa hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:14:39.701Z INFO  [casper.blocks.BlockRetriever] Block eed480acdf1a9061c1837c61462b4aafbf29751d5bab0a534791c959e95434fa marked as received.
+2026-11-13T15:14:40.666Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:42.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:44.173Z INFO  [casper.blocks.BlockRetriever] Adding 8424f597a8efe3e12e4c78682e2621c70a02e2c86e1db04300f0657af4eab3f5 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:14:44.216Z INFO  [casper.blocks.BlockRetriever] Adding 2abc5b4c6d76f4785dc355a2c5a7a07ee37cd0887cfe0d6e9e6c088b2913d94f hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:14:44.595Z INFO  [casper.blocks.BlockRetriever] Adding 4c2db71a97c04f9701e9e0caa80ea2ec122a4709dd0aa81a141403c81b2a5a8b hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:14:44.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:44.685Z INFO  [casper.blocks.BlockRetriever] Block 4c2db71a97c04f9701e9e0caa80ea2ec122a4709dd0aa81a141403c81b2a5a8b marked as received.
+2026-11-13T15:14:46.137Z INFO  [casper.engine.NodeRunning] Received ForkChoiceTipRequest from n457join-bootstrap
+2026-11-13T15:14:46.301Z INFO  [casper.engine.NodeRunning] Sending tips ecb2df289f265a41949ce35ae675c4872675f9ff66309a16c83a5763da63e8c9 f3d1452e1615c821be8bbbad4cf92a88daf39b423880e8fe69f18a414e6438bf 852e11dc9f6096d50ce0c057e52cbe26241e1c65d476e02a25e8468b2d6db4e9 ea190ae2f071ee8c65bbc54f03f25d549a8a4f25c6413575aeb270e04c047cd0 to n457join-bootstrap
+2026-11-13T15:14:46.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:48.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:50.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:52.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:54.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:55.636Z INFO  [casper.blocks.BlockRetriever] Adding 26441b472e29ff0cf9e57cae0c13837ed13f84e15ad3cf431cbbc3ce7b420247 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:14:55.766Z INFO  [casper.blocks.BlockRetriever] Block 26441b472e29ff0cf9e57cae0c13837ed13f84e15ad3cf431cbbc3ce7b420247 marked as received.
+2026-11-13T15:14:56.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:58.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:14:59.216Z INFO  [casper.blocks.BlockRetriever] Adding 1bc84fa0a7605b86d445be86fc21f3cfd6c6d58899c077607285f8c9653a175c hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:14:59.256Z INFO  [casper.blocks.BlockRetriever] Adding cee0491709aedb376f61293c04f302623b2565f4c5f19b6409b94777b11eac7e hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:14:59.257Z INFO  [casper.protocol.CommUtil] Requested fork tip from peers
+2026-11-13T15:15:00.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:00.750Z INFO  [casper.blocks.BlockRetriever] Adding 87a9361971aa940f7c60159efbc57fcc99e98be18f8af6b0e9a9c5421e0b7a4f hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:15:00.881Z INFO  [casper.blocks.BlockRetriever] Block 87a9361971aa940f7c60159efbc57fcc99e98be18f8af6b0e9a9c5421e0b7a4f marked as received.
+2026-11-13T15:15:02.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:04.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:06.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:08.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:10.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:11.666Z INFO  [casper.blocks.BlockRetriever] Adding 9dabc47d25123bfe6611835598fe011be1cc72001de7720e85784595fda1e9bc hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:15:11.811Z INFO  [casper.blocks.BlockRetriever] Block 9dabc47d25123bfe6611835598fe011be1cc72001de7720e85784595fda1e9bc marked as received.
+2026-11-13T15:15:12.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:14.257Z INFO  [casper.blocks.BlockRetriever] Adding a958ac666b6ed00c4627bcf10627a5b9595371a10221ea039acc062a9b76792b hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:15:14.299Z INFO  [casper.blocks.BlockRetriever] Adding 35b5bccfa36b430d6fd3cc662d89077587702438992048f5bbc76d242e3debd4 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:15:14.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:16.138Z INFO  [casper.engine.NodeRunning] Received ForkChoiceTipRequest from n457join-bootstrap
+2026-11-13T15:15:16.303Z INFO  [casper.engine.NodeRunning] Sending tips ecb2df289f265a41949ce35ae675c4872675f9ff66309a16c83a5763da63e8c9 f3d1452e1615c821be8bbbad4cf92a88daf39b423880e8fe69f18a414e6438bf 852e11dc9f6096d50ce0c057e52cbe26241e1c65d476e02a25e8468b2d6db4e9 ea190ae2f071ee8c65bbc54f03f25d549a8a4f25c6413575aeb270e04c047cd0 to n457join-bootstrap
+2026-11-13T15:15:16.635Z INFO  [casper.blocks.BlockRetriever] Adding a66c3074452e464dee325d50271d2090996f1097020f8cc2930e202cf935a22c hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:15:16.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:16.723Z INFO  [casper.blocks.BlockRetriever] Block a66c3074452e464dee325d50271d2090996f1097020f8cc2930e202cf935a22c marked as received.
+2026-11-13T15:15:18.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:20.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:22.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:24.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:26.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:27.606Z INFO  [casper.blocks.BlockRetriever] Adding 273a47333bf9acb589de40cfc6921b34823aa4962d55f1fd1a0bad03a1237ab8 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:15:27.779Z INFO  [casper.blocks.BlockRetriever] Block 273a47333bf9acb589de40cfc6921b34823aa4962d55f1fd1a0bad03a1237ab8 marked as received.
+2026-11-13T15:15:28.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:29.256Z INFO  [casper.protocol.CommUtil] Requested fork tip from peers
+2026-11-13T15:15:29.338Z INFO  [casper.blocks.BlockRetriever] Adding d2d7adb4b9835d691661986430bcc81bd9afa5fec76d9f445120c37648bc52f4 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:15:29.380Z INFO  [casper.blocks.BlockRetriever] Adding 64ec8b019a6828bbe6677c2a9a998fba85d694d8142c874a894a6c0f5d929dcd hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:15:30.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:32.591Z INFO  [casper.blocks.BlockRetriever] Adding 730d4422127c16d66474af5481246e6eac6d7e8d269278eca3d9f3e307fefead hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:15:32.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:32.680Z INFO  [casper.blocks.BlockRetriever] Block 730d4422127c16d66474af5481246e6eac6d7e8d269278eca3d9f3e307fefead marked as received.
+2026-11-13T15:15:34.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:36.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:38.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:40.666Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:42.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:43.635Z INFO  [casper.blocks.BlockRetriever] Adding 36c53a6f0c1df96175a40eacb4f1d28fcddcb1dd7025f8827773bc1558929148 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:15:43.763Z INFO  [casper.blocks.BlockRetriever] Block 36c53a6f0c1df96175a40eacb4f1d28fcddcb1dd7025f8827773bc1558929148 marked as received.
+2026-11-13T15:15:44.178Z WARN  [casper.blocks.BlockDisposition] re-offering faulted block #14 ef7d6965c88f78b399cd314cd66dc958cddeecd9e3d8e994cca0340f803e6763 (attempt 4 of 8, stage dag insert)
+2026-11-13T15:15:44.208Z INFO  [coop.rchain.node.runtime.BlockIndex] block indexing: 1750 blocks indexed, 1 replay fallbacks (1118 ms, 0 not persisted), index cache 29 entries, 32 pruned, cap 64, 0 capacity evicted
+2026-11-13T15:15:44.227Z WARN  [casper.interpreter.validate] merge search: 106 merges · widest scope 18 chains / 2 conflict pairs / 0 asymmetric · most states expanded on one merge 19 · width buckets [57, 49, 0, 0, 0] · cost buckets [106, 0, 0, 0, 0]
+[pos] close_block 14 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:15:44.260Z INFO  [casper.blocks.BlockRetriever] Adding 2e922c575dd40169a5a86965e31b54979b5028bb1465667ccd467863d45e374e hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:15:44.263Z ERROR [casper.blocks.BlockProcessor] Block #14 ef7d6965c88f78b399cd314cd66dc958cddeecd9e3d8e994cca0340f803e6763 faulted at dag insert (equivocation detected: sender produced two blocks with the same sequence number); recorded for retry 4/8
+2026-11-13T15:15:44.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:46.138Z INFO  [casper.engine.NodeRunning] Received ForkChoiceTipRequest from n457join-bootstrap
+2026-11-13T15:15:46.305Z INFO  [casper.engine.NodeRunning] Sending tips ecb2df289f265a41949ce35ae675c4872675f9ff66309a16c83a5763da63e8c9 f3d1452e1615c821be8bbbad4cf92a88daf39b423880e8fe69f18a414e6438bf 852e11dc9f6096d50ce0c057e52cbe26241e1c65d476e02a25e8468b2d6db4e9 ea190ae2f071ee8c65bbc54f03f25d549a8a4f25c6413575aeb270e04c047cd0 to n457join-bootstrap
+2026-11-13T15:15:46.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:48.668Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:50.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:52.192Z INFO  [casper.blocks.BlockRetriever] Adding c53b54384c6b8d2b85a9e524f9572901cc68d2995406b88be27a16631b19bfb6 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:15:52.296Z INFO  [casper.blocks.BlockRetriever] Block c53b54384c6b8d2b85a9e524f9572901cc68d2995406b88be27a16631b19bfb6 marked as received.
+2026-11-13T15:15:52.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:54.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:56.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:58.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:15:59.256Z INFO  [casper.protocol.CommUtil] Requested fork tip from peers
+2026-11-13T15:15:59.669Z INFO  [casper.blocks.BlockRetriever] Adding fde07896c10b039ce33d4d56e775150c129a770e3c240875484b6b69976362f1 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:15:59.711Z INFO  [casper.blocks.BlockRetriever] Adding eed480acdf1a9061c1837c61462b4aafbf29751d5bab0a534791c959e95434fa hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:16:00.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:02.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:04.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:06.666Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:08.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:09.290Z INFO  [casper.blocks.BlockRetriever] Adding 4cd44f3396101a13cecbc15b94b469b5289fafae55839bef06480263c47bbc16 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:16:09.490Z INFO  [casper.blocks.BlockRetriever] Block 4cd44f3396101a13cecbc15b94b469b5289fafae55839bef06480263c47bbc16 marked as received.
+2026-11-13T15:16:09.622Z INFO  [casper.blocks.BlockRetriever] Adding d92296d2f3f7d8a72ddf65f6a7344e5efd8d1035d14b3de852377e6104effa46 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:16:09.718Z INFO  [casper.blocks.BlockRetriever] Block d92296d2f3f7d8a72ddf65f6a7344e5efd8d1035d14b3de852377e6104effa46 marked as received.
+2026-11-13T15:16:10.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:12.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:14.174Z INFO  [casper.blocks.BlockRetriever] Adding 4c2db71a97c04f9701e9e0caa80ea2ec122a4709dd0aa81a141403c81b2a5a8b hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:16:14.215Z INFO  [casper.blocks.BlockRetriever] Adding 26441b472e29ff0cf9e57cae0c13837ed13f84e15ad3cf431cbbc3ce7b420247 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:16:14.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:15.782Z INFO  [casper.blocks.BlockRetriever] Adding 23f307182b1737bc15a5bbee6cd417ff0dc68fc351884d7e720cc52731e86886 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:16:15.869Z INFO  [casper.blocks.BlockRetriever] Block 23f307182b1737bc15a5bbee6cd417ff0dc68fc351884d7e720cc52731e86886 marked as received.
+2026-11-13T15:16:16.138Z INFO  [casper.engine.NodeRunning] Received ForkChoiceTipRequest from n457join-bootstrap
+2026-11-13T15:16:16.302Z INFO  [casper.engine.NodeRunning] Sending tips ecb2df289f265a41949ce35ae675c4872675f9ff66309a16c83a5763da63e8c9 f3d1452e1615c821be8bbbad4cf92a88daf39b423880e8fe69f18a414e6438bf 852e11dc9f6096d50ce0c057e52cbe26241e1c65d476e02a25e8468b2d6db4e9 ea190ae2f071ee8c65bbc54f03f25d549a8a4f25c6413575aeb270e04c047cd0 to n457join-bootstrap
+2026-11-13T15:16:16.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:18.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:20.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:20.713Z INFO  [casper.blocks.BlockRetriever] Adding 1a95f155ea0b628399046209c74e8acf7c4726c883584e17c1d95c872d69901f hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:16:20.842Z INFO  [casper.blocks.BlockRetriever] Block 1a95f155ea0b628399046209c74e8acf7c4726c883584e17c1d95c872d69901f marked as received.
+2026-11-13T15:16:22.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:24.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:26.666Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:28.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:29.256Z INFO  [casper.protocol.CommUtil] Requested fork tip from peers
+2026-11-13T15:16:29.258Z INFO  [casper.blocks.BlockRetriever] Adding 87a9361971aa940f7c60159efbc57fcc99e98be18f8af6b0e9a9c5421e0b7a4f hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:16:29.298Z INFO  [casper.blocks.BlockRetriever] Adding 9dabc47d25123bfe6611835598fe011be1cc72001de7720e85784595fda1e9bc hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:16:30.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:31.823Z INFO  [casper.blocks.BlockRetriever] Adding 40c413404c5563cf1c0e8b73cacdcb9abb63d0551a06eba9781a7e064e6120dd hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:16:31.960Z INFO  [casper.blocks.BlockRetriever] Block 40c413404c5563cf1c0e8b73cacdcb9abb63d0551a06eba9781a7e064e6120dd marked as received.
+2026-11-13T15:16:32.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:34.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:36.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:38.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:40.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:40.993Z INFO  [casper.blocks.BlockRetriever] Adding e2cd4a9e73b36cfd92ac9ba083b5cb78970839d88b679f3786eb41dbefa60f79 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:16:41.085Z INFO  [casper.blocks.BlockRetriever] Block e2cd4a9e73b36cfd92ac9ba083b5cb78970839d88b679f3786eb41dbefa60f79 marked as received.
+2026-11-13T15:16:42.666Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:44.258Z INFO  [casper.blocks.BlockRetriever] Adding a66c3074452e464dee325d50271d2090996f1097020f8cc2930e202cf935a22c hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:16:44.302Z INFO  [casper.blocks.BlockRetriever] Adding 273a47333bf9acb589de40cfc6921b34823aa4962d55f1fd1a0bad03a1237ab8 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:16:44.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:46.138Z INFO  [casper.engine.NodeRunning] Received ForkChoiceTipRequest from n457join-bootstrap
+2026-11-13T15:16:46.304Z INFO  [casper.engine.NodeRunning] Sending tips ecb2df289f265a41949ce35ae675c4872675f9ff66309a16c83a5763da63e8c9 f3d1452e1615c821be8bbbad4cf92a88daf39b423880e8fe69f18a414e6438bf 852e11dc9f6096d50ce0c057e52cbe26241e1c65d476e02a25e8468b2d6db4e9 ea190ae2f071ee8c65bbc54f03f25d549a8a4f25c6413575aeb270e04c047cd0 to n457join-bootstrap
+2026-11-13T15:16:46.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:48.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:50.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:52.099Z INFO  [casper.blocks.BlockRetriever] Adding 145849b02780ca965f77ce4c24657480cd68057b18ce7373172c939e45006fca hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:16:52.187Z INFO  [casper.blocks.BlockRetriever] Block 145849b02780ca965f77ce4c24657480cd68057b18ce7373172c939e45006fca marked as received.
+2026-11-13T15:16:52.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:52.753Z INFO  [casper.blocks.BlockRetriever] Adding fcfc8415e5d70383fcb6d18a072b2ee1d09a269ba0ce6ca94d232bfaa8e682a7 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:16:52.842Z INFO  [casper.blocks.BlockRetriever] Block fcfc8415e5d70383fcb6d18a072b2ee1d09a269ba0ce6ca94d232bfaa8e682a7 marked as received.
+2026-11-13T15:16:54.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:56.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:58.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:16:59.216Z INFO  [casper.blocks.BlockRetriever] Adding 730d4422127c16d66474af5481246e6eac6d7e8d269278eca3d9f3e307fefead hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:16:59.256Z INFO  [casper.protocol.CommUtil] Requested fork tip from peers
+2026-11-13T15:17:00.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:02.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:04.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:06.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:08.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:09.737Z INFO  [casper.blocks.BlockRetriever] Adding f65935745e39c615b45029128dff21b5ba7e19d59d5d48a5cd6946dce361c050 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:17:09.819Z INFO  [casper.blocks.BlockRetriever] Adding 63aa3ab0a96b1568205dde1ef4ea82844cab1092c5f29a1f48b0d701113cb21e hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:17:10.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:11.834Z INFO  [casper.blocks.BlockRetriever] Block f65935745e39c615b45029128dff21b5ba7e19d59d5d48a5cd6946dce361c050 marked as received.
+2026-11-13T15:17:11.852Z INFO  [casper.blocks.BlockRetriever] Block 63aa3ab0a96b1568205dde1ef4ea82844cab1092c5f29a1f48b0d701113cb21e marked as received.
+2026-11-13T15:17:12.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:14.259Z INFO  [casper.blocks.BlockRetriever] Adding 36c53a6f0c1df96175a40eacb4f1d28fcddcb1dd7025f8827773bc1558929148 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:17:14.301Z INFO  [casper.blocks.BlockRetriever] Adding c53b54384c6b8d2b85a9e524f9572901cc68d2995406b88be27a16631b19bfb6 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:17:14.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:16.137Z INFO  [casper.engine.NodeRunning] Received ForkChoiceTipRequest from n457join-bootstrap
+2026-11-13T15:17:16.303Z INFO  [casper.engine.NodeRunning] Sending tips ecb2df289f265a41949ce35ae675c4872675f9ff66309a16c83a5763da63e8c9 f3d1452e1615c821be8bbbad4cf92a88daf39b423880e8fe69f18a414e6438bf 852e11dc9f6096d50ce0c057e52cbe26241e1c65d476e02a25e8468b2d6db4e9 ea190ae2f071ee8c65bbc54f03f25d549a8a4f25c6413575aeb270e04c047cd0 to n457join-bootstrap
+2026-11-13T15:17:16.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:18.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:20.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:22.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:24.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:26.666Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:28.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:29.216Z INFO  [casper.protocol.CommUtil] Requested fork tip from peers
+2026-11-13T15:17:29.259Z INFO  [casper.blocks.BlockRetriever] Adding d92296d2f3f7d8a72ddf65f6a7344e5efd8d1035d14b3de852377e6104effa46 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:17:29.302Z INFO  [casper.blocks.BlockRetriever] Adding 4cd44f3396101a13cecbc15b94b469b5289fafae55839bef06480263c47bbc16 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:17:30.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:32.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:34.047Z INFO  [casper.blocks.BlockRetriever] Adding 588c679978767a4e42ae0e02f92524d4ebba2c7ec69c7a5657f80afe4baa9001 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:17:34.170Z INFO  [casper.blocks.BlockRetriever] Adding 8758365c698265541a5a7cb0368a1d7f8e203cc4b79417552594661732b67f97 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:17:34.217Z INFO  [casper.blocks.BlockRetriever] Block 588c679978767a4e42ae0e02f92524d4ebba2c7ec69c7a5657f80afe4baa9001 marked as received.
+2026-11-13T15:17:34.262Z INFO  [casper.blocks.BlockRetriever] Block 8758365c698265541a5a7cb0368a1d7f8e203cc4b79417552594661732b67f97 marked as received.
+2026-11-13T15:17:34.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:36.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:38.666Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:39.764Z INFO  [casper.blocks.BlockRetriever] Adding 115b3d4ca8863345ddfa10dc6744c3cbbdce2851db64f0e8b1ed9e50abc2bc87 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:17:39.898Z INFO  [casper.blocks.BlockRetriever] Block 115b3d4ca8863345ddfa10dc6744c3cbbdce2851db64f0e8b1ed9e50abc2bc87 marked as received.
+2026-11-13T15:17:40.501Z INFO  [casper.blocks.BlockRetriever] Adding 9759febe851c2d5bdd23852d450ef0e35e4ee664fae0b980b27587e9fa030bd2 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:17:40.632Z INFO  [casper.blocks.BlockRetriever] Block 9759febe851c2d5bdd23852d450ef0e35e4ee664fae0b980b27587e9fa030bd2 marked as received.
+2026-11-13T15:17:40.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:42.666Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:44.303Z INFO  [casper.blocks.BlockRetriever] Adding 23f307182b1737bc15a5bbee6cd417ff0dc68fc351884d7e720cc52731e86886 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:17:44.344Z INFO  [casper.blocks.BlockRetriever] Adding 1a95f155ea0b628399046209c74e8acf7c4726c883584e17c1d95c872d69901f hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:17:44.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:46.137Z INFO  [casper.engine.NodeRunning] Received ForkChoiceTipRequest from n457join-bootstrap
+2026-11-13T15:17:46.301Z INFO  [casper.engine.NodeRunning] Sending tips ecb2df289f265a41949ce35ae675c4872675f9ff66309a16c83a5763da63e8c9 f3d1452e1615c821be8bbbad4cf92a88daf39b423880e8fe69f18a414e6438bf 852e11dc9f6096d50ce0c057e52cbe26241e1c65d476e02a25e8468b2d6db4e9 ea190ae2f071ee8c65bbc54f03f25d549a8a4f25c6413575aeb270e04c047cd0 to n457join-bootstrap
+2026-11-13T15:17:46.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:48.668Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:50.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:52.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:54.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:55.874Z INFO  [casper.blocks.BlockRetriever] Adding 4863e445db176281de74f98fce746a3d8f434e728cfccd1d6f030b942cc480ee hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:17:55.964Z INFO  [casper.blocks.BlockRetriever] Block 4863e445db176281de74f98fce746a3d8f434e728cfccd1d6f030b942cc480ee marked as received.
+2026-11-13T15:17:56.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:56.787Z INFO  [casper.blocks.BlockRetriever] Adding be450a30bedc2caa7705321309c1ac2df12e7e71578fb96d64459760e39dc172 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:17:56.884Z INFO  [casper.blocks.BlockRetriever] Block be450a30bedc2caa7705321309c1ac2df12e7e71578fb96d64459760e39dc172 marked as received.
+2026-11-13T15:17:58.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:17:59.217Z INFO  [casper.blocks.BlockRetriever] Adding 40c413404c5563cf1c0e8b73cacdcb9abb63d0551a06eba9781a7e064e6120dd hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:17:59.256Z INFO  [casper.protocol.CommUtil] Requested fork tip from peers
+2026-11-13T15:17:59.258Z INFO  [casper.blocks.BlockRetriever] Adding e2cd4a9e73b36cfd92ac9ba083b5cb78970839d88b679f3786eb41dbefa60f79 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:18:00.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:02.668Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:04.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:06.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:08.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:10.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:11.821Z INFO  [casper.blocks.BlockRetriever] Adding 84546c5b869124382eeeec0a21f4ad70b69b075b8eaa36b9f363101dc72cef9c hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:18:11.908Z INFO  [casper.blocks.BlockRetriever] Block 84546c5b869124382eeeec0a21f4ad70b69b075b8eaa36b9f363101dc72cef9c marked as received.
+2026-11-13T15:18:12.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:12.688Z INFO  [casper.blocks.BlockRetriever] Adding 8dd770f1befa174368db01e2c7dd42e3e785745c2fc092f40dfb596eba467681 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:18:12.820Z INFO  [casper.blocks.BlockRetriever] Block 8dd770f1befa174368db01e2c7dd42e3e785745c2fc092f40dfb596eba467681 marked as received.
+2026-11-13T15:18:14.175Z INFO  [casper.blocks.BlockRetriever] Adding fcfc8415e5d70383fcb6d18a072b2ee1d09a269ba0ce6ca94d232bfaa8e682a7 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:18:14.217Z INFO  [casper.blocks.BlockRetriever] Adding 145849b02780ca965f77ce4c24657480cd68057b18ce7373172c939e45006fca hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:18:14.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:16.138Z INFO  [casper.engine.NodeRunning] Received ForkChoiceTipRequest from n457join-bootstrap
+2026-11-13T15:18:16.302Z INFO  [casper.engine.NodeRunning] Sending tips ecb2df289f265a41949ce35ae675c4872675f9ff66309a16c83a5763da63e8c9 f3d1452e1615c821be8bbbad4cf92a88daf39b423880e8fe69f18a414e6438bf 852e11dc9f6096d50ce0c057e52cbe26241e1c65d476e02a25e8468b2d6db4e9 ea190ae2f071ee8c65bbc54f03f25d549a8a4f25c6413575aeb270e04c047cd0 to n457join-bootstrap
+2026-11-13T15:18:16.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:18.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:20.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:22.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:24.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:26.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:27.779Z INFO  [casper.blocks.BlockRetriever] Adding 837c9106b160e34f8badbe11247b33482acc5ce4fb7e9bdeeaa48d026f65dc52 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:18:27.872Z INFO  [casper.blocks.BlockRetriever] Block 837c9106b160e34f8badbe11247b33482acc5ce4fb7e9bdeeaa48d026f65dc52 marked as received.
+2026-11-13T15:18:28.600Z INFO  [casper.blocks.BlockRetriever] Adding 1c8087fb0a88b25d51142bc47a146bde66797166101649d7f3835e3d76250b27 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:18:28.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:28.688Z INFO  [casper.blocks.BlockRetriever] Block 1c8087fb0a88b25d51142bc47a146bde66797166101649d7f3835e3d76250b27 marked as received.
+2026-11-13T15:18:29.256Z INFO  [casper.protocol.CommUtil] Requested fork tip from peers
+2026-11-13T15:18:30.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:32.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:34.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:36.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:38.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:40.666Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:42.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:43.772Z INFO  [casper.blocks.BlockRetriever] Adding 03a863e651fba479446aa426d0e6fba333943b2701bc78824ce1d5764a1eb3b7 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:18:43.862Z INFO  [casper.blocks.BlockRetriever] Block 03a863e651fba479446aa426d0e6fba333943b2701bc78824ce1d5764a1eb3b7 marked as received.
+2026-11-13T15:18:44.216Z INFO  [casper.blocks.BlockRetriever] Adding f65935745e39c615b45029128dff21b5ba7e19d59d5d48a5cd6946dce361c050 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:18:44.258Z INFO  [casper.blocks.BlockRetriever] Adding 63aa3ab0a96b1568205dde1ef4ea82844cab1092c5f29a1f48b0d701113cb21e hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:18:44.299Z INFO  [casper.blocks.BlockRetriever] Adding 588c679978767a4e42ae0e02f92524d4ebba2c7ec69c7a5657f80afe4baa9001 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:18:44.340Z INFO  [casper.blocks.BlockRetriever] Adding 8758365c698265541a5a7cb0368a1d7f8e203cc4b79417552594661732b67f97 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:18:44.666Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:44.710Z INFO  [casper.blocks.BlockRetriever] Adding b451eac74a28a020460e42a1b97ab412c956f1c42aae844dfa6cb35337331c63 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:18:44.971Z INFO  [casper.blocks.BlockRetriever] Block b451eac74a28a020460e42a1b97ab412c956f1c42aae844dfa6cb35337331c63 marked as received.
+2026-11-13T15:18:46.137Z INFO  [casper.engine.NodeRunning] Received ForkChoiceTipRequest from n457join-bootstrap
+2026-11-13T15:18:46.303Z INFO  [casper.engine.NodeRunning] Sending tips ecb2df289f265a41949ce35ae675c4872675f9ff66309a16c83a5763da63e8c9 f3d1452e1615c821be8bbbad4cf92a88daf39b423880e8fe69f18a414e6438bf 852e11dc9f6096d50ce0c057e52cbe26241e1c65d476e02a25e8468b2d6db4e9 ea190ae2f071ee8c65bbc54f03f25d549a8a4f25c6413575aeb270e04c047cd0 to n457join-bootstrap
+2026-11-13T15:18:46.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:48.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:50.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:52.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:54.666Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:56.666Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:58.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:18:59.256Z INFO  [casper.protocol.CommUtil] Requested fork tip from peers
+2026-11-13T15:18:59.257Z INFO  [casper.blocks.BlockRetriever] Adding 115b3d4ca8863345ddfa10dc6744c3cbbdce2851db64f0e8b1ed9e50abc2bc87 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:18:59.298Z INFO  [casper.blocks.BlockRetriever] Adding 9759febe851c2d5bdd23852d450ef0e35e4ee664fae0b980b27587e9fa030bd2 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:19:00.205Z INFO  [casper.blocks.BlockRetriever] Adding c8304990177a6fc518e003dbe5b0a845d08228872502b7416a830f9f64137ed7 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:19:00.511Z INFO  [casper.blocks.BlockRetriever] Block c8304990177a6fc518e003dbe5b0a845d08228872502b7416a830f9f64137ed7 marked as received.
+2026-11-13T15:19:00.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:00.996Z INFO  [casper.blocks.BlockRetriever] Adding a72c2a0a82e09246ab86f33c1cc0995df46e44424c8c7a002ab6a3a25e4ff368 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:19:01.090Z INFO  [casper.blocks.BlockRetriever] Block a72c2a0a82e09246ab86f33c1cc0995df46e44424c8c7a002ab6a3a25e4ff368 marked as received.
+2026-11-13T15:19:02.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:04.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:06.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:08.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:10.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:12.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:14.424Z INFO  [casper.blocks.BlockRetriever] Adding 4863e445db176281de74f98fce746a3d8f434e728cfccd1d6f030b942cc480ee hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:19:14.466Z INFO  [casper.blocks.BlockRetriever] Adding be450a30bedc2caa7705321309c1ac2df12e7e71578fb96d64459760e39dc172 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:19:14.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:15.718Z INFO  [casper.blocks.BlockRetriever] Adding 5fb5f922eea3a1a79851f846276ad859b9683ff0780431dfdcd3057892fd830f hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:19:15.847Z INFO  [casper.blocks.BlockRetriever] Block 5fb5f922eea3a1a79851f846276ad859b9683ff0780431dfdcd3057892fd830f marked as received.
+2026-11-13T15:19:16.138Z INFO  [casper.engine.NodeRunning] Received ForkChoiceTipRequest from n457join-bootstrap
+2026-11-13T15:19:16.302Z INFO  [casper.engine.NodeRunning] Sending tips ecb2df289f265a41949ce35ae675c4872675f9ff66309a16c83a5763da63e8c9 f3d1452e1615c821be8bbbad4cf92a88daf39b423880e8fe69f18a414e6438bf 852e11dc9f6096d50ce0c057e52cbe26241e1c65d476e02a25e8468b2d6db4e9 ea190ae2f071ee8c65bbc54f03f25d549a8a4f25c6413575aeb270e04c047cd0 to n457join-bootstrap
+2026-11-13T15:19:16.489Z INFO  [casper.blocks.BlockRetriever] Adding 3f6b0977a53bc6cd3453670f8fb6c5f276c66c1f6cfe9d57a661f984e8aaa177 hash to RequestedBlocks because of HashBroadcastRecieved.
+2026-11-13T15:19:16.587Z INFO  [casper.blocks.BlockRetriever] Block 3f6b0977a53bc6cd3453670f8fb6c5f276c66c1f6cfe9d57a661f984e8aaa177 marked as received.
+2026-11-13T15:19:16.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:18.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:20.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:22.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:24.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:26.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:28.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:29.218Z INFO  [casper.blocks.BlockRetriever] Adding 8dd770f1befa174368db01e2c7dd42e3e785745c2fc092f40dfb596eba467681 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:19:29.256Z INFO  [casper.protocol.CommUtil] Requested fork tip from peers
+2026-11-13T15:19:29.257Z INFO  [casper.blocks.BlockRetriever] Adding 84546c5b869124382eeeec0a21f4ad70b69b075b8eaa36b9f363101dc72cef9c hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:19:30.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:32.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:34.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:36.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:38.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:40.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:42.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:44.176Z INFO  [casper.blocks.BlockRetriever] Adding 837c9106b160e34f8badbe11247b33482acc5ce4fb7e9bdeeaa48d026f65dc52 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:19:44.666Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:46.138Z INFO  [casper.engine.NodeRunning] Received ForkChoiceTipRequest from n457join-bootstrap
+2026-11-13T15:19:46.304Z INFO  [casper.engine.NodeRunning] Sending tips ecb2df289f265a41949ce35ae675c4872675f9ff66309a16c83a5763da63e8c9 f3d1452e1615c821be8bbbad4cf92a88daf39b423880e8fe69f18a414e6438bf 852e11dc9f6096d50ce0c057e52cbe26241e1c65d476e02a25e8468b2d6db4e9 ea190ae2f071ee8c65bbc54f03f25d549a8a4f25c6413575aeb270e04c047cd0 to n457join-bootstrap
+2026-11-13T15:19:46.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:48.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:50.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:52.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:54.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:56.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:58.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:19:59.178Z WARN  [casper.blocks.BlockDisposition] re-offering faulted block #14 ef7d6965c88f78b399cd314cd66dc958cddeecd9e3d8e994cca0340f803e6763 (attempt 5 of 8, stage dag insert)
+2026-11-13T15:19:59.214Z WARN  [casper.interpreter.validate] merge search: 108 merges · widest scope 18 chains / 2 conflict pairs / 0 asymmetric · most states expanded on one merge 19 · width buckets [58, 50, 0, 0, 0] · cost buckets [108, 0, 0, 0, 0]
+2026-11-13T15:19:59.215Z INFO  [casper.protocol.CommUtil] Requested fork tip from peers
+[pos] close_block 14 boundary=false epoch_length=10000 max_active=100 bond=[1, 9223372036854775807]
+2026-11-13T15:19:59.246Z ERROR [casper.blocks.BlockProcessor] Block #14 ef7d6965c88f78b399cd314cd66dc958cddeecd9e3d8e994cca0340f803e6763 faulted at dag insert (equivocation detected: sender produced two blocks with the same sequence number); recorded for retry 5/8
+2026-11-13T15:19:59.301Z INFO  [casper.blocks.BlockRetriever] Adding 1c8087fb0a88b25d51142bc47a146bde66797166101649d7f3835e3d76250b27 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:20:00.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:02.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:04.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:06.668Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:08.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:10.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:12.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:14.217Z INFO  [casper.blocks.BlockRetriever] Adding b451eac74a28a020460e42a1b97ab412c956f1c42aae844dfa6cb35337331c63 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:20:14.259Z INFO  [casper.blocks.BlockRetriever] Adding 03a863e651fba479446aa426d0e6fba333943b2701bc78824ce1d5764a1eb3b7 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:20:14.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:16.138Z INFO  [casper.engine.NodeRunning] Received ForkChoiceTipRequest from n457join-bootstrap
+2026-11-13T15:20:16.302Z INFO  [casper.engine.NodeRunning] Sending tips ecb2df289f265a41949ce35ae675c4872675f9ff66309a16c83a5763da63e8c9 f3d1452e1615c821be8bbbad4cf92a88daf39b423880e8fe69f18a414e6438bf 852e11dc9f6096d50ce0c057e52cbe26241e1c65d476e02a25e8468b2d6db4e9 ea190ae2f071ee8c65bbc54f03f25d549a8a4f25c6413575aeb270e04c047cd0 to n457join-bootstrap
+2026-11-13T15:20:16.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:18.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:20.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:22.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:24.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:26.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:28.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:29.215Z INFO  [casper.protocol.CommUtil] Requested fork tip from peers
+2026-11-13T15:20:29.341Z INFO  [casper.blocks.BlockRetriever] Adding a72c2a0a82e09246ab86f33c1cc0995df46e44424c8c7a002ab6a3a25e4ff368 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:20:29.383Z INFO  [casper.blocks.BlockRetriever] Adding c8304990177a6fc518e003dbe5b0a845d08228872502b7416a830f9f64137ed7 hash to RequestedBlocks because of MissingDependencyRequested.
+2026-11-13T15:20:30.666Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:32.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:34.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:36.668Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:38.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:40.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:42.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:44.666Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:46.137Z INFO  [casper.engine.NodeRunning] Received ForkChoiceTipRequest from n457join-bootstrap
+2026-11-13T15:20:46.303Z INFO  [casper.engine.NodeRunning] Sending tips ecb2df289f265a41949ce35ae675c4872675f9ff66309a16c83a5763da63e8c9 f3d1452e1615c821be8bbbad4cf92a88daf39b423880e8fe69f18a414e6438bf 852e11dc9f6096d50ce0c057e52cbe26241e1c65d476e02a25e8468b2d6db4e9 ea190ae2f071ee8c65bbc54f03f25d549a8a4f25c6413575aeb270e04c047cd0 to n457join-bootstrap
+2026-11-13T15:20:46.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:48.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:50.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:52.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:54.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:56.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:58.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:20:59.256Z INFO  [casper.protocol.CommUtil] Requested fork tip from peers
+2026-11-13T15:21:00.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:21:02.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:21:04.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:21:06.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:21:08.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:21:10.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:21:12.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:21:14.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:21:16.137Z INFO  [casper.engine.NodeRunning] Received ForkChoiceTipRequest from n457join-bootstrap
+2026-11-13T15:21:16.302Z INFO  [casper.engine.NodeRunning] Sending tips ecb2df289f265a41949ce35ae675c4872675f9ff66309a16c83a5763da63e8c9 f3d1452e1615c821be8bbbad4cf92a88daf39b423880e8fe69f18a414e6438bf 852e11dc9f6096d50ce0c057e52cbe26241e1c65d476e02a25e8468b2d6db4e9 ea190ae2f071ee8c65bbc54f03f25d549a8a4f25c6413575aeb270e04c047cd0 to n457join-bootstrap
+2026-11-13T15:21:16.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:21:18.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:21:20.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)
+2026-11-13T15:21:22.667Z WARN  [coop.rchain.node.instances.ProposerInstance] propose withheld: the node is blocked and is not producing (resource fallback,                      unit C)

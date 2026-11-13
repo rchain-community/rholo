@@ -1561,7 +1561,12 @@ pub async fn own_key_equivocation_verdict(
             continue;
         }
         let Some(block) = block_store.get(&[hash]).await?.into_iter().next().flatten() else {
-            continue;
+            // Without the body we cannot tell whether this verdict concerns our key.
+            // Unknown offence history must take the caller's fail-closed startup arm.
+            return Err(format!(
+                "equivocation verdict {} has no stored block body; cannot establish this validator key's offence history",
+                hash.to_hex()
+            ));
         };
         if block.sender == *own_key {
             return Ok(Some(format!(
@@ -2678,6 +2683,52 @@ mod tests {
                 .unwrap(),
             None,
             "another key's offence is not this key's proof"
+        );
+    }
+
+    #[tokio::test]
+    async fn an_equivocation_verdict_without_its_body_fails_closed() {
+        let blocks = block_store::create(&InMemoryStoreManager::default())
+            .await
+            .expect("empty block store");
+        let ledger = store().await;
+        let missing = hash(44);
+        ledger
+            .mark_terminal_fault(missing, height(4), EQUIVOCATION_VERDICT_STAGE, "refused")
+            .await
+            .unwrap();
+        // An absent body gives no basis to classify the verdict as ours or a peer's.
+        for own in [Validator::new([0x22; 65]), Validator::new([0x33; 65])] {
+            let error = own_key_equivocation_verdict(&ledger, &blocks, &own)
+                .await
+                .expect_err("missing offence history must not return a clean key");
+            assert!(error.contains(&missing.to_hex()), "{error}");
+            assert!(error.contains("no stored block body"), "{error}");
+        }
+    }
+
+    #[tokio::test]
+    async fn missing_non_verdict_bodies_are_not_equivocation_history() {
+        let blocks = block_store::create(&InMemoryStoreManager::default())
+            .await
+            .expect("empty block store");
+        let ledger = store().await;
+        let own = Validator::new([0x22; 65]);
+        assert_eq!(
+            own_key_equivocation_verdict(&ledger, &blocks, &own)
+                .await
+                .unwrap(),
+            None
+        );
+        ledger
+            .mark_pending(hash(45), height(4), PendingStage::Stored)
+            .await
+            .unwrap();
+        assert_eq!(
+            own_key_equivocation_verdict(&ledger, &blocks, &own)
+                .await
+                .unwrap(),
+            None
         );
     }
 

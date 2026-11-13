@@ -1,0 +1,17 @@
+{
+  "observed_at_utc": "2026-11-13T18:12:12.320973+00:00",
+  "url": "https://testnet.rhobot.net/health",
+  "http_status": 200,
+  "headers": {
+    "Server": "nginx/1.18.0 (Ubuntu)",
+    "Date": "Fri, 13 Nov 2026 18:12:11 GMT",
+    "Content-Type": "application/json",
+    "Content-Length": "294",
+    "Last-Modified": "Fri, 13 Nov 2026 18:12:06 GMT",
+    "Connection": "close",
+    "ETag": "\"6af752f6-126\"",
+    "Cache-Control": "no-store",
+    "Accept-Ranges": "bytes"
+  },
+  "scope": "public route only; not independent four-validator observation"
+}

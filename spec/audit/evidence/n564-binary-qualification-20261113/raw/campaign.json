@@ -1,0 +1,22 @@
+{
+  "source_sha": "1ceabd2917a2d4f41104116b6cf8b5fd0317964b",
+  "aggregate": "PASS",
+  "cycles": [
+    {
+      "control": "natural-trigger-second-node",
+      "result": "PASS"
+    },
+    {
+      "control": "attestation",
+      "result": "PASS"
+    },
+    {
+      "control": "reset-catch-up-auto-resume",
+      "result": "PASS"
+    },
+    {
+      "control": "halt-operator-resume",
+      "result": "PASS"
+    }
+  ]
+}

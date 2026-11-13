@@ -1,0 +1,56 @@
+{
+  "aggregate": "PASS",
+  "deploy_id": "30440220407f70a8a31af47daf992ef50c3f7f7900ec0a210871529ddf00f00d4d3d1f20022054c4fe2b2d2794ee3e8db6838d7ea72b353fa44d2d40759b39231bbf07d3e19b",
+  "same_serialized_block": true,
+  "nodes": [
+    {
+      "node": "devnet-bootstrap",
+      "binary_sha256": "5ff2b4f9d77a4694d3efa4df46cb1a86fb6a31a157929cc4770a5e43436cd1b8",
+      "block_hash": "c01651a6e945509a573cdf4b80298e34c82fe6da74c88f5a231ab1d7d8542768",
+      "pre_state_hash": "af3071658de28282f6e0f1d4145062cb235b3f6e1e1b19fee390b69650da3c3f",
+      "post_state_hash": "8e1846b9fb36d4add2cbcb883abcd3fbd2ff49a6216e72d8832aa6a524181b06",
+      "deploys": [
+        {
+          "deployer": "04f700a417754b775d95421973bdbdadb2d23c8a5af46f1829b1431f5c136e549e8a0d61aa0c793f1a614f8e437711c7758473c6ceb0859ac7e9e07911ca66b5c4",
+          "term": "new state in {\n  state!({}) |\n  contract @\"replay-order:registry\"(@action, @address, @payload, @resultName) = {\n    match action {\n      \"publish\" => {\n        for (@store <- state) {\n          state!(store.set(address, payload)) | @resultName!(\"OK\")\n        }\n      }\n      \"get\" => {\n        for (@store <<- state) {\n          match store.get(address) {\n            Nil => { @resultName!(\"MISS\") }\n            value => { @resultName!(value) }\n          }\n        }\n      }\n    }\n  }\n}\n",
+          "timestamp": 1794593591777,
+          "sig": "30440220407f70a8a31af47daf992ef50c3f7f7900ec0a210871529ddf00f00d4d3d1f20022054c4fe2b2d2794ee3e8db6838d7ea72b353fa44d2d40759b39231bbf07d3e19b",
+          "sigAlgorithm": "secp256k1",
+          "phloPrice": 1,
+          "phloLimit": 1000000,
+          "validAfterBlockNumber": 4,
+          "cost": 13317,
+          "errored": false,
+          "systemDeployError": ""
+        }
+      ],
+      "raw_block_sha256": "648d632268409130e6490a38d0bf350b806ee1da46a2d10bd19daf78a5767333",
+      "finalized": true
+    },
+    {
+      "node": "devnet-validator-1",
+      "binary_sha256": "5ff2b4f9d77a4694d3efa4df46cb1a86fb6a31a157929cc4770a5e43436cd1b8",
+      "block_hash": "c01651a6e945509a573cdf4b80298e34c82fe6da74c88f5a231ab1d7d8542768",
+      "pre_state_hash": "af3071658de28282f6e0f1d4145062cb235b3f6e1e1b19fee390b69650da3c3f",
+      "post_state_hash": "8e1846b9fb36d4add2cbcb883abcd3fbd2ff49a6216e72d8832aa6a524181b06",
+      "deploys": [
+        {
+          "deployer": "04f700a417754b775d95421973bdbdadb2d23c8a5af46f1829b1431f5c136e549e8a0d61aa0c793f1a614f8e437711c7758473c6ceb0859ac7e9e07911ca66b5c4",
+          "term": "new state in {\n  state!({}) |\n  contract @\"replay-order:registry\"(@action, @address, @payload, @resultName) = {\n    match action {\n      \"publish\" => {\n        for (@store <- state) {\n          state!(store.set(address, payload)) | @resultName!(\"OK\")\n        }\n      }\n      \"get\" => {\n        for (@store <<- state) {\n          match store.get(address) {\n            Nil => { @resultName!(\"MISS\") }\n            value => { @resultName!(value) }\n          }\n        }\n      }\n    }\n  }\n}\n",
+          "timestamp": 1794593591777,
+          "sig": "30440220407f70a8a31af47daf992ef50c3f7f7900ec0a210871529ddf00f00d4d3d1f20022054c4fe2b2d2794ee3e8db6838d7ea72b353fa44d2d40759b39231bbf07d3e19b",
+          "sigAlgorithm": "secp256k1",
+          "phloPrice": 1,
+          "phloLimit": 1000000,
+          "validAfterBlockNumber": 4,
+          "cost": 13317,
+          "errored": false,
+          "systemDeployError": ""
+        }
+      ],
+      "raw_block_sha256": "648d632268409130e6490a38d0bf350b806ee1da46a2d10bd19daf78a5767333",
+      "finalized": true
+    }
+  ],
+  "scope": "disposable two-validator network; no historical-chain compatibility or release selection"
+}

@@ -1,0 +1,42 @@
+{
+  "closure_authorized": false,
+  "compatibility": {
+    "accepted_history_sweep": "NOT RUN",
+    "activation_gate": "ungated COMM binding loop",
+    "class": "consensus-critical / category-A candidate",
+    "decision_owners": [
+      "jimscarver",
+      "PatrickMockridge"
+    ],
+    "maintainer_decision": null,
+    "permitted_boundaries": [
+      "coordinated new genesis for unswept history",
+      "independently accepted retained-history compatibility sweep and coordinated activation for continuation"
+    ]
+  },
+  "execution_proven": false,
+  "finding": "C357",
+  "issue": 564,
+  "live_acceptance": {
+    "authorized_native_rev_transfer": null,
+    "independent_reviewer": null,
+    "installed_four_validator_pins": null,
+    "operator": null,
+    "public_route_finality_observation_http": 404,
+    "public_route_source_self_report": "0a1e02362a7c34e474e068ffd47469c8d4be707a",
+    "rollback_owner": null,
+    "scope": "one public route; not four independent validators",
+    "verdict": "NOT EXECUTED",
+    "window": null
+  },
+  "qualification": {
+    "binary_sha256": "5ff2b4f9d77a4694d3efa4df46cb1a86fb6a31a157929cc4770a5e43436cd1b8",
+    "locality": "single-host disposable GitHub runner devnet",
+    "maintainer_selected_release": false,
+    "profile": "debug, debug symbols disabled",
+    "source_sha": "1ceabd2917a2d4f41104116b6cf8b5fd0317964b",
+    "verdict": "PASS"
+  },
+  "release_readiness": "NO-GO",
+  "schema": 1
+}

@@ -1,0 +1,19 @@
+{
+  "checks": [
+    {
+      "node": "devnet-bootstrap",
+      "block_hash": "c01651a6e945509a573cdf4b80298e34c82fe6da74c88f5a231ab1d7d8542768",
+      "observed_blake2b256": "c01651a6e945509a573cdf4b80298e34c82fe6da74c88f5a231ab1d7d8542768",
+      "encoded_bytes": 10647,
+      "matches": true
+    },
+    {
+      "node": "devnet-validator-1",
+      "block_hash": "c01651a6e945509a573cdf4b80298e34c82fe6da74c88f5a231ab1d7d8542768",
+      "observed_blake2b256": "c01651a6e945509a573cdf4b80298e34c82fe6da74c88f5a231ab1d7d8542768",
+      "encoded_bytes": 10647,
+      "matches": true
+    }
+  ],
+  "algorithm": "blake2b-256 over bytes.fromhex(raw-block.encoded)"
+}

@@ -1,0 +1,7 @@
+natural-trigger drill: 1ceabd2917a2d4f41104116b6cf8b5fd0317964b at 2026-11-13T18:12:53Z
+== green (rnode:local, expect green)
+registry deploy id: 30440220407f70a8a31af47daf992ef50c3f7f7900ec0a210871529ddf00f00d4d3d1f20022054c4fe2b2d2794ee3e8db6838d7ea72b353fa44d2d40759b39231bbf07d3e19b
+inclusion block: c01651a6e945509a573cdf4b80298e34c82fe6da74c88f5a231ab1d7d8542768
+green PASS: natural-trigger block c01651a6e945509a573cdf4b80298e34c82fe6da74c88f5a231ab1d7d8542768 accepted by both nodes and finalized
+campaign: PASS
+PASS: all selected natural-trigger arms

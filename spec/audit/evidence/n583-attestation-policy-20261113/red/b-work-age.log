@@ -1,0 +1,25 @@
+   Compiling rchain-block-storage v0.1.0 (/home/patrick/RNodeRust/.claude/worktrees/pr-567/block-storage)
+   Compiling rchain-casper v0.1.0 (/home/patrick/RNodeRust/.claude/worktrees/pr-567/casper)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 30.81s
+     Running unittests src/lib.rs (target/debug/deps/rchain_casper-f30259b6c576b39a)
+
+running 1 test
+test blocks::proposer::proposer::attestation_age_tests::late_work_is_licensed_from_its_first_observation_and_expires_at_the_horizon ... FAILED
+
+failures:
+
+---- blocks::proposer::proposer::attestation_age_tests::late_work_is_licensed_from_its_first_observation_and_expires_at_the_horizon stdout ----
+
+thread 'blocks::proposer::proposer::attestation_age_tests::late_work_is_licensed_from_its_first_observation_and_expires_at_the_horizon' (1057631) panicked at casper/src/blocks/proposer/proposer.rs:5947:13:
+assertion `left == right` failed: work first seen at 33 is still licensed at tip 49
+  left: (false, true)
+ right: (false, false)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    blocks::proposer::proposer::attestation_age_tests::late_work_is_licensed_from_its_first_observation_and_expires_at_the_horizon
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 633 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p rchain-casper --lib`

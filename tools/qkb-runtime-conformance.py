@@ -105,7 +105,7 @@ class Run:
             "started_utc": datetime.now(timezone.utc).isoformat(), "version": version,
             "result": "INCOMPLETE", "runtime_source": RHOLO, "qlf_source": QLF,
             "binary_sha256": digest,
-            "scope": "isolated-single-validator-loopback", "cases": [],
+            "scope": "isolated-single-validator-loopback", "suite": args.suite, "cases": [],
         }
         self.node = None
         self.url = "http://127.0.0.1:40403"
@@ -390,6 +390,13 @@ class Run:
             if not oracle["solved"] or got != ref.from_str(oracle["cont"]):
                 raise AssertionError(f"solver reference mismatch on {seed}")
 
+        self.report["python_only_groups"] = {
+            "f": "sharded model; current Rholang contract has one state cell",
+            "j": "mutable queued callbacks; Rholang values are immutable"}
+        if self.args.suite == "functional":
+            self.report["runtime_vectors"] = {"solver_seeds": 5}
+            return
+
         # Runtime coverage of every length-4 history admitted by the native bit:
         # 168 actual per-axis closures and all 216 aggregate-only false positives.
         main_service = self.uri
@@ -432,6 +439,22 @@ class Run:
             "j": "mutable queued callbacks; Rholang values are immutable"}
         self.report["runtime_groups"] = ["a", "b", "c", "d", "e", "g", "h", "i"]
 
+    def logic_only(self, ref):
+        props = ["bot", "top"] + [(a, sign) for a in range(4) for sign in (1, -1)]
+        props += [("and", sp, gauge) for sp in ref.SPATIAL_ATOMS
+                  for gauge in [(3, 1), (3, -1)]]
+        assert len(props) == 22
+        rows = []
+        for p, q in itertools.product(props, repeat=2):
+            rows += [["compatible", p, q, ref.compatible(p, q)],
+                     ["conjoin", p, q, ref.conjoin(p, q)]]
+        size = self.args.logic_batch_size
+        for offset in range(0, len(rows), size):
+            self.logic_batch(f"logic-only-{offset//size}", rows[offset:offset+size])
+        self.report["runtime_vectors"] = {
+            "proposition_pairs": 484, "logic_comparisons": len(rows),
+            "logic_batch_size": size}
+
     def close(self):
         if self.node is not None:
             self.node.terminate()
@@ -455,7 +478,11 @@ def main():
     ap.add_argument("--qlf", required=True)
     ap.add_argument("--contract", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--suite", choices=["functional", "logic", "all"], default="functional")
+    ap.add_argument("--logic-batch-size", type=int, default=16)
     args = ap.parse_args()
+    if not 1 <= args.logic_batch_size <= 96:
+        ap.error("--logic-batch-size must be in 1..96")
 
     qlf_sha = subprocess.check_output(
         ["git", "-C", args.qlf, "rev-parse", "HEAD"], text=True).strip()
@@ -469,7 +496,10 @@ def main():
         run.report["python_reference"] = "a-j PASS"
         run.start()
         run.install()
-        run.suite(ref)
+        if args.suite == "logic":
+            run.logic_only(ref)
+        else:
+            run.suite(ref)
         run.report["result"] = "PASS"
     except Exception as exc:
         run.report["result"] = "FAIL"

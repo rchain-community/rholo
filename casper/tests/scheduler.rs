@@ -130,6 +130,45 @@ async fn block_paths_reject_relaxed_mode() {
     );
 }
 
+/// **The cost-accounting unit itself refuses the pure relaxed schedule** (Laws 20–22).
+///
+/// `compute_state` and the public cost-accounting wrappers are different doors to the same unit;
+/// guarding only the doors lets a future caller through. The refusal is inside the unit, before its
+/// reset or any deploy work. `Sequential` stays usable and `RelaxedValidated` is covered by the
+/// validated corpus; the exploratory path is a different route (`exploratory_path_stays_open_...`).
+#[tokio::test]
+async fn cost_accounting_entry_points_reject_relaxed_mode() {
+    let d = deploy(r#"@"chan"!(42)"#);
+
+    let relaxed = build_runtime_manager_with_mode(EffectMode::Relaxed).await;
+    let pre_state = seed_vault(&relaxed).await;
+
+    let err = relaxed
+        .play_deploy_with_cost_accounting(&d, &fixed_rand())
+        .await
+        .expect_err("relaxed play_deploy_with_cost_accounting must hard-reject");
+    assert!(err.contains("off-chain only"), "unexpected reason: {err}");
+
+    let err = relaxed
+        .play_deploys_with_cost_accounting(&pre_state, std::slice::from_ref(&d), &fixed_rand())
+        .await
+        .expect_err("relaxed play_deploys_with_cost_accounting must hard-reject");
+    assert!(err.contains("off-chain only"), "unexpected reason: {err}");
+
+    let sequential = build_runtime_manager_with_mode(EffectMode::Sequential).await;
+    let pre_state = seed_vault(&sequential).await;
+    let (_, results) = sequential
+        .play_deploys_with_cost_accounting(&pre_state, std::slice::from_ref(&d), &fixed_rand())
+        .await
+        .expect("sequential cost accounting stays open");
+    assert_eq!(results.len(), 1);
+    assert!(
+        !results[0].deploy.is_failed,
+        "the sequential deploy must play, not fail: {:?}",
+        results[0].deploy
+    );
+}
+
 #[tokio::test]
 async fn exploratory_path_stays_open_in_relaxed_mode() {
     // The relaxed manager's only deploy outlet is the exploratory path (`explore-deploy`), which

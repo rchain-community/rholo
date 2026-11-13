@@ -103,7 +103,7 @@ class Run:
             raise ValueError("runtime version does not identify the pinned Rholo revision")
         self.report = {
             "started_utc": datetime.now(timezone.utc).isoformat(), "version": version,
-            "result": "INCOMPLETE", "runtime_source": RHOLO, "qlf_source": QLF,
+            "result": "INCOMPLETE", "runtime_source": RHOLO, "qlf_source": args.qlf_revision,
             "binary_sha256": digest,
             "scope": "isolated-single-validator-loopback", "suite": args.suite, "cases": [],
         }
@@ -476,6 +476,7 @@ def main():
     ap.add_argument("--expected-binary-sha256", required=True)
     ap.add_argument("--rholo", required=True)
     ap.add_argument("--qlf", required=True)
+    ap.add_argument("--qlf-revision", default=QLF)
     ap.add_argument("--contract", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--suite", choices=["functional", "logic", "all"], default="functional")
@@ -486,7 +487,7 @@ def main():
 
     qlf_sha = subprocess.check_output(
         ["git", "-C", args.qlf, "rev-parse", "HEAD"], text=True).strip()
-    if qlf_sha != QLF:
+    if qlf_sha != args.qlf_revision:
         raise SystemExit("QLF checkout does not match the pinned reference")
     sys.path.insert(0, str(Path(args.qlf).resolve()))
     import qkb_reference as ref

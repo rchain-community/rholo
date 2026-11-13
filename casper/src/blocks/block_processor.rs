@@ -19,7 +19,9 @@ use std::time::Duration;
 use tokio::sync::mpsc;
 use tokio::task::{JoinError, JoinHandle, JoinSet};
 
-use crate::block_disposition::{BlockDispositionStore, MAX_FAULT_RETRIES};
+use crate::block_disposition::{
+    BlockDispositionStore, EQUIVOCATION_VERDICT_STAGE, MAX_FAULT_RETRIES,
+};
 use crate::interpreter_util::ShardHealth;
 use crate::merging::BlockIndex;
 use crate::multi_parent_casper::ValidateError;
@@ -208,6 +210,68 @@ async fn record_block_fault(
             ),
         ),
     }
+}
+
+/// **An equivocation at insert is a verdict, not an obligation** (AUDIT C367).
+///
+/// The DAG's H-1 gate refuses a second, distinct block by one sender at one `seq_num` before any
+/// write: the DAG can never hold both, so no retry can change the outcome. Recording it as a
+/// retryable fault instead left the body in the disposition ledger for eight escalating retries
+/// (~20 minutes), and the process-wide fault latch — which the proposer gate reads — stopped
+/// *this* node producing for as long as the row lived, re-seeded from the ledger on every
+/// restart. One equivocating validator therefore took every honest node out of production.
+///
+/// The refusal is the outcome: the DAG's own equivocation-evidence record is the durable offence
+/// (C200), the body's ledger row is marked as a verdict that owes nothing (so the orphan audit
+/// still sees it accounted for, while the latch and the start-up seed do not), and production is
+/// left alone. The log names the height, sender and sequence number so the two sides of the
+/// collision are joinable.
+fn is_equivocation_refusal(error: &str) -> bool {
+    error.starts_with(crate::dag::EQUIVOCATION_PREFIX)
+}
+
+async fn record_equivocation_verdict(
+    disposition: &BlockDispositionStore,
+    block: &BlockMessage,
+    reason: &str,
+    log: &Arc<dyn Log>,
+    source: LogSource,
+) {
+    log.error(
+        source,
+        &format!(
+            "Block #{} {} from {} refused at dag insert: the DAG already holds a different block \
+             by this sender at sequence {}; the refusal is final (no retry) and does not block \
+             this node's production",
+            block.block_number,
+            block.block_hash.to_hex(),
+            rchain_shared::base16::encode(&block.sender.as_bytes()[..8]),
+            block.seq_num,
+        ),
+    );
+    // The row stays as the body's accounting (the orphan audit reads rows) with the budget spent,
+    // so the start-up seed and the re-offer skip it; only the owner of a lost row would fault.
+    if let Err(e) = disposition
+        .mark_terminal_fault(
+            block.block_hash,
+            block.block_number,
+            EQUIVOCATION_VERDICT_STAGE,
+            reason,
+        )
+        .await
+    {
+        log.error(
+            source,
+            &format!(
+                "Block {} equivocation verdict could not be recorded: {e}; the body may read as \
+                 an orphan to the next ownership audit",
+                block.block_hash.to_hex()
+            ),
+        );
+    }
+    // An earlier attempt at the same body may have latched a retryable fault; the verdict
+    // discharges it. This node must not stop producing because a peer equivocated.
+    clear_pipeline_fault(&block.block_hash);
 }
 
 /// A fault no retry can fix is parked with the budget already spent; it stays loud and only an
@@ -558,7 +622,11 @@ pub async fn apply<F, Fut>(
                 }
             };
             if let Err(e) = dag.insert(block_meta, block.clone()).await {
-                record_block_fault(&disposition, &block, "dag insert", &e, &log, source).await;
+                if is_equivocation_refusal(&e) {
+                    record_equivocation_verdict(&disposition, &block, &e, &log, source).await;
+                } else {
+                    record_block_fault(&disposition, &block, "dag insert", &e, &log, source).await;
+                }
                 continue;
             }
             // The insert committed, so either verdict is a DAG record; the durable obligation is
@@ -649,6 +717,89 @@ mod tests {
         );
         clear_pipeline_fault(&hash);
         assert!(!pipeline_fault_is_outstanding(&hash));
+    }
+
+    /// **An equivocation verdict accounts for its body without owing an outcome** (C367).
+    ///
+    /// The body is owed after an earlier transient fault and the latch is seeded, which models a
+    /// restart that re-reads the durable ledger. The refusal must keep the row (deleting it makes
+    /// the body an orphan the ownership audit blocks readiness over) and clear the obligation
+    /// (recording it as outstanding would block this node's production for every retry window and
+    /// after every restart — how one equivocating validator stalled the node in the M3 join arm).
+    #[tokio::test]
+    async fn an_equivocation_verdict_accounts_for_the_body_without_owing_it() {
+        use crate::block_disposition::BlockDispositionCodec;
+        use rchain_block_storage::dag::codecs::BlockHashCodec;
+        use rchain_shared::store_manager::{database, InMemoryStoreManager};
+
+        let manager = InMemoryStoreManager::default();
+        let kv = database(
+            &manager,
+            "block-disposition-test",
+            Arc::new(BlockHashCodec),
+            Arc::new(BlockDispositionCodec),
+        )
+        .await
+        .expect("in-memory ledger");
+        let store = BlockDispositionStore::from_store(Arc::new(kv));
+
+        let block = sample_block();
+        store
+            .mark_faulted(
+                block.block_hash,
+                block.block_number,
+                "dag insert",
+                "justification not present in message map",
+            )
+            .await
+            .expect("a prior transient fault");
+        seed_pipeline_faults([block.block_hash]);
+        assert!(pipeline_fault_is_outstanding(&block.block_hash));
+
+        assert!(is_equivocation_refusal(
+            "equivocation detected: sender produced two blocks with the same sequence number"
+        ));
+        assert!(
+            !is_equivocation_refusal("justification not present in message map"),
+            "only the H-1 refusal is a verdict; every other insert error stays retryable"
+        );
+
+        let log: Arc<dyn Log> = Arc::new(rchain_shared::log::NopLog);
+        record_equivocation_verdict(
+            &store,
+            &block,
+            "equivocation detected: sender produced two blocks with the same sequence number",
+            &log,
+            LogSource::new("casper.blocks.BlockProcessor"),
+        )
+        .await;
+
+        let row = store
+            .get(&block.block_hash)
+            .await
+            .expect("ledger read")
+            .expect("the row is the body's accounting; deleting it makes the body an orphan");
+        assert!(
+            row.is_equivocation_verdict(),
+            "the row must carry the verdict stage with the retry budget spent"
+        );
+        assert!(
+            store
+                .outstanding()
+                .await
+                .expect("outstanding read")
+                .is_empty(),
+            "a verdict owes no outcome: the start-up seed and the re-offer must skip it"
+        );
+        assert_eq!(
+            store.unsettled().await.expect("unsettled read").len(),
+            1,
+            "the body stays accounted for"
+        );
+        assert!(
+            !pipeline_fault_is_outstanding(&block.block_hash),
+            "a permanently refused block must not hold readiness or the proposer gate"
+        );
     }
 
     /// A minimal block for the fault/deadline tests. `block-storage`'s shared fixture is

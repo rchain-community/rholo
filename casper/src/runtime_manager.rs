@@ -1592,6 +1592,14 @@ impl RuntimeManager {
         ),
         String,
     > {
+        // This is the consensus entry point used by block construction and validation.
+        // Unlike exploratory evaluation, no unvalidated relaxed schedule may reach a block.
+        if self.effect_mode == EffectMode::Relaxed {
+            return Err(
+                "relaxed effect scheduling is off-chain only: refusing block-path deploy execution"
+                    .to_string(),
+            );
+        }
         let creator = block_data.sender.bytes().to_vec();
         let seq_num = i64::from(block_data.seq_num);
         // **The close deploy's participation is in the deploy itself on this path** (B4, #150): the play

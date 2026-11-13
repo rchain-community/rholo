@@ -76,6 +76,48 @@ async fn block_paths_reject_relaxed_mode() {
         .expect_err("relaxed play_deploys must hard-reject");
     assert!(err.contains("off-chain only"), "unexpected reason: {err}");
 
+    // The full consensus block entry point must enforce the same restriction.
+    // A standalone process_deploy/play_deploys guard does not protect block_on.
+    let pre_state = seed_vault(&relaxed).await;
+    let block_err = relaxed
+        .compute_state(
+            &pre_state,
+            std::slice::from_ref(&d),
+            &[],
+            &fixed_rand(),
+            BlockData::empty(),
+            &fringe_state(1),
+        )
+        .await;
+    let block_err = match block_err {
+        Ok(_) => panic!("relaxed compute_state must reject even a valid effectful deploy"),
+        Err(e) => e,
+    };
+    assert!(
+        block_err.contains("off-chain only"),
+        "unexpected reason: {block_err}"
+    );
+
+    let limited_err = relaxed
+        .compute_state_with_limit(
+            &pre_state,
+            std::slice::from_ref(&d),
+            &[],
+            &fixed_rand(),
+            BlockData::empty(),
+            &fringe_state(1),
+            Some(1),
+        )
+        .await;
+    let limited_err = match limited_err {
+        Ok(_) => panic!("relaxed compute_state_with_limit must reject too"),
+        Err(e) => e,
+    };
+    assert!(
+        limited_err.contains("off-chain only"),
+        "unexpected reason: {limited_err}"
+    );
+
     let sequential = build_runtime_manager_with_mode(EffectMode::Sequential).await;
     let (_, eval_result) = sequential
         .process_deploy(&d, &fixed_rand())

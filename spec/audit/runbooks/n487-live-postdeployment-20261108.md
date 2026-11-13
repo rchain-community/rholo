@@ -1,10 +1,10 @@
 # #487 / #553 — pre-registered public four-validator acceptance runbook
 
-**Status:** DRAFT / NOT EXECUTED. This document is a proposed acceptance protocol, not authorization to touch validators, submit transactions, restart nodes or claim a live result.
+**Status:** DRAFT / NOT EXECUTED. Refreshed 2026-11-13 onto `dev@dfc2e1fea`: the scoring criteria, arms and abort conditions are unchanged, and §1 remains deliberately unpopulated. This document is a proposed acceptance protocol, not authorization to touch validators, submit transactions, restart nodes or claim a live result.
 
 **Decision owner:** Jim + Patrick (maintainer go/no-go and final verdict); operator and independent evidence reviewer must be identified before execution. **Scope owner:** Aria (pre-registration/evidence design). Approval of this document alone does not authorize execution.
 
-**Parent:** [#553](https://github.com/rhovision-org/rholo/issues/553). **Local comparator:** [n487-admission-finality-stall-n4-20261102](../evidence/n487-admission-finality-stall-n4-20261102/README.md). **Already satisfied separately:** the scoped #485/#492 historical differential, [merged #557](https://github.com/rhovision-org/rholo/pull/557) at `f5ec8e2b`. This runbook **does not reopen #485**.
+**Parent:** [#553](https://github.com/rhovision-org/rholo/issues/553). **Local comparator:** [n487-admission-finality-stall-n4-20261102](../evidence/n487-admission-finality-stall-n4-20261102/README.md). **Already satisfied separately:** the scoped #485/#492 historical differential, [merged #557](https://github.com/rhovision-org/rholo/pull/557) at `f5ec8e2b` (a historical, scoped record; `dev` has since moved through #565/#566/#568/#570/#569/#571 and #555, which is why this runbook was refreshed). This runbook **does not reopen #485**.
 
 ## 0. Acceptance contract — freeze before the window
 

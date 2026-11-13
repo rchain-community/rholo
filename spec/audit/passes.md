@@ -12477,3 +12477,43 @@ arm is claimed**: it cannot pass until B is decided, and the pack's verdict stay
 **Boundary.** This is a local four-validator devnet on one host; it is not the off-host M3 positive,
 not M3-00 acceptance and not a candidate-binary result. The M3 arm's instrument half passed; the join
 half remains owed. No deployment is authorized.
+
+## 160. The supported recovery has two halves, and the arm could not see a two-digit sequence (C368, #576)
+
+#575's FAIL left a question the issue could not answer on its own: can a reset validator rejoin at
+all, or only in the shape that forked? The tooling said yes — `DEVNET_RESET_PASSIVE=1` stages the
+node without its signing key — but nothing ever gave the key back, so the supported recovery was a
+documented half. The arm that would have witnessed it also contained an instrument defect that would
+have hidden a failure.
+
+**The instrument.** `tools/n457-mature-join-arm.py` parsed `proposed and added block #N (seq S)` with
+one capture group and unpacked `(_, seq)` in the comprehension, so `findall`'s string "15" split into
+"1" and "5" and the sequence witness read 5. A strictly-increasing list of single characters is still
+increasing, so nothing failed — the arm reported a green sequence check over numbers it had never
+seen. Caught while reconciling the JSON against the captured log, after a raw-line field was added
+beside the parsed pairs; `proposal_sequences` now returns `(block, seq)` pairs,
+`tests/test_n457_mature_join.py` asserts a two-digit sequence stays whole, and the arm records
+`proposed_lines`, the activated container's id and creation time, and one `activated.log` from which
+every count in the record is read.
+
+**The missing half.** `tools/devnet.sh activate <i>` restarts a passively-staged validator with its
+key: the same volume, ports and flags, adding `--validator-private-key-path`, and it refuses a
+container that is absent or already carries the key. The arm's `--supported-recovery` runs the pair —
+staging, catch-up, activation, convergence — and fails on any `equivocation detected` line, on no
+proposal, or on a reused or regressed own sequence. The operator page now says that a rebuild from a
+key and an empty store is not a rebuild from backup, and gives the staged order.
+
+**The witness.** `spec/audit/evidence/n576-passive-join-20261113/` (13 files, digest-verified,
+`locality: local-devnet`, `execution_proven:false`): the passive replica caught up in 17.4 s
+(`LFS state is successfully restored.` at 16:18:14.246Z), activation reached round 19 in 4.3 s with
+`sync: null` and anchor #14 `d67ffe73…` held by the bootstrap, **0** equivocations, and four
+proposals at sequences **15, 16, 17, 18** — starting from the restored own history rather than at 13.
+Two earlier development runs of the same arm reached the same outcome and are not packed.
+
+**What stays open.** The unsupported shape — key present from boot — still signs a second block at a
+used sequence; #575's capture is that fork. A fail-closed guard or an operational rule for it is
+#576's, and this pass does not claim it. The M3 instrument half (#575) and this join half are
+`local-devnet`; the off-host positive remains Jim's envelope.
+
+**Boundary.** One local four-validator devnet on one host; not the off-host M3 positive, not M3-00
+acceptance and not a candidate-binary result. No deployment is authorized.

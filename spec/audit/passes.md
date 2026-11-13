@@ -12681,3 +12681,66 @@ historical 840→841 witness, or an independent sign-off. It does not touch cros
 (`concurrent_forked_replays_agree_with_serial_replays`) replays two dependency-free blocks
 concurrently on per-block forks and compares each with its serial replay; the cap and fork tests pin
 the dispatch mechanism. The next `C` number remains unused: these are model rows, not findings.
+
+## 164. Attestation policy: covered replay and first-observed work age (C372, C373, #583)
+
+Issue #583 carried two residuals left by #230/#351/#223. Both are **local attestation policy**: no
+block validity, consensus, stake or quorum rule moves.
+
+**C372 — a block below the closed round was answered on proposer time alone.** The tap's freshness
+input was `attest_is_live(block.timestamp, now)`, a ±15 s wall-clock window; the per-sender
+`answered` map is in-memory, so a restart emptied it. A new block at an old height — below the round
+this node had already closed, with every parent in that round's causal past — passed whenever its own
+stamp looked current.
+
+The obvious chain-state predicate, "some latest message's `seen` contains the block hash", cannot
+answer this. `Message.seen` includes the message's own id (`casper/src/dag.rs:95`), and the validated
+stream runs **after** `dag.insert` (`casper/src/blocks/block_processor.rs`), so the block is its own
+latest message and the predicate is true for every block. Excluding the block's own message makes it
+false for every block: an earlier message's `seen` is a snapshot taken before this block existed.
+Literal duplicate deliveries never reach the tap at all — an already-known hash is routed to
+`released_tx`, which fires no tap.
+
+What does answer it is the block's position against the last closed round boundary: strictly below
+`round_height`, with every justification in that boundary's causal past (`attested_history`). A late,
+*uncovered* side-branch block is below the boundary but its parents are not in the boundary's past, so
+it is not history and still reaches the timestamp window and `attest_warranted` — the C211/C214 rejoin
+path, kept alive. The strict `<` matters: the insert can itself close a boundary on the block, so a
+fresh tip block may sit exactly at `round_height`.
+
+**C373 — an advancing fringe renewed the licence for ever.** `work_age_floor` substituted the moving
+`fringe_top` for the work's own height whenever the work lay below it. That was a live-verified #223
+fix: a returning validator's epoch-boundary work at height 10, seen at tip 33 with the fringe at 30,
+had to be licensed, and counting from its own height withheld the attestation that alone could
+finalise it. The same rule let any uncovered side branch stay within `ATTESTATION_HORIZON` for ever
+while the fringe kept up, so the cadence path (`attestation_suppressed`) emitted empty attestations
+without end.
+
+The two constraints reconcile only if the age is the node's **first observation** of the work. A new
+per-shard durable store (`block-storage/src/work_seen.rs`) records the tip height when the work first
+enters `conflict_set`; the row is written once and never rewritten, so no fringe advance,
+re-observation or restart renews it. An absent row is a first sighting; a read or write error is
+**fail-closed** (`tip − horizon − 1`), which withholds promptness only — the cadence path still
+attests when a quorum is reachable (W-N9-01). Rows are pruned only for work at or below the last
+finalized block, which cannot re-enter the unfinalized region without a safety violation. The scan
+takes the **newest** work-bearing block, so an expired side branch cannot mask newer work still inside
+its own window (premature quiet finality).
+
+**Red before, green after.** U1 committed both falsifiers against the pre-fix behaviour:
+`late_work_is_licensed_from_its_first_observation_and_expires_at_the_horizon` failed at tip 49 (still
+licensed), and `a_block_below_the_closed_round_is_history` failed on the covered block (not treated
+as history). After the fixes both are green, with
+`expired_work_does_not_mask_newer_work`, `an_unreadable_store_withholds_the_prompt_licence` and the
+store's reopen test as the controls. The #223 live shape is the positive control in both: work first
+seen at tip 33 is licensed at once, and the late-but-uncovered block is not history.
+
+**Acceptance.** The issue's closing bar is the N=3 rejoin (the direct #223 regression) and an N=4
+quiet-finality arm at the source head. The run metadata, exit codes and raw logs are recorded in
+`spec/audit/evidence/n583-attestation-policy-<date>/README.md`; this pass is not evidence for them
+until that record exists. No live deployment, public validator, key use or consensus release is
+implied.
+
+**What this pass does not do.** It changes no block validity and no consensus interpretation of the
+proposer timestamp (#528). It does not persist the tap's per-sender `answered` map: that reset is a
+pacing bound, not the freshness property, and literal replays do not reach the tap. It does not close
+#33 or #428, and it is not evidence for #584's frozen live four-validator gate.

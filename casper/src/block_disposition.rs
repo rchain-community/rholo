@@ -2714,12 +2714,22 @@ mod tests {
             .expect("empty block store");
         let ledger = store().await;
         let own = Validator::new([0x22; 65]);
-        assert_eq!(own_key_equivocation_verdict(&ledger, &blocks, &own).await.unwrap(), None);
+        assert_eq!(
+            own_key_equivocation_verdict(&ledger, &blocks, &own)
+                .await
+                .unwrap(),
+            None
+        );
         ledger
             .mark_pending(hash(45), height(4), PendingStage::Stored)
             .await
             .unwrap();
-        assert_eq!(own_key_equivocation_verdict(&ledger, &blocks, &own).await.unwrap(), None);
+        assert_eq!(
+            own_key_equivocation_verdict(&ledger, &blocks, &own)
+                .await
+                .unwrap(),
+            None
+        );
     }
 
     #[tokio::test]

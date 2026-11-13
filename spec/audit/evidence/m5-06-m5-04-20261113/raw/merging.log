@@ -1,0 +1,58 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.24s
+     Running unittests src/lib.rs (target/debug/deps/rchain_casper-f30259b6c576b39a)
+
+running 51 tests
+test merging::boundary_merge_tests::rejecting_a_later_same_block_writer_keeps_the_earlier_value ... ok
+test merging::boundary_merge_tests::a_native_block_with_two_chains_merges ... ok
+test merging::boundary_merge_tests::a_rejected_boundary_chain_does_not_take_its_blocks_other_chains ... ok
+test merging::boundary_merge_tests::sibling_boundaries_with_different_fringes_merge ... ok
+test merging::boundary_merge_tests::the_width_buckets_are_inclusive_at_their_edges ... ok
+test merging::index_stats_tests::read_reports_the_live_counters ... ok
+test merging::boundary_merge_tests::identical_sibling_boundaries_merge ... ok
+test merging::index_stats_tests::the_summary_names_every_counter ... ok
+test merging::kept_effect_coverage_tests::a_dropped_channel_is_named ... ok
+test merging::index_stats_tests::the_merge_scope_does_not_depend_on_which_children_this_node_holds ... ok
+test merging::boundary_merge_tests::sibling_boundaries_with_different_pots_merge ... ok
+test merging::kept_effect_coverage_tests::a_dropped_entry_is_named ... ok
+test merging::boundary_merge_tests::an_ancestor_and_descendant_writing_one_key_both_merge ... ok
+test merging::kept_effect_coverage_tests::disjoint_kept_changes_are_all_present ... ok
+test merging::kept_effect_coverage_tests::the_report_names_a_final_scope_deploy_and_the_tuple_space_violation ... ok
+test merging::kept_effect_coverage_tests::coverage_preserves_duplicate_occurrences_within_and_across_kept_chains ... ok
+test merging::boundary_merge_tests::equal_concurrent_vault_writes_do_not_destroy_rev ... ok
+test merging::merge_relation_tests::a_deploy_index_orders_by_id ... ok
+test merging::merge_relation_tests::a_deploy_with_cost_orders_by_id_then_cost ... ok
+test merging::merge_relation_tests::a_chains_equality_ordering_and_hash_are_one_key ... ok
+test merging::boundary_merge_tests::sibling_boundaries_with_a_stake_change_merge ... ok
+test merging::merge_relation_tests::chain_dependency_follows_the_event_logs ... ok
+test merging::merge_relation_tests::chain_conflicts_cover_the_id_overlap_and_the_event_relation ... ok
+test merging::merge_relation_tests::branch_conflicts_lift_the_chain_relation ... ok
+test merging::native_merge_tests::a_chains_order_agrees_with_its_equality ... ok
+test merging::merge_relation_tests::the_chain_cost_is_the_sum_of_its_deploys ... ok
+test merging::rejection_reason_tests::i1_accepts_a_dependency_cascade_and_rejects_self_justification ... ok
+test merging::rejection_reason_tests::i1_includes_finalized_conflicts_and_rejected_dependencies ... ok
+test merging::tests::a_cache_hit_refreshes_lru_recency ... ok
+test merging::tests::a_disagreement_between_a_fringes_finalisers_is_a_union_not_a_written_value ... ok
+test merging::tests::a_fringe_hash_absent_from_the_dag_is_an_error_naming_the_fringe ... ok
+test merging::tests::a_pinned_fringe_still_grows_the_conflict_scope_with_a_parent_that_advances ... ok
+test merging::tests::capacity_eviction_bounds_the_cache_and_keeps_in_flight_indices_alive ... ok
+test merging::tests::deploy_chain_cost_sums ... ok
+test merging::tests::deploys_are_conflicting_by_shared_id ... ok
+test merging::tests::equality_is_the_same_key_as_ordering_and_hashing ... ok
+test merging::native_merge_tests::a_blocks_own_chains_are_ordered_and_dependent ... ok
+test merging::tests::finality_pruning_removes_cache_order_bookkeeping_too ... ok
+test merging::kept_effect_coverage_tests::coverage_checks_every_serialized_occurrence ... ok
+test merging::tests::merge_scope_conflicts_are_the_fringe_blocks_the_final_fringe_has_not_seen ... ok
+test merging::tests::merge_scope_genesis_returns_genesis_as_base ... ok
+test merging::tests::merge_scope_with_a_final_fringe_has_no_base ... ok
+test merging::native_merge_tests::a_rejected_later_chain_leaves_the_earlier_ones_value_in_the_merged_state ... ok
+test merging::tests::pruning_a_cache_that_holds_nothing_is_a_no_op ... ok
+test merging::native_merge_tests::a_merge_carries_the_native_writes_of_the_branches_it_merges ... ok
+test merging::tests::rejections_are_keyed_by_block_for_the_final_scope_and_absence_means_not_rejected ... ok
+test merging::native_merge_tests::two_branch_blocks_writing_one_native_slot_do_not_panic_the_merge ... ok
+test merging::boundary_merge_tests::the_merge_report_names_every_dropped_native_write ... ok
+test merging::boundary_merge_tests::the_merge_search_sees_the_shape_the_merge_builds ... ok
+test merging::boundary_merge_tests::a_cost_accounted_block_keeps_its_own_native_writes_through_the_merge ... ok
+test merging::boundary_merge_tests::a_boundary_round_does_not_lose_a_contained_deploys_charge ... ok
+
+test result: ok. 51 passed; 0 failed; 0 ignored; 0 measured; 575 filtered out; finished in 0.08s
+

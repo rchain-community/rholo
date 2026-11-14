@@ -793,25 +793,28 @@ def verify_sums_json(path: Path) -> str | None:
     return None
 
 
-def verify_sums_text(path: Path) -> str | None:
+def verify_sums_text(path: Path):
+    """Return (listed names, problem). A plain sums file must cover every evidence file present."""
     try:
         lines = path.read_text().splitlines()
     except OSError as error:
-        return f"{path.name} is unreadable: {error}"
+        return set(), f"{path.name} is unreadable: {error}"
+    listed = set()
     for line in lines:
         line = line.strip()
         if not line:
             continue
         parts = line.split(None, 1)
         if len(parts) != 2 or not DIGEST_RE.match(parts[0]):
-            return f"malformed line in {path.name}: {line!r}"
+            return listed, f"malformed line in {path.name}: {line!r}"
         relative = parts[1].lstrip("*")
+        listed.add(relative)
         target = path.parent / relative
         if not target.is_file():
-            return f"missing file listed in {path.name}: {relative}"
+            return listed, f"missing file listed in {path.name}: {relative}"
         if sha256_file(target) != parts[0]:
-            return f"digest mismatch in {path.name}: {relative}"
-    return None
+            return listed, f"digest mismatch in {path.name}: {relative}"
+    return listed, None
 
 
 def check_g5(run, events, run_dir: Path) -> dict:
@@ -878,9 +881,28 @@ def check_g5(run, events, run_dir: Path) -> dict:
         if sums is None:
             finding.incomplete("the run is not hashed; pack it with tools/evidence-pack.py")
         else:
-            problem = verify_sums_text(sums)
+            listed, problem = verify_sums_text(sums)
             if problem:
                 finding.fail(problem)
+            else:
+                expected = {
+                    name
+                    for name in (
+                        "samples.jsonl.gz",
+                        "samples.jsonl",
+                        "plan.public.json",
+                        "run.json",
+                        "submission.json",
+                        "claims.json",
+                        "recovery.json",
+                    )
+                    if (run_dir / name).is_file()
+                }
+                missing = expected - listed
+                if missing:
+                    finding.incomplete(
+                        f"evidence file(s) not covered by SHA256SUMS: {', '.join(sorted(missing))}"
+                    )
 
     for name in ("run.json", "plan.public.json"):
         path = find_file(run_dir, name)

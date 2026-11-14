@@ -277,10 +277,23 @@ class LiveGateFixture(unittest.TestCase):
         events = good_events() if events is None else events
         samples = self.run_dir / "samples.jsonl"
         samples.write_text("\n".join(json.dumps(event, sort_keys=True) for event in events) + "\n")
-        (self.run_dir / "SHA256SUMS").write_text(
-            f"{hashlib.sha256(samples.read_bytes()).hexdigest()}  samples.jsonl\n"
-        )
+        self.write_sums()
         return events
+
+    def write_sums(self, names=None):
+        names = names or (
+            "samples.jsonl",
+            "run.json",
+            "submission.json",
+            "claims.json",
+            "recovery.json",
+        )
+        (self.run_dir / "SHA256SUMS").write_text(
+            "".join(
+                f"{hashlib.sha256((self.run_dir / name).read_bytes()).hexdigest()}  {name}\n"
+                for name in names
+            )
+        )
 
     def check(self):
         report = gate.evaluate(self.run_dir, self.preflight_path)
@@ -299,9 +312,7 @@ class LiveGateFixture(unittest.TestCase):
     def rewrite_events(self, events):
         samples = self.run_dir / "samples.jsonl"
         samples.write_text("\n".join(json.dumps(event, sort_keys=True) for event in events) + "\n")
-        (self.run_dir / "SHA256SUMS").write_text(
-            f"{hashlib.sha256(samples.read_bytes()).hexdigest()}  samples.jsonl\n"
-        )
+        self.write_sums()
 
     def assert_status(self, report, name, expected):
         self.assertEqual(report["criteria"][name]["status"], expected, report["criteria"][name]["reasons"])
@@ -405,6 +416,7 @@ class G2Tests(LiveGateFixture):
         ]
         self.write_bundle(events=events)
         (self.run_dir / "claims.json").write_text(json.dumps(claims(settled=False, basis="notFinalized")))
+        self.write_sums()
         report, code = self.check()
         self.assert_status(report, "G2", "INCOMPLETE")
         self.assert_status(report, "G3", "PASS")
@@ -425,6 +437,7 @@ class G2Tests(LiveGateFixture):
 class G3Tests(LiveGateFixture):
     def test_the_487_shape_fails_when_the_record_calls_execution_settlement(self):
         (self.run_dir / "claims.json").write_text(json.dumps(claims(settled=True, basis="processWithSuccess")))
+        self.write_sums()
         report, code = self.check()
         self.assert_status(report, "G3", "FAIL")
         self.assertEqual(code, 1)
@@ -479,6 +492,7 @@ class G3Tests(LiveGateFixture):
 class G4Tests(LiveGateFixture):
     def test_no_recovery_arm_is_incomplete(self):
         (self.run_dir / "recovery.json").unlink()
+        self.write_sums(names=("samples.jsonl", "run.json", "submission.json", "claims.json"))
         report, code = self.check()
         self.assert_status(report, "G4", "INCOMPLETE")
         self.assertEqual(code, 3)
@@ -488,6 +502,7 @@ class G4Tests(LiveGateFixture):
         document["accepted_deploys_after"] = [DEPLOY]
         document["lost_deploys"] = [OTHER]
         (self.run_dir / "recovery.json").write_text(json.dumps(document))
+        self.write_sums()
         report, _ = self.check()
         self.assert_status(report, "G4", "FAIL")
 
@@ -495,6 +510,7 @@ class G4Tests(LiveGateFixture):
         document = recovery()
         document["own_key_halt_observed"] = True
         (self.run_dir / "recovery.json").write_text(json.dumps(document))
+        self.write_sums()
         report, _ = self.check()
         self.assert_status(report, "G4", "FAIL")
 
@@ -503,6 +519,7 @@ class G4Tests(LiveGateFixture):
         document["same_deploy_finalized"] = False
         document.pop("post_recovery_settlement")
         (self.run_dir / "recovery.json").write_text(json.dumps(document))
+        self.write_sums()
         report, _ = self.check()
         self.assert_status(report, "G4", "FAIL")
 
@@ -525,6 +542,7 @@ class G5Tests(LiveGateFixture):
         document = json.loads((self.run_dir / "run.json").read_text())
         document["validators"][1]["endpoint_sha256"] = document["validators"][0]["endpoint_sha256"]
         (self.run_dir / "run.json").write_text(json.dumps(document))
+        self.write_sums()
         report, _ = self.check()
         self.assert_status(report, "G5", "FAIL")
 
@@ -532,11 +550,17 @@ class G5Tests(LiveGateFixture):
         document = json.loads((self.run_dir / "run.json").read_text())
         document["note"] = "http://validator.example:40403"
         (self.run_dir / "run.json").write_text(json.dumps(document))
+        self.write_sums()
         report, _ = self.check()
         self.assert_status(report, "G5", "FAIL")
 
     def test_an_unhashed_run_is_incomplete(self):
         (self.run_dir / "SHA256SUMS").unlink()
+        report, _ = self.check()
+        self.assert_status(report, "G5", "INCOMPLETE")
+
+    def test_an_uncovered_record_file_is_incomplete(self):
+        self.write_sums(names=("samples.jsonl",))
         report, _ = self.check()
         self.assert_status(report, "G5", "INCOMPLETE")
 

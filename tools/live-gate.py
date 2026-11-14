@@ -580,7 +580,11 @@ def check_g2(submission, run, events) -> dict:
         if not any(route == "deploy_settlement" and status == 200 for route, status in routes):
             finding.incomplete(f"{alias} has no successful deploy-settlement sample")
 
-    ordered = sorted(settlement_events(events), key=lambda event: (event.get("utc") or "", event.get("tick", 0)))
+    epoch = datetime.min.replace(tzinfo=timezone.utc)
+    ordered = sorted(
+        settlement_events(events),
+        key=lambda event: (parse_utc(event.get("utc")) or epoch, event.get("tick", 0)),
+    )
     stages = {}
     for event in ordered:
         stage = event["body"].get("stage")

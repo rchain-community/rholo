@@ -1,10 +1,10 @@
-# #487 / #553 — pre-registered public four-validator acceptance runbook
+# #487 / #584 — pre-registered public four-validator acceptance runbook
 
-**Status:** DRAFT / NOT EXECUTED. Refreshed 2026-11-13 onto `dev@1ceabd291` (including #572 and #578): the scoring criteria and arms are unchanged; candidate/approval pins remain unpopulated. Sections 1.1–1.2 make collection, independent checks and the maintainer handoff explicit. This document is a proposed acceptance protocol, not authorization to touch validators, submit transactions, restart nodes or claim a live result.
+**Status:** DRAFT / NOT EXECUTED. Refreshed 2026-11-14 onto `dev@88b8b5340` (including #572, #578 and the #580/#581 shared-halt fixture isolation): the scoring criteria and arms are unchanged; candidate/approval pins remain unpopulated. Sections 1.1–1.2 make collection, independent checks and the maintainer handoff explicit. This document is a proposed acceptance protocol, not authorization to touch validators, submit transactions, restart nodes or claim a live result.
 
 **Decision owner:** Jim + Patrick (maintainer go/no-go and final verdict); operator and independent evidence reviewer must be identified before execution. **Scope owner:** Aria (pre-registration/evidence design). Approval of this document alone does not authorize execution.
 
-**Parent:** [#553](https://github.com/rhovision-org/rholo/issues/553). **Local comparator:** [n487-admission-finality-stall-n4-20261102](../evidence/n487-admission-finality-stall-n4-20261102/README.md). **Already satisfied separately:** the scoped #485/#492 historical differential, [merged #557](https://github.com/rhovision-org/rholo/pull/557) at `f5ec8e2b` (a historical, scoped record, not acceptance of the current public deployment). This runbook **does not reopen #485**.
+**Parent:** [#584](https://github.com/rhovision-org/rholo/issues/584), successor to closed #553; it carries the live #487 verdict as the frozen G1–G6 criteria. **Local comparator:** [n487-admission-finality-stall-n4-20261102](../evidence/n487-admission-finality-stall-n4-20261102/README.md). **Already satisfied separately:** the scoped #485/#492 historical differential, [merged #557](https://github.com/rhovision-org/rholo/pull/557) at `f5ec8e2b` (a historical, scoped record, not acceptance of the current public deployment). This runbook **does not reopen #485**.
 
 ## 0. Acceptance contract — freeze before the window
 
@@ -117,7 +117,7 @@ As of this refresh, **no live candidate, four-host installed digest set, approve
 | Jim/Patrick | Name operator, observer(s), independent reviewer, rollback owner and UTC window; authorize the exact bounded signed native-REV transfer | Explicit approval references tied to the frozen runbook, pins and deploy identity |
 | Independent reviewer | Review private completeness and public redactions before GO; review live evidence afterward | Preflight review followed by a separate human live verdict under §4 |
 
-These are external run inputs, not values for Aria to guess. Keep [#553](https://github.com/rhovision-org/rholo/issues/553) open until the actual live verdict.
+These are external run inputs, not values for Aria to guess. Keep [#584](https://github.com/rhovision-org/rholo/issues/584) open until the actual live verdict.
 
 ## 2. Arms / sampling plan — freeze these criteria before execution
 
@@ -173,7 +173,7 @@ Publish a **redacted, reviewable** run record in `spec/audit/evidence/n487-live-
 - **INCONCLUSIVE:** missing stage sample, missing validator/evidence/pins, no finalization within approved window, observer disagreement or stale data. Never re-label as PASS.
 - **ABORTED:** window or operational safety abort before an admissible verdict.
 
-Only after an independent maintainer reviews the **live** record against this document may #553 be closed. A green CI badge, the n487 DevNet result, or merged #557 **alone** does not establish public-network release acceptance.
+Only after an independent maintainer reviews the **live** record against this document may #584 be closed. A green CI badge, the n487 DevNet result, or merged #557 **alone** does not establish public-network release acceptance.
 
 ## 5. Responsibility and immutable boundary
 
@@ -181,4 +181,4 @@ Only after an independent maintainer reviews the **live** record against this do
 - **During the run:** designated operator executes only pre-approved actions; evidence observer collects all four validators' data. Aria may prepare scripts or review evidence **without operating public validators**.
 - **After the run:** publish hashed evidence and human verdict in a **separate evidence PR**. If the run reveals a software defect, create a **separate fix PR**; do not amend the pre-registered criteria after observing the outcome.
 
-**Explicit non-claims:** This draft contains **no live-run result**, no current release pin, no authorization, no public transaction, no live testnet changes, and no #553 closure.
+**Explicit non-claims:** This draft contains **no live-run result**, no current release pin, no authorization, no public transaction, no live testnet changes, and no #584 closure.

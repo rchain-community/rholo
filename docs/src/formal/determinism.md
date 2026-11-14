@@ -102,6 +102,45 @@ trace contains a COMM event — and runs it under both the sequential and the ba
 a **negative** for the 2026-11-08 shape in this fixture, not a closure of RC1; the incident's trigger
 remains open, and the result is recorded on #564.
 
+## The replay record's order (Law 95)
+
+The replay's record is not a set of COMMs; it is an **ordered** candidate list per consume, and the
+order is the play's. RSpace prepends every event to its log (`rspace/src/rspace.rs:202-216`), so
+`build_replay_data` must walk it in reverse to file COMMs in execution order
+(`rspace/src/replay_rspace.rs:129-167`). Before the fix it filed them newest-first: a later pending
+request could bind before the earlier repeated peek's COMM, the peek's `times_repeated` could not match
+the produce counter, work was suppressed, and the replay cost fell — the 2026-11-08 incident's
+**5576 vs 5302** (274 phlo).
+
+The law (`Rchain/RSpace/ReplayOrder.lean`) models the two builders. The chronological one files the
+play's sequence; the newest-first one is the defect's shape, and on a two-request witness it charges
+the later COMM's continuation instead of the earlier one's (5 vs 3). The executable tie is
+`casper/tests/replay_trace_order.rs::pending_peeks_replay_with_exact_cost_and_state`, which pins the
+real play costs 1860 / 2606 / 4844 and requires the strict replay to preserve cost and state. The law
+does **not** cover the RCHAIN-3505 workaround that drops the reverse half for a failed deploy (Law 11's
+recorded hazard).
+
+## A split does not change the accounting (Law 96)
+
+Three places split work. A **batch** of deploys runs on forks from one base; a batch of
+dependency-free **blocks** is validated concurrently on one forked replay runtime per block and
+inserted serially; and **nodes** replay one block from one committed pre-state. The rule is the same:
+the split may change speed, never the per-deploy cost, COMM log, failure flag or post-state.
+
+- **Verification is not optional.** `canonical_batch_policy` (`casper/src/runtime_manager.rs:501-513`)
+  never leaves an enabled batch unverified, and the verification oracle compares all four per-deploy
+  fields with the sequential run. C360 measured the pre-fix shape: batched play with verification off
+  recorded costs `[986, 984, 984, 984]` and a different post-state.
+- **Concurrent validation is per-block.** Each validation forks its own replay runtime at the block's
+  committed pre-state (`fork_replay_runtime`), so a dependency-free batch's verdicts are the serial
+  verdicts; insertion stays serial (`casper/src/blocks/block_processor.rs:536-620`).
+- **A disagreement is not published.** Two nodes' verdicts are reconciled only by agreement; a
+  difference is attributed by provenance (Law 92) and bounded by the recovery state machine (Law 94).
+
+The model is `Rchain/SplitAccounting.lean`; the Rust witnesses are the batch-policy test, the
+two-path determinism test and the cost-only tamper test named in the register. It does not claim a
+speedup or a capacity result — M1/M2 remain measurement gates.
+
 ## What determinism does *not* require
 
 Determinism is about the **state hash**, not about the recorded cost field or diagnostic output. Two

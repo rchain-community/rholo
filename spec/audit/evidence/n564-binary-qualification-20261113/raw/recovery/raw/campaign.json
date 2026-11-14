@@ -1,0 +1,19 @@
+{
+  "source_sha": "1ceabd2917a2d4f41104116b6cf8b5fd0317964b",
+  "binary_sha256": "sha256:ec527b36491baaae9c008bd783babf97c8cba93236fd34ebdf32bdd00721f0a6",
+  "aggregate": "PASS",
+  "cycles": [
+    {
+      "control": "arm1-attestation",
+      "result": "PASS"
+    },
+    {
+      "control": "arm2-reset",
+      "result": "PASS"
+    },
+    {
+      "control": "arm3-halt",
+      "result": "PASS"
+    }
+  ]
+}

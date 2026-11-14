@@ -1,0 +1,121 @@
+name: C357 pinned binary operational qualification
+on:
+  push:
+    branches: [verify/c357-binary-20261113]
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  CARGO_INCREMENTAL: "0"
+  CARGO_BUILD_JOBS: "2"
+  CARGO_PROFILE_DEV_DEBUG: "0"
+defaults:
+  run:
+    shell: bash
+jobs:
+  qualification:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - name: Pin pristine node source
+        run: |
+          set -euo pipefail
+          git worktree add --detach /tmp/c357-source 1ceabd2917a2d4f41104116b6cf8b5fd0317964b
+          mkdir -p receipts/runtime receipts/natural receipts/recovery
+          git rev-parse HEAD > receipts/harness-sha.txt
+          git -C /tmp/c357-source rev-parse HEAD > receipts/runtime/source-sha.txt
+          git -C /tmp/c357-source status --porcelain > receipts/runtime/source-status.txt
+          test ! -s receipts/runtime/source-status.txt
+          sha256sum /tmp/c357-source/Cargo.lock > receipts/runtime/cargo-lock.sha256
+          rustup toolchain install 1.95.0 --profile minimal
+          sudo tools/ci-apt-install.sh protobuf-compiler libprotobuf-dev
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0
+        with:
+          workspaces: /tmp/c357-source
+          shared-key: c357-binary-20261113
+          cache-on-failure: true
+      - name: Build and identify qualification binary
+        working-directory: /tmp/c357-source
+        run: |
+          set -euo pipefail
+          cargo +1.95.0 build --locked -p rchain-node --bin rnode 2>&1 | tee "$GITHUB_WORKSPACE/receipts/runtime/build.log"
+          cp target/debug/rnode "$GITHUB_WORKSPACE/receipts/runtime/rnode"
+          cd "$GITHUB_WORKSPACE/receipts/runtime"
+          sha256sum rnode > rnode.sha256
+          ./rnode --version > version.txt
+          ldd rnode > linked-libraries.txt
+          rustc +1.95.0 --version > rustc.txt
+          printf '%s\n' 'debug profile, debug symbols disabled; qualification build, not a selected release candidate' > build-profile.txt
+      - name: Package the exact executable for disposable validators
+        run: |
+          set -euo pipefail
+          cat > receipts/runtime/Dockerfile <<'DOCKER'
+          FROM ubuntu:24.04
+          RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl libssl3 libgcc-s1 && rm -rf /var/lib/apt/lists/*
+          COPY rnode /usr/local/bin/rnode
+          ENTRYPOINT ["rnode"]
+          DOCKER
+          docker build -t rnode:local receipts/runtime 2>&1 | tee receipts/runtime/image-build.log
+          docker image inspect rnode:local > receipts/runtime/image-inspect.json
+          docker run --rm --entrypoint sha256sum rnode:local /usr/local/bin/rnode > receipts/runtime/image-binary.sha256
+          test "$(cut -d' ' -f1 receipts/runtime/rnode.sha256)" = "$(cut -d' ' -f1 receipts/runtime/image-binary.sha256)"
+          docker run --rm rnode:local --version > receipts/runtime/image-version.txt
+          cp /tmp/c357-source/tools/n564-natural-trigger-drill.sh receipts/natural/drill.sh
+          cp /tmp/c357-source/tools/self-replay-drill.sh receipts/recovery/drill.sh
+      - name: Natural trigger and independent same-block validation
+        working-directory: /tmp/c357-source
+        run: |
+          set -euo pipefail
+          tools/n564-natural-trigger-drill.sh --arms green --green-image rnode:local --keep --timeout 180 2>&1 | tee "$GITHUB_WORKSPACE/receipts/natural/console.log"
+          python3 "$GITHUB_WORKSPACE/tools/c357-verify-capture.py" "$GITHUB_WORKSPACE/receipts"
+      - name: Preserve natural-trigger raw capture
+        if: always()
+        run: |
+          if test -d /tmp/c357-source/target/n564-natural-trigger; then
+            cp -a /tmp/c357-source/target/n564-natural-trigger receipts/natural/raw
+          fi
+      - name: Recovery ladder on the identical binary
+        if: success() || failure()
+        working-directory: /tmp/c357-source
+        run: |
+          set -euo pipefail
+          test -s "$GITHUB_WORKSPACE/receipts/runtime/image-binary.sha256"
+          tools/self-replay-drill.sh --timeout 240 2>&1 | tee "$GITHUB_WORKSPACE/receipts/recovery/console.log"
+      - name: Preserve recovery raw capture
+        if: always()
+        run: |
+          if test -d /tmp/c357-source/target/self-replay-drill; then
+            cp -a /tmp/c357-source/target/self-replay-drill receipts/recovery/raw
+          fi
+          cp tools/c357-verify-capture.py receipts/
+          cp .github/workflows/c357-binary.yml receipts/workflow.yml
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          root=pathlib.Path("receipts")
+          metadata={"run_id":os.environ["GITHUB_RUN_ID"],"run_attempt":os.environ["GITHUB_RUN_ATTEMPT"],"harness_sha":os.environ["GITHUB_SHA"],"runtime_source_sha":"1ceabd2917a2d4f41104116b6cf8b5fd0317964b","locality":"single-host-github-runner-disposable-devnet","execution_proven":False,"release_selected":False,"live_deployment":False}
+          (root/"run.json").write_text(json.dumps(metadata,indent=2)+"\n")
+          sums={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(root.rglob("*")) if p.is_file() and p.name not in {"rnode","SHA256SUMS.json"}}
+          (root/"SHA256SUMS.json").write_text(json.dumps(sums,indent=2,sort_keys=True)+"\n")
+          PY
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: c357-operational-1ceabd291
+          path: |
+            receipts/
+            !receipts/runtime/rnode
+          if-no-files-found: error
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: c357-rnode-1ceabd291
+          path: |
+            receipts/runtime/rnode
+            receipts/runtime/rnode.sha256
+            receipts/runtime/source-sha.txt
+            receipts/runtime/version.txt
+            receipts/runtime/build-profile.txt
+          if-no-files-found: error

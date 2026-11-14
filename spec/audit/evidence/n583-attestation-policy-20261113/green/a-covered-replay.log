@@ -1,0 +1,18 @@
+   Compiling rchain-node v0.1.0 (/home/patrick/RNodeRust/.claude/worktrees/pr-567/node)
+   Compiling rchain-block-storage v0.1.0 (/home/patrick/RNodeRust/.claude/worktrees/pr-567/block-storage)
+   Compiling rchain-casper v0.1.0 (/home/patrick/RNodeRust/.claude/worktrees/pr-567/casper)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 29.33s
+warning: the following packages contain code that will be rejected by a future version of Rust: nom v4.2.3
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests src/lib.rs (target/debug/deps/rchain_node-68a90276a1ed8b63)
+
+running 6 tests
+test runtime::node_runtime::attest_warranted_tests::a_block_older_than_the_round_is_not_answered ... ok
+test runtime::node_runtime::attest_warranted_tests::a_block_stamped_far_in_the_future_is_not_answered ... ok
+test runtime::node_runtime::attest_warranted_tests::a_height_already_answered_is_not_answered_again ... ok
+test runtime::node_runtime::attest_warranted_tests::any_remote_block_at_a_new_height_is_a_reason_to_attest ... ok
+test runtime::node_runtime::attest_warranted_tests::a_round_that_comes_to_rest_at_one_height_is_answered_for_every_peer ... ok
+test runtime::node_runtime::attest_tap_gate_tests::a_block_below_the_closed_round_is_history ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 384 filtered out; finished in 0.00s
+

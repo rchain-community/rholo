@@ -1,0 +1,4 @@
+# tree=2fe16f163 head=2fe16f1630458b3c14344137616f3c5353db42bd
+# rig: --validators 3 --stakes 100,100,50 --epoch-length 10 --no-autopropose --propose-on-deploy; stop devnet-validator-2 for 6 deploys
+# image=sha256:14bca1377cacdb9c79ff57d6e43c7f72ea3212aadd02f41e887ca77fa5be161d 2026-11-13T22:22:00.461090379Z
+# started 2026-11-13T22:22:09Z

@@ -1,6 +1,6 @@
-# Cross-shard transactions: two-phase commit (Laws 26–29)
+# Cross-shard transactions: two-phase commit (Laws 26–29, 98–100)
 
-**Laws this document carries:** 26–29 — shard scope, cross-shard atomicity, leg idempotency, and the durable decision record.
+**Laws this document carries:** 26–29 — shard scope, cross-shard atomicity, leg idempotency, and the durable decision record; 98–100 — the acceptance language: value conservation, the decision-before-effect ordering and recovery closure, and shard-local ingress/routing.
 
 [Cross-shard invoke](../node/shard-invoke.md) specifies the *primitive*: a remote deploy is an ordinary
 caller-signed deploy submitted to a **different shard**'s deploy service, and `deployerId` is
@@ -12,7 +12,9 @@ and retrying on crash.
 
 This page specifies the **transaction layer** that lifts that primitive to atomicity: a
 **two-phase commit (2PC)**, framed as a **Git pull request**. It is formalized in
-[`spec/Rchain/CrossShard.lean`](../../../spec/Rchain/CrossShard.lean) as Laws 26–29.
+[`spec/Rchain/CrossShard.lean`](../../../spec/Rchain/CrossShard.lean) as Laws 26–29, with the acceptance
+laws in [`spec/Rchain/CrossShardAcceptance.lean`](../../../spec/Rchain/CrossShardAcceptance.lean) as
+Laws 98–100.
 
 ## The Git pull-request analogy
 
@@ -41,17 +43,24 @@ same terminal outcome. That is the atomicity the primitive lacks.
 
 ## States
 
+There are two state types, because there are two records:
+
 ```lean
+-- The participant's record (`rholang/src/native_state.rs`), modelled in CrossShard.lean:
 inductive TxnState where
-  | proposed | prepared | committed | aborted
+  | prepared | committed | aborted
+
+-- The coordinator's record (`casper/src/gateway/ledger.rs`), a separate Rust type:
+--   CoordState = Proposed | Prepared | Committed | Aborted
 ```
 
-- `proposed` — the coordinator recorded the transaction's legs (the PR is open).
-- `prepared` — phase one is **in flight**: at least one participant has voted, but not yet all of
-  them. (A *participant* is separately "prepared" once its own escrow is locked — the two use the
-  same word for different scopes.)
-- `committed` — the coordinator decided COMMIT (the merge): every leg has voted `ready`.
-- `aborted` — the coordinator decided ABORT (the close): a leg voted `abort`, errored, or timed out.
+- `prepared` (participant) — the leg's escrow is locked and a vote is recorded.
+- `committed` / `aborted` (both records) — terminal. The participant has applied or compensated the
+  escrow; the coordinator has made the decision durable.
+- `Proposed` (coordinator only) — the transaction's legs are recorded and no leg has voted yet. The
+  Lean model does not need a `proposed` constructor: "no record" is `Ledger.record = none` on the
+  participant side, and the acceptance laws (99) only distinguish terminal from undecided, which
+  `TxnState.IsTerminal` supplies.
 
 The coordinator's mapping keeps `commit_record_deterministic` exact: `committed` is written only
 when every leg has voted `ready`, so a `prepared` record can never hold a complete all-`ready` vote
@@ -82,9 +91,12 @@ A `prepared` participant that loses the coordinator **holds its lock** and recov
 the coordinator's durable record. That is the classic 2PC **blocking** caveat — the model is *atomic*
 (no mixed outcome) at the cost of a blocking recovery window; there is deliberately no non-blocking
 3PC or presumed-abort, because those trade atomicity for liveness. The honest consequence is Law 29:
-the record must be durable, so recovery always terminates.
+the record must be durable, so recovery always terminates. Law 99 carries the two operational halves:
+the decision is written **before** phase two, and a drive from any non-terminal record reaches a
+terminal one — including the no-legs abort — so a restart has a record to finish rather than an
+in-flight transaction with no decision.
 
-## The four laws
+## The cross-shard laws
 
 - **Law 26 — shard scope determinism.** A deploy/block's effects bind to exactly one shard; the shard
   id is a validated, ordered value, and the RNG seed + unforgeable names are shard-scoped. This is
@@ -105,6 +117,21 @@ the record must be durable, so recovery always terminates.
   content-addressed record; a `prepared` participant can always recover it, and the merge/close
   record is re-derivable on replay (the Laws 11/16 content-addressing analog).
 
+- **Law 98 — value conservation.** A prepare debits exactly the escrow, a commit credits exactly it,
+  an abort refunds exactly it, and the payer + payee + escrow total is unchanged by every verb; the
+  multi-shard instance is the sum of its legs under one decision. Commit is not a mint and abort is
+  not a second payment.
+
+- **Law 99 — the decision precedes its effect, and recovery closes.** An undecided record applies
+  nothing; every drive reaches a terminal state (the no-legs abort is the fallback); a terminal record
+  is returned untouched with no participant contacted; and a resume never re-prepares a leg that
+  already voted.
+
+- **Law 100 — shard-local scope.** Membership is checked before a record opens; a phase is anchored
+  at the target shard's head, and an unreadable head refuses it (a genesis anchor is born expired);
+  block/deploy ingress is shard-local, so the shard-blind DAG only ever merges one shard; and the
+  router dispatches to the named member rather than relaying.
+
 ## The formalization
 
 The Lean model defines the shard id, the lifecycle, a leg (a shard's effect + its compensating
@@ -115,7 +142,7 @@ abbrev ShardId := String
 def ValidShardId (s : ShardId) : Prop := s ≠ ""
 
 inductive TxnState where
-  | proposed | prepared | committed | aborted
+  | prepared | committed | aborted
 
 inductive Vote where
   | ready | abort
@@ -170,10 +197,32 @@ theorem commit_record_deterministic_is_false :
 - **29** — split in two, and **the decision half is proved**: `allReady` and `coordinatorDecision` are
   the port's own two lines (`txn_coordinator.rs:177-179`), and `coordinator_decision_committed_iff`
   gives `committed` iff every vote is ready — so the recorded decision *is* a function of the votes. The
-  durability half (a prepared participant recovers it) needs the coordinator's record writes modelled.
+  durability half is modelled in the same module (`CoordRecord.recordVote` and the absorbing
+  theorems: a terminal record ignores a later vote, the C160 fix); the ordering and recovery
+  acceptance is Law 99.
 
 Law 28 is different in kind: `leg_idempotent` is a **theorem** about the model's own `applyEffect`
 (that row is `proved-model`), not an axiom.
+
+The acceptance module `CrossShardAcceptance.lean` continues from these types: `escrow`/`recordTotal`
+and the exact-debit/exact-credit theorems over the participant's `txnPrepare`/`txnCommit`/`txnAbort`
+(98); `prepareAll`/`drive`/`phaseTwo`/`resume` over `CoordRecord` (99); and `openTxn`,
+`phaseWithHead`/`BornExpired`, `accepted` and the router model (100). Each clause has a defect-shape
+definition and theorem, so the statement can fail against the neighbouring wrong implementation.
+
+## Acceptance
+
+There is **no M1–M6 gate for cross-shard transactions**: #428's mainnet gate does not mention them, and
+its M5 "merge" is DAG state merge. Acceptance here is the law register — Laws 26–29 plus 98–100 — and
+the resolution of the cross-shard primitive issue #33. Two boundaries are worth stating plainly:
+
+- The invoke-layer primitive remains **non-atomic across shards** (#33's own resolution); atomicity is
+  the 2PC layer, and the `rho:txn` escrow is what moves value, per shard.
+- No deploy is **relayed** to a shard the node does not validate; a foreign shard is a caller error
+  (Law 100a/100d), and per-shard bootstrap remains deferred because the LFS fringe exchange carries no
+  shard id.
+
+The register's rows do not substitute for the live/candidate acceptance arms, and #33 stays open.
 
 ## Rust realization (status)
 
@@ -212,6 +261,25 @@ Law 28 is different in kind: `leg_idempotent` is a **theorem** about the model's
   non-goal, [`../node/shard-invoke.md`](../node/shard-invoke.md)), and per-shard bootstrap — a
   multi-shard node must therefore start from its own genesis or from existing state, since the LFS
   fringe exchange carries no shard id.
+- **The acceptance witnesses** (Laws 98–100): the participant's exact debit/credit balances
+  (`txn_prepare_commit_round_trip`, `txn_prepare_abort_returns_escrow`), the gateway's per-shard
+  totals on both outcomes (`gateway_moves_the_escrow_on_every_leg`,
+  `gateway_aborts_every_leg_when_one_cannot_prepare`), the ordering (`a_decision_that_cannot_be_written_sends_no_phase_two`),
+  the resume (`run_resumes_an_existing_non_terminal_record`, `gateway_is_idempotent_under_txn_id`), the
+  anchor refusal (`current_height_refuses_a_head_it_cannot_read`,
+  `an_unreadable_head_refuses_the_leg_and_aborts`), and the ingress/routing cases
+  (`a_block_from_another_shard_is_not_of_interest_at_the_receiver`,
+  `a_block_whose_deploy_is_from_another_shard_is_refused`, the `shard_routing` table).
+- **C370, fixed in the same pass**: `common::ShardFaults.head_error` and `reported_height` were
+  declared but never read, so the previous "unreadable head anchors at 0" test could not fail for the
+  reason its name gave and asserted `Committed`, the opposite of C64/C67. The knobs are wired and the
+  case now asserts the refusal, the empty deploy list and the readable shard's head anchor.
+- **A recorded boundary**: `current_height` returns `Ok(0)` for a shard the node does not hold. A fresh
+  `run` cannot reach it (membership is checked first). After a membership change, recovery reaches a
+  leg that left the membership, but the deploy service's `member()` gate refuses it and the leg
+  aborts (`recover_in_flight_refuses_a_leg_that_left_the_membership`). A leg already voted `ready` on
+  a removed shard keeps its escrow locked; that residual is outside the law and recorded here rather
+  than claimed closed.
 
 The end-to-end two-shard path — uniform commit, and abort on partial failure — is exercised by
 `casper/tests/cross_shard_txn.rs` over a `DeployService` test double. The same file also takes the
@@ -224,4 +292,6 @@ is covered by `casper/tests/gateway_txn.rs` (commit, compensation, idempotency u
 over two shards and drives the transaction through `POST /api/v1/txn`. `casper/tests/gateway_faults.rs`
 takes the *failure* half of that surface — a deploy rejected, a reply that never comes, a head that
 cannot be read, a ledger that cannot be written — since those branches are the ones that decide
-whether a cross-shard transaction can leave funds stranded.
+whether a cross-shard transaction can leave funds stranded. The acceptance pass added the direct
+ordering case (`a_decision_that_cannot_be_written_sends_no_phase_two`), the membership-loss recovery
+case, and the receiver/validator shard-ingress cases listed above.

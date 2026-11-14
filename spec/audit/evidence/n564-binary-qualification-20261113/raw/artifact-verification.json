@@ -1,0 +1,7 @@
+{
+  "artifact_id": 14065780201,
+  "expected_digest": "sha256:2441cb7f15aee4149ffe74e54ab9d94940c390bf6469bf1f37e6e4541a6a76f2",
+  "observed_digest": "sha256:2441cb7f15aee4149ffe74e54ab9d94940c390bf6469bf1f37e6e4541a6a76f2",
+  "matches": true,
+  "note": "provider artifact SHA-256 verified for the downloaded archive; not signature or execution attestation"
+}

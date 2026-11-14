@@ -1,0 +1,7 @@
+{
+  "binary_sha256": "2cffda31f4d7d03cb2e7644340449d153da40e9e5db39f5b4c407791c6504201",
+  "detected_at": "aggregate-counterexample",
+  "falsifier": "per-axis admission guard removed",
+  "result": "PASS",
+  "runtime_source": "79e550400114b32a0292b9103cb5e83c6e1e1c72"
+}

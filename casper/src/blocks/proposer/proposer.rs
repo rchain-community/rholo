@@ -18,7 +18,9 @@ use rchain_block_storage::dag::dag_storage::{
     SELF_REPLAY_IDS_MAX, SELF_REPLAY_RECORD_VERSION,
 };
 use rchain_block_storage::dag::liveness;
+use rchain_block_storage::dag::representation::DagRepresentation;
 use rchain_block_storage::syntax::put_block;
+use rchain_block_storage::work_seen::WorkSeenStore;
 use rchain_crypto::private_key::PrivateKey;
 use rchain_crypto::signatures::secp256k1::Secp256k1;
 use rchain_crypto::signatures::signed::Signed;
@@ -1374,6 +1376,9 @@ impl Proposer {
         dummy_deploy_opt: Option<(PrivateKey, String)>,
         dag: Arc<dyn BlockDagStorage>,
         block_store: BlockStore,
+        // **The local first-seen record for unfinalised work** (#583). Aged from observation, not
+        // from the advancing fringe, so the prompt-attestation licence cannot be renewed for ever.
+        work_seen: WorkSeenStore,
         runtime: Arc<RuntimeManager>,
         block_index: F,
         propose_effect: Arc<dyn Fn(&BlockMessage) -> BoxFuture<()> + Send + Sync>,
@@ -1459,6 +1464,9 @@ impl Proposer {
             // Independent monotonic retry for a quiet chain with unfinalized work.
             // It belongs to this shard/proposer, not a process-global clock.
             let quiet_retry_since: Arc<Mutex<Option<Instant>>> = Arc::new(Mutex::new(None));
+            // The finalized hash whose work-seen rows were last pruned: the sweep runs only when
+            // finality advances, so the local map stays bounded by the unfinalized region (#583).
+            let work_seen_pruned: Arc<Mutex<Option<BlockHash>>> = Arc::new(Mutex::new(None));
             Arc::new(
                 move |vi: &ValidatorIdentity,
                       source: ProposeSource,
@@ -1473,6 +1481,8 @@ impl Proposer {
                     let blocked_since_advance = blocked_since_advance.clone();
                     let blocked_since = blocked_since.clone();
                     let quiet_retry_since = quiet_retry_since.clone();
+                    let work_seen = work_seen.clone();
+                    let work_seen_pruned = work_seen_pruned.clone();
                     let dummy_deploy_opt = dummy_deploy_opt.clone();
                     let log = log.clone();
                     let health = health.clone();
@@ -1483,6 +1493,7 @@ impl Proposer {
                             runtime.as_ref(),
                             dag.as_ref(),
                             &block_store,
+                            &work_seen,
                             block_index.as_ref(),
                             &vi,
                             &shard_id,
@@ -1498,6 +1509,7 @@ impl Proposer {
                             mode,
                             &health,
                             &self_replay,
+                            &work_seen_pruned,
                             batch_limit,
                         )
                         .await
@@ -2102,6 +2114,7 @@ async fn create_block<'a, F, Fut>(
     runtime: &'a RuntimeManager,
     dag: &'a dyn BlockDagStorage,
     block_store: &'a BlockStore,
+    work_seen: &WorkSeenStore,
     block_index: &'a F,
     validator_identity: &ValidatorIdentity,
     shard_id: &str,
@@ -2117,6 +2130,7 @@ async fn create_block<'a, F, Fut>(
     mode: ProposalMode,
     health: &ShardHealth,
     self_replay: &Mutex<SelfReplayTracker>,
+    work_seen_pruned: &Mutex<Option<BlockHash>>,
     batch_limit: Option<usize>,
 ) -> Result<BlockCreatorResult, String>
 where
@@ -2418,8 +2432,10 @@ where
     // ledgers on empty attestations cannot keep a quiet chain running.
     let mut finalized_rejections = None;
 
-    let mut oldest_unfinalized: Option<BlockHeight> = None;
-    for (height, h) in &conflict_set {
+    let mut newest_work: Option<(BlockHash, BlockHeight)> = None;
+    // **Newest first**: the licence ages from the newest unfinalised work-bearing block, so an
+    // expired side branch cannot mask work still inside its own opportunity (#583).
+    for (height, h) in conflict_set.iter().rev() {
         if let Some(b) = get_block(block_store, h).await? {
             if b.state.system_deploys.is_empty()
                 && b.state.deploys.is_empty()
@@ -2438,7 +2454,7 @@ where
                 &b,
                 finalized_rejections.as_ref().unwrap_or(&BTreeSet::new()),
             ) {
-                oldest_unfinalized = Some(*height);
+                newest_work = Some((h.clone(), *height));
                 break;
             }
         }
@@ -2485,15 +2501,12 @@ where
         .unwrap_or_else(BlockHeight::zero);
     // (a), as the two inputs the decision takes — see `attestation_inputs` for why the second is now
     // bounded by age rather than read from the parents.
-    // The fringe this block extends, as a height: the work's age is counted from here when the work lies
-    // below it (#223) — see `work_age_floor`.
-    let fringe_top = pre_state
-        .prev_fringe
-        .iter()
-        .filter_map(|h| dag_repr.dag_message_state.msg_map.get(h).map(|m| m.height))
-        .max();
-    let (nothing_to_finalize, new_state_transition) =
-        attestation_inputs(work_age_floor(oldest_unfinalized, fringe_top), tip);
+    // **The licence is aged from this node's first observation of the work, not from the moving
+    // fringe** (#583). The work's own height is not a substitute: #223's returning validator observed
+    // its boundary work twenty-three heights late.
+    let licence_age = work_licence_age(work_seen, newest_work.as_ref(), tip, log).await;
+    let (nothing_to_finalize, new_state_transition) = attestation_inputs(licence_age);
+    prune_work_seen(work_seen, dag_repr.as_ref(), work_seen_pruned, log).await;
     // The live weight set: the one liveness rule, shared with the finalizer through `liveness` (#70
     // increment 2). It decides who counts as *moving*; the quorum itself stays measured against the
     // whole bonded map below, so a minority cannot attest its way to a supermajority.
@@ -4696,11 +4709,16 @@ fn block_needs_finalization(
         || !block.rejected_deploys.is_subset(finalized_rejections)
 }
 
-/// The guard's two inputs, from the **oldest work-bearing block this node has seen that the fringe it is
-/// building on does not yet cover** (`None`: there is none).
+/// The guard's two inputs, from the **newest work-bearing block this node has seen that the fringe it is
+/// building on does not yet cover**. The height passed in is the work's **age in heights**, measured
+/// from this node's first observation of it (#583), not the work's own height.
 ///
 /// - `nothing_to_finalize`: there is no such block.
-/// - `new_state_transition`: there is one, and it is within [`ATTESTATION_HORIZON`] of the tip.
+/// - `new_state_transition`: there is one, and its first observation is within
+///   [`ATTESTATION_HORIZON`] heights of the tip.
+///
+/// The input is an age rather than a height so that a fail-closed store error can be represented at
+/// every tip, including below the horizon.
 ///
 /// **The licence used to be "a parent carries deploys", and that is AUDIT C209.** With no autopropose the
 /// only proposal attempts are the deploy itself and the attestation tap, and each round's parents are the
@@ -4709,36 +4727,143 @@ fn block_needs_finalization(
 /// and the fringe stopped one layer short of the deploy: measured live (#214, criterion 1: 693 samples,
 /// finality `none` throughout) and in-process. A deploy-bearing block needs every bonded sender to speak
 /// for a few rounds after it, not one, and this is what licenses that.
-fn attestation_inputs(oldest_unfinalized: Option<BlockHeight>, tip: BlockHeight) -> (bool, bool) {
-    match oldest_unfinalized {
+fn attestation_inputs(newest_unfinalized_age: Option<i64>) -> (bool, bool) {
+    match newest_unfinalized_age {
         None => (true, false),
-        Some(h) => (
-            false,
-            liveness::heights_behind(tip, h) <= ATTESTATION_HORIZON,
-        ),
+        Some(age) => (false, age <= ATTESTATION_HORIZON),
     }
 }
 
-/// **The height the unfinalised work's age is counted from**: the work's own height, or the fringe's when
-/// the work lies below it.
+/// **The age of the prompt-attestation licence** (#583): heights from this node's first observation
+/// of the newest unfinalised work to the current tip.
 ///
-/// The horizon bounds a *finality stall* — work that has waited `ATTESTATION_HORIZON` heights without the
-/// fringe reaching it. Work below a fringe that has since moved on has not waited at all: it arrived late.
-/// That is a returning validator (#223): while catching up it proposed on each block it replayed, so its
-/// chain holds blocks at the heights it was absent for, two of them epoch boundaries carrying a
-/// `CloseBlock`. Every survivor read that block, twenty heights below the tip, as twenty-height-old work,
-/// withheld its attestation, and the work could only be finalised by the attestations it withheld:
-/// finality stopped for good, live, with the survivors' fringe three heights behind the tip. Counting from
-/// the fringe licenses them while the fringe keeps up, and a stalled fringe still ends the licence on the
-/// same bound.
-fn work_age_floor(
-    oldest_unfinalized: Option<BlockHeight>,
-    fringe_top: Option<BlockHeight>,
-) -> Option<BlockHeight> {
-    oldest_unfinalized.map(|h| match fringe_top {
-        Some(f) if f > h => f,
-        _ => h,
-    })
+/// The recorded first-seen tip is never rewritten while that work is unfinalised. An advancing
+/// fringe therefore cannot renew it, and the store is durable, so a restart cannot either. An absent
+/// row is a first observation; a read or write error is **fail-closed** (an age past the horizon),
+/// which withholds promptness only — the cadence path still attests when a quorum is reachable
+/// (W-N9-01). The work's own height is not a substitute: #223's returning validator observed its
+/// boundary work twenty-three heights late and had to be licensed immediately.
+///
+/// The scan takes the **newest** work-bearing block, not the oldest: an expired side-branch block
+/// must not mask newer work that is still inside its own opportunity, which would be premature
+/// quiet finality. Each work identity is still aged once and for ever; a fresh sighting is genuinely
+/// new work, not the same work renewed.
+async fn work_licence_age(
+    work_seen: &WorkSeenStore,
+    newest_work: Option<&(BlockHash, BlockHeight)>,
+    tip: BlockHeight,
+    log: &Arc<dyn Log>,
+) -> Option<i64> {
+    let (hash, _height) = newest_work?;
+    let source = LogSource::new("casper.blocks.Proposer");
+    let first_seen = match work_seen.get(std::slice::from_ref(hash)).await {
+        Ok(mut rows) => match rows.pop().flatten() {
+            Some(seen) if seen >= 0 => BlockHeight::try_from(seen).ok(),
+            Some(seen) => {
+                log.warn(
+                    source,
+                    &format!(
+                        "work {} has a negative first-seen height ({seen}); withholding the prompt \
+                         attestation",
+                        hash.to_hex()
+                    ),
+                );
+                None
+            }
+            None => match work_seen.put(&[(hash.clone(), i64::from(tip))]).await {
+                Ok(()) => Some(tip),
+                Err(e) => {
+                    log.warn(
+                        source,
+                        &format!(
+                            "could not record the first sighting of work {}: {e}; withholding the \
+                             prompt attestation (fail-closed)",
+                            hash.to_hex()
+                        ),
+                    );
+                    None
+                }
+            },
+        },
+        Err(e) => {
+            log.warn(
+                source,
+                &format!(
+                    "could not read the first sighting of work {}: {e}; withholding the prompt \
+                     attestation (fail-closed)",
+                    hash.to_hex()
+                ),
+            );
+            None
+        }
+    };
+    match first_seen {
+        Some(first) => Some(liveness::heights_behind(tip, first)),
+        // Fail-closed: an age past the horizon, representable at every tip. (A synthetic *height*
+        // would clamp to zero below the horizon and read as licensed.)
+        None => Some(ATTESTATION_HORIZON + 1),
+    }
+}
+
+/// Delete first-seen rows for work at or below the last finalized block.
+///
+/// The sweep runs only when finality advances, so the map stays bounded by the unfinalized region.
+/// Work below finality cannot re-enter the unfinalized region without a safety violation, so dropping
+/// its row cannot renew a licence.
+async fn prune_work_seen(
+    work_seen: &WorkSeenStore,
+    dag_repr: &DagRepresentation,
+    last_pruned: &Mutex<Option<BlockHash>>,
+    log: &Arc<dyn Log>,
+) {
+    let source = LogSource::new("casper.blocks.Proposer");
+    let Some(finalized) = dag_repr.last_finalized_block_hash() else {
+        return;
+    };
+    {
+        let mut guard = last_pruned.lock().unpoison();
+        if guard.as_ref() == Some(&finalized) {
+            return;
+        }
+        *guard = Some(finalized.clone());
+    }
+    let Some(finalized_height) = dag_repr
+        .dag_message_state
+        .msg_map
+        .get(&finalized)
+        .map(|m| m.height)
+    else {
+        return;
+    };
+    let keys = match work_seen.keys().await {
+        Ok(keys) => keys,
+        Err(e) => {
+            log.warn(
+                source,
+                &format!("could not read the work-seen store to prune it: {e}"),
+            );
+            return;
+        }
+    };
+    let stale: Vec<BlockHash> = keys
+        .into_iter()
+        .filter(|hash| {
+            dag_repr
+                .dag_message_state
+                .msg_map
+                .get(hash)
+                .is_some_and(|m| m.height <= finalized_height)
+        })
+        .collect();
+    if stale.is_empty() {
+        return;
+    }
+    if let Err(e) = work_seen.delete(&stale).await {
+        log.warn(
+            source,
+            &format!("could not prune {} work-seen rows: {e}", stale.len()),
+        );
+    }
 }
 
 /// The guard's inputs and its decision, for the diagnostic line.
@@ -5816,6 +5941,155 @@ mod active_validator_tests {
     }
 }
 
+/// **The #583 falsifier: work is licensed from its first observation, not from the moving fringe.**
+///
+/// The #223 live shape is the positive control: work first seen at tip 33 is licensed at once and at
+/// the horizon boundary. Advancing the tip past one horizon from that observation — with the fringe
+/// still three heights behind — must end the licence, and re-observing the same work at a later tip
+/// must not renew it.
+#[cfg(test)]
+mod attestation_age_tests {
+    use super::{attestation_inputs, work_licence_age, ATTESTATION_HORIZON};
+    use rchain_block_storage::work_seen::{self, WorkSeenStore};
+    use rchain_models::block_hash::BlockHash;
+    use rchain_shared::log::{Log, NopLog};
+    use rchain_shared::refined::BlockHeight;
+    use rchain_shared::store_manager::InMemoryStoreManager;
+    use rchain_shared::typed_store::KeyValueTypedStore;
+    use std::collections::BTreeMap;
+    use std::sync::Arc;
+
+    fn h(n: i64) -> BlockHeight {
+        BlockHeight::try_from(n).expect("height")
+    }
+
+    fn hash(byte: u8) -> BlockHash {
+        BlockHash::from_slice(&[byte; 32])
+    }
+
+    async fn licence(
+        store: &WorkSeenStore,
+        work: &(BlockHash, BlockHeight),
+        tip: BlockHeight,
+        log: &Arc<dyn Log>,
+    ) -> (bool, bool) {
+        attestation_inputs(work_licence_age(store, Some(work), tip, log).await)
+    }
+
+    #[tokio::test]
+    async fn late_work_is_licensed_from_its_first_observation_and_expires_at_the_horizon() {
+        let store = work_seen::create(&InMemoryStoreManager::default())
+            .await
+            .expect("open the work-seen store");
+        let log: Arc<dyn Log> = Arc::new(NopLog);
+        // The #223 live shape: the work is at its own height 10, and this node first saw it at tip
+        // 33. The store is the record; the fringe is not an input any more.
+        let work = (hash(1), h(10));
+        store
+            .put(&[(work.0.clone(), 33)])
+            .await
+            .expect("record the first sighting");
+
+        assert_eq!(
+            licence(&store, &work, h(33), &log).await,
+            (false, true),
+            "work first seen at 33 is licensed immediately"
+        );
+        assert_eq!(
+            licence(&store, &work, h(33 + ATTESTATION_HORIZON), &log).await,
+            (false, true),
+            "and at the horizon boundary"
+        );
+
+        // Past one horizon from the observation the licence ends; advancing the tip is exactly what
+        // the old fringe floor used to convert into renewal (W-N9-07).
+        for tip in [33 + ATTESTATION_HORIZON + 1, 97, 997] {
+            assert_eq!(
+                licence(&store, &work, h(tip), &log).await,
+                (false, false),
+                "work first seen at 33 is still licensed at tip {tip}"
+            );
+        }
+        // Re-observing the same work at a later tip does not rewrite the first-seen height.
+        assert_eq!(licence(&store, &work, h(1000), &log).await, (false, false));
+
+        // The positive control: different work first seen at 49 is licensed at 49, even though its
+        // own height is 10. This is the C211/C214 late-work path, kept alive within its window.
+        let fresh = (hash(2), h(10));
+        store
+            .put(&[(fresh.0.clone(), 49)])
+            .await
+            .expect("record the fresh sighting");
+        assert_eq!(licence(&store, &fresh, h(49), &log).await, (false, true));
+    }
+
+    /// **An expired side branch does not mask newer work** (#583): the licence is decided by the
+    /// newest work-bearing block, so old work outside its window cannot withhold promptness for work
+    /// that is still inside its own.
+    #[tokio::test]
+    async fn expired_work_does_not_mask_newer_work() {
+        let store = work_seen::create(&InMemoryStoreManager::default())
+            .await
+            .expect("open the work-seen store");
+        let log: Arc<dyn Log> = Arc::new(NopLog);
+        let old = (hash(1), h(10));
+        let newer = (hash(2), h(35));
+        store.put(&[(old.0.clone(), 10)]).await.expect("record old");
+        store
+            .put(&[(newer.0.clone(), 35)])
+            .await
+            .expect("record newer");
+        // Newest-at-height wins the scan; its own first observation is 35, so at tip 40 it is five
+        // heights old and licensed.
+        assert_eq!(licence(&store, &newer, h(40), &log).await, (false, true));
+        // The old work alone is 30 heights old at that tip and would withhold.
+        assert_eq!(licence(&store, &old, h(40), &log).await, (false, false));
+    }
+
+    /// **A store that cannot answer is fail-closed.** An unreadable first-seen row must not be read
+    /// as a fresh sighting; that would turn a local store error into exactly the renewal the fix
+    /// removes. Promptness is withheld, and the cadence path is unaffected.
+    #[tokio::test]
+    async fn an_unreadable_store_withholds_the_prompt_licence() {
+        struct FailingStore;
+
+        #[async_trait::async_trait]
+        impl KeyValueTypedStore<BlockHash, i64> for FailingStore {
+            async fn get(&self, _keys: &[BlockHash]) -> Result<Vec<Option<i64>>, String> {
+                Err("unreadable".to_string())
+            }
+            async fn put(&self, _pairs: &[(BlockHash, i64)]) -> Result<(), String> {
+                Err("unwritable".to_string())
+            }
+            async fn delete(&self, _keys: &[BlockHash]) -> Result<usize, String> {
+                Err("unwritable".to_string())
+            }
+            async fn contains(&self, _keys: &[BlockHash]) -> Result<Vec<bool>, String> {
+                Err("unreadable".to_string())
+            }
+            async fn to_map(&self) -> Result<BTreeMap<BlockHash, i64>, String> {
+                Err("unreadable".to_string())
+            }
+        }
+
+        let store: WorkSeenStore = Arc::new(FailingStore);
+        let log: Arc<dyn Log> = Arc::new(NopLog);
+        let work = (hash(1), h(10));
+        assert_eq!(
+            licence(&store, &work, h(50), &log).await,
+            (false, false),
+            "a failed read is fail-closed, not a fresh sighting"
+        );
+        // The edge the age input exists for: below the horizon, a synthetic "expired" *height*
+        // would clamp to zero and read as licensed.
+        assert_eq!(
+            licence(&store, &work, h(5), &log).await,
+            (false, false),
+            "a failed read withholds promptness at a low tip too"
+        );
+    }
+}
+
 /// **An in-process network of validators with no autopropose**, running the proposer's own decisions —
 /// the round gate and its escape, the pre-state fringe, the attestation guard, the epoch trigger — over
 /// one shared `DagMessageState`. Every block reaches every live validator at once; each arrival is one
@@ -5826,7 +6100,7 @@ mod active_validator_tests {
 /// What it does not model: delivery delay and reordering, and the store reads `create_block` makes.
 #[cfg(test)]
 mod quiet_chain_tests {
-    use super::{attestation_inputs, attestation_suppressed, work_age_floor, ATTESTATION_HORIZON};
+    use super::{attestation_inputs, attestation_suppressed, ATTESTATION_HORIZON};
     use rchain_block_storage::dag::finalizer::Message;
     use rchain_block_storage::dag::liveness;
     use rchain_block_storage::dag::message_map;
@@ -5910,6 +6184,9 @@ mod quiet_chain_tests {
         let mut next_id = 1u64;
         // Genesis carries the genesis deploys, so it is deploy-bearing to the guard, as on a node.
         let mut with_deploy: BTreeSet<u64> = BTreeSet::from([0]);
+        // **First observation per work block** (#583): the height at which it first entered the
+        // conflict set. It is never rewritten, so no later step can renew the licence.
+        let mut first_seen: BTreeMap<u64, BlockHeight> = BTreeMap::new();
         let mut deploy_blocks: Vec<u64> = Vec::new();
         let mut answered: BTreeMap<(usize, u8), i64> = BTreeMap::new();
         let mut pool = vec![0usize; n_max];
@@ -5989,11 +6266,21 @@ mod quiet_chain_tests {
                     .copied()
                     .collect();
                 let nothing_to_finalize = conflict.iter().all(|h| !with_deploy.contains(h));
-                let oldest_pending = conflict
+                let work: Vec<u64> = conflict
                     .iter()
                     .filter(|h| with_deploy.contains(h))
-                    .map(|h| st.msg_map[h].height)
-                    .min();
+                    .copied()
+                    .collect();
+                for h in &work {
+                    first_seen.entry(*h).or_insert(work_tip);
+                }
+                // The licence ages from the first observation of the **newest** work-bearing block
+                // (#583), so an expired side branch cannot mask work still inside its opportunity.
+                let newest_first_seen = work
+                    .iter()
+                    .max_by_key(|h| st.msg_map[h].height)
+                    .map(|h| first_seen[h]);
+                let oldest_pending = work.iter().map(|h| st.msg_map[h].height).min();
                 if let Some(o) = oldest_pending {
                     max_age = max_age.max(liveness::heights_behind(work_tip, o));
                 }
@@ -6002,7 +6289,9 @@ mod quiet_chain_tests {
                         nothing_to_finalize,
                         parents.iter().any(|p| with_deploy.contains(&p.id)),
                     ),
-                    View::SeenWork | View::Seen => attestation_inputs(oldest_pending, work_tip),
+                    View::SeenWork | View::Seen => attestation_inputs(
+                        newest_first_seen.map(|first| liveness::heights_behind(work_tip, first)),
+                    ),
                 };
                 let live = liveness::live_weight_set(
                     &bonds,
@@ -6270,34 +6559,6 @@ mod quiet_chain_tests {
         }
     }
 
-    /// **Late work below a fringe that has moved on keeps its licence; a stalled fringe still ends it**
-    /// (#223). A returning validator's catch-up chain put a `CloseBlock` at height 10 into the survivors'
-    /// view at tip 33 with their fringe at 30: counted from its own height it was 23 heights old, past the
-    /// horizon, and every survivor withheld the attestation that alone could finalise it.
-    #[test]
-    fn late_work_below_the_fringe_is_counted_from_the_fringe() {
-        let h = |n: i64| BlockHeight::try_from(n).unwrap();
-        let tip = h(33);
-        // Live, before: counted from the work, the licence had lapsed.
-        assert_eq!(attestation_inputs(Some(h(10)), tip), (false, false));
-        // Counted from the fringe it lies below, the work is 3 heights old.
-        assert_eq!(work_age_floor(Some(h(10)), Some(h(30))), Some(h(30)));
-        assert_eq!(
-            attestation_inputs(work_age_floor(Some(h(10)), Some(h(30))), tip),
-            (false, true)
-        );
-        // Work above the fringe is unchanged, so a stall still ends the licence on the same bound: the
-        // fringe stuck at 10 with work at 12 and the tip at 12 + horizon + 1.
-        let stalled_tip = h(12 + ATTESTATION_HORIZON + 1);
-        assert_eq!(work_age_floor(Some(h(12)), Some(h(10))), Some(h(12)));
-        assert_eq!(
-            attestation_inputs(work_age_floor(Some(h(12)), Some(h(10))), stalled_tip),
-            (false, false)
-        );
-        // No work is still no work, whatever the fringe.
-        assert_eq!(work_age_floor(None, Some(h(30))), None);
-    }
-
     /// **The horizon is where the licence ends, and only the licence.** A deploy-bearing block that is
     /// still unfinalised past it is still something to finalise, so the guard falls back to the cadence
     /// rather than to silence.
@@ -6309,20 +6570,16 @@ mod quiet_chain_tests {
     /// and only one of them withholds.
     #[test]
     fn the_licence_ends_at_the_horizon_and_the_work_does_not() {
-        let tip = BlockHeight::try_from(100).unwrap();
-        let at = |behind: i64| Some(BlockHeight::try_from(100 - behind).unwrap());
+        let age = |behind: i64| Some(behind);
         assert_eq!(
-            attestation_inputs(None, tip),
+            attestation_inputs(None),
             (true, false),
             "nothing seen is unfinalised"
         );
-        assert_eq!(attestation_inputs(at(0), tip), (false, true));
+        assert_eq!(attestation_inputs(age(0)), (false, true));
+        assert_eq!(attestation_inputs(age(ATTESTATION_HORIZON)), (false, true));
         assert_eq!(
-            attestation_inputs(at(ATTESTATION_HORIZON), tip),
-            (false, true)
-        );
-        assert_eq!(
-            attestation_inputs(at(ATTESTATION_HORIZON + 1), tip),
+            attestation_inputs(age(ATTESTATION_HORIZON + 1)),
             (false, false),
             "past the horizon the deploy no longer licenses a prompt attestation"
         );

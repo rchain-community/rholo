@@ -12420,11 +12420,24 @@ and halt with the reset disabled plus the operator resume. All three pass.
 `spec/audit/evidence/n564-self-replay-recovery-drill-20261113/` (35 files), both digest-verified,
 `locality: local-devnet`, `execution_proven:false`.
 
-**Boundary.** The workload is the synthetic pending-peek shape distilled from the recovered BYOID
-registry, not the incident's terms or block; the original rejected bytes/trace and the incident
-state remain unrecovered. This is not an incident reproduction and not a live or candidate-binary
-result. C357 and #564 stay open for the live/candidate operational acceptance and the §6
-compatibility/lockstep decision. No deployment is authorized.
+**Boundary.** This fresh-genesis workload is the synthetic pending-peek shape distilled from the
+recovered BYOID registry, not the original incident execution. The original rejected serialized
+block/processed-trace bytes and complete live validator store remain unavailable; authenticated
+deploys and Merkle-verified state closures were recovered separately in the
+[historical reconstruction](evidence/n564-rcb-recovered-20261111/README.md). The §158 run is not an
+incident reproduction or a live/selected-candidate result.
+
+**Pinned-binary follow-up (2026-11-13).** The
+[retained qualification record](evidence/n564-binary-qualification-20261113/README.md) builds pristine
+`1ceabd291` with Rust 1.95.0 (debug profile, symbols disabled), captures executable SHA-256
+`5ff2b4f9d77a4694d3efa4df46cb1a86fb6a31a157929cc4770a5e43436cd1b8`, and passes the natural
+pending-peek arm plus all three recovery arms on that image. Independent captures verify the same
+content-addressed block and finalized inclusion on both nodes, cost 13317, matching state/accounting,
+and matching executable files. This is a single-host disposable qualification build, **not a
+maintainer-selected release artifact or four-validator installed result**. The public-route snapshot
+still self-reports `0a1e02362` and returns 404 for finality-observation. C357 and #564 remain open for
+independent compatibility acceptance/lockstep decision and live/selected-candidate acceptance; no
+deployment is authorized.
 
 ## 159. The equivocation refusal that stalled the honest nodes (C367, #575, #576)
 
@@ -12552,3 +12565,184 @@ named, operator-visible state. What it does **not** do: heal the fork (the guard
 operator rotates the key or withdraws the bond), or substitute for the supported procedure when the
 operator has a choice. The M3 off-host positive and candidate-binary acceptance remain the
 envelope's, and no run here is mainnet evidence. No deployment is authorized.
+
+## 162. Split execution and its accounting: Laws 95–97 (#564, #428)
+
+The register proved the surrounding invariants but carried no **cost** through the parallel paths.
+Law 11 modelled replay as an occurrence equivalence and explicitly not the order; Law 25 proved the
+*state* a speculative run publishes; Law 86c proved independent `StateChange`s commute, not that their
+charges add; Law 93 separated the cost verdict from the state verdict but not the order that produces
+it. #428's M5 asks for the merge's per-chain accounting, and #564's acceptance asks for play cost ==
+replay cost per deploy and per block. This pass formalises the missing carrier in three rows.
+
+**Law 95 — the replay record is the play's execution order.** RSpace prepends events
+(`rspace/src/rspace.rs:202-216`); `build_replay_data` files COMMs under their consume/produce refs in
+the order it walks that newest-first log. The fix walks it reversed
+(`rspace/src/replay_rspace.rs:129-167`). The model (`Rchain/RSpace/ReplayOrder.lean`) has two builders
+— the chronological one and the defect's unreversed shape — and a two-request witness that shares a
+datum: chronological charges the earlier COMM (5) and suppresses the later request; newest-first
+charges the later COMM (3) and suppresses the earlier. The real incident's 5576/5302 pair is evidence;
+the Rust witness (`casper/tests/replay_trace_order.rs::pending_peeks_replay_with_exact_cost_and_state`)
+pins the real costs 1860 / 2606 / 4844 and exact-cost replay. The RCHAIN-3505 failed-deploy trace mask
+is out of scope and stays Law 11's recorded hazard.
+
+**Law 96 — a split execution does not change the accounting.** Three splits: the batched play path
+(`casper/src/runtime_manager.rs:1793-1895`), concurrent validation of dependency-free blocks
+(`casper/src/blocks/block_processor.rs:536-620`), and cross-node replay. The model
+(`Rchain/SplitAccounting.lean`) states the four clauses: an enabled batch always verifies
+(`canonical_batch_policy`, C360's `[986, 984, 984, 984]` is the unverified counterexample); a certified
+batch equals the sequential oracle on cost, log, failure flag and post-state; concurrent validation on
+per-block forks agrees with serial; and a cross-node disagreement publishes nothing (Law 92 attributes
+it, Law 94 bounds it). It does not claim a speedup — M1/M2 measure that.
+
+**Law 97 — a merge's accounting is total and single-counted.** The model
+(`Rchain/Casper/MergeAccounting.lean`) classifies every conflict-scope chain (kept / rejected with a
+non-zero reason / final-scope rejected); checks kept effects as a **multiset** (`covers_occurrences`,
+`casper/src/merging.rs:391-403`) so the duplicate case the #420 incident lived in cannot pass as a set;
+applies a cost move at most once and refuses an overdraft (`compose_cost_accounting`,
+`casper/src/merging.rs:1616-1630`); and adds independent chains' charges (the state half is Law 86c's).
+It states the set relation rather than the fixture identity: `resolve_conflict_set_with_census` returns
+`kept = conflictSet \ enforce_rejected \ resolved` and `rejected = resolved ∪ enforce_rejected`
+(`sdk/src/dag/merging.rs:926-978`), so `kept + rejected = conflict` is a control, not the general
+theorem. The fee/refund question stays retired (Law 48).
+
+## 163. Cross-shard acceptance: Laws 98–100 (#33 follow-on)
+
+The cross-shard register stopped at the protocol's *shape*: Law 26 validates a shard id at ingress,
+Law 27 proves every prepared leg reaches the one decision, Law 28 proves the leg verbs idempotent,
+and Law 29 proves the decision is a function of the votes and terminal records are absorbing. Three
+pieces of the acceptance language were not carried by any row:
+
+- **Value.** Nothing said a commit credits exactly the escrow, an abort refunds exactly it, or the
+  payer + payee + escrow total is conserved. A mint, a double payment or a commit that leaves the
+  record prepared were all compatible with 27/28.
+- **Crash ordering.** Law 29 said a terminal record is absorbing; nothing said the decision is durable
+  **before** phase two, that every drive reaches a terminal state, or that a resume does not re-prepare
+  a voted leg.
+- **Scope.** Law 26 validated the id; nothing said a leg on a shard the node does not validate opens no
+  record, that a phase is anchored at the target head (C166/C64), or that block/deploy ingress makes
+  the shard-blind DAG single-shard.
+
+This pass adds Laws 98–100 in `Rchain/CrossShardAcceptance.lean`, each clause with a positive theorem
+and a defect-shape definition:
+
+**Law 98 — value conservation.** `escrow`/`recordTotal` over the participant's own `Ledger`; the exact
+debit (`prepare_escrows_exactly`), the exact credit and refund (`commit_credits_the_payee_exactly`,
+`abort_refunds_the_payer_exactly`), conservation of every verb, and the multi-shard list induction
+(`a_committed_instance_conserves_the_totals`, `an_aborted_instance_refunds_the_leg_amounts`). The
+defects are a prepare that records without debiting, a commit that keeps the escrow, an over-credit,
+and a mixed one decision (98c). Idempotence is Law 28's and is cited, not reproved.
+
+**Law 99 — the decision before its effect and recovery closure.** `phaseTwo` is gated on
+`TxnState.IsTerminal` (an undecided record applies nothing); `drive` aborts a record still undecided
+after phase one, including the no-legs record; `resume` returns a terminal record untouched with an
+empty send list; and `prepareLoop` never sends a prepare to a shard already in the vote set. The new
+Rust witness `a_decision_that_cannot_be_written_sends_no_phase_two` fails the ledger write that would
+carry the decision and asserts the prepare deploy happened and no commit deploy did — the ordering,
+not merely the record's final value. `gateway_is_idempotent_under_txn_id` and
+`run_resumes_an_existing_non_terminal_record` pin the other two halves.
+
+**Law 100 — shard-local scope.** `openTxn` refuses a non-member or empty leg list before the durable
+open; `phaseWithHead` refuses on an unreadable head and `BornExpired` gives the port's expiry
+(`anchor + lifespan <= head`, `casper/src/validate.rs:77`), so the `valid_after = 0` fallback is a
+born-expired phase; `accepted` requires both the block's shard id and every deploy's to be the node's,
+which is what makes any list of accepted blocks one shard and Law 97's accounting per-shard; and the
+router model has no relay outcome.
+
+**C370 — a dead fault knob, not a coordinator defect.** `common::ShardFaults.head_error` and
+`reported_height` were declared and read nowhere. The case that meant to pin C64/C67 therefore ran a
+well-behaved shard, saw `Committed`, and asserted it, with a name and comment describing the permissive
+fallback the coordinator had already removed. Wiring the knobs turned the case red until it was
+rewritten to assert the real refusal: aborted, the reason names the unreadable head, no deploy reaches
+that shard, and the readable leg is anchored at its reported head. The direct unit test
+`current_height_refuses_a_head_it_cannot_read` was green throughout — which is the finding: a broken
+fixture beside a green predicate is not evidence. The new
+`recover_in_flight_refuses_a_leg_that_left_the_membership` records the `current_height` unknown-shard
+`Ok(0)` edge safely (the deploy service's `member()` gate refuses the shard, so the leg aborts); a leg
+already voted ready on a removed shard still keeps its escrow locked, a residual outside the law.
+
+**Incidental, C371 — the own-key halt tests raced.** CI caught a pre-existing test race on the new
+branch: the C367 peer-equivocation case and the C369 own-key case both write the process-global halt,
+and the peer case could clear it and then assert "no halt" while the own-key case latched it. The
+latch's global scope is required in production (it stops this process's proposer), so the fix is a
+test-only mutex around both bodies; a single-test run was green and the full-suite run was the signal.
+This is a test-race fix, not a production defect.
+
+**What this pass does not do.** It does not run or substitute for a live/candidate acceptance arm: there
+is no M1–M6 gate for cross-shard transactions, and #33 stays open. It does not add a relay, change the
+invoke-layer primitive (still non-atomic across shards), or close the per-shard bootstrap deferral (the
+LFS fringe exchange carries no shard id). It changes no consensus code; the only Rust changes are
+witnesses.
+
+**What this pass does not do.** It does not run M1–M6, and none of the three laws is evidence for
+them: a proved invariant is not a measured capacity, an off-host join, a multi-host finality run, the
+historical 840→841 witness, or an independent sign-off. It does not touch cross-shard transactions
+(Laws 26–29) or change consensus. The Law 96c direct Rust verdict-equality witness
+(`concurrent_forked_replays_agree_with_serial_replays`) replays two dependency-free blocks
+concurrently on per-block forks and compares each with its serial replay; the cap and fork tests pin
+the dispatch mechanism. The next `C` number remains unused: these are model rows, not findings.
+
+## 164. Attestation policy: covered replay and first-observed work age (C372, C373, #583)
+
+Issue #583 carried two residuals left by #230/#351/#223. Both are **local attestation policy**: no
+block validity, consensus, stake or quorum rule moves.
+
+**C372 — a block below the closed round was answered on proposer time alone.** The tap's freshness
+input was `attest_is_live(block.timestamp, now)`, a ±15 s wall-clock window; the per-sender
+`answered` map is in-memory, so a restart emptied it. A new block at an old height — below the round
+this node had already closed, with every parent in that round's causal past — passed whenever its own
+stamp looked current.
+
+The obvious chain-state predicate, "some latest message's `seen` contains the block hash", cannot
+answer this. `Message.seen` includes the message's own id (`casper/src/dag.rs:95`), and the validated
+stream runs **after** `dag.insert` (`casper/src/blocks/block_processor.rs`), so the block is its own
+latest message and the predicate is true for every block. Excluding the block's own message makes it
+false for every block: an earlier message's `seen` is a snapshot taken before this block existed.
+Literal duplicate deliveries never reach the tap at all — an already-known hash is routed to
+`released_tx`, which fires no tap.
+
+What does answer it is the block's position against the last closed round boundary: strictly below
+`round_height`, with every justification in that boundary's causal past (`attested_history`). A late,
+*uncovered* side-branch block is below the boundary but its parents are not in the boundary's past, so
+it is not history and still reaches the timestamp window and `attest_warranted` — the C211/C214 rejoin
+path, kept alive. The strict `<` matters: the insert can itself close a boundary on the block, so a
+fresh tip block may sit exactly at `round_height`.
+
+**C373 — an advancing fringe renewed the licence for ever.** `work_age_floor` substituted the moving
+`fringe_top` for the work's own height whenever the work lay below it. That was a live-verified #223
+fix: a returning validator's epoch-boundary work at height 10, seen at tip 33 with the fringe at 30,
+had to be licensed, and counting from its own height withheld the attestation that alone could
+finalise it. The same rule let any uncovered side branch stay within `ATTESTATION_HORIZON` for ever
+while the fringe kept up, so the cadence path (`attestation_suppressed`) emitted empty attestations
+without end.
+
+The two constraints reconcile only if the age is the node's **first observation** of the work. A new
+per-shard durable store (`block-storage/src/work_seen.rs`) records the tip height when the work first
+enters `conflict_set`; the row is written once and never rewritten, so no fringe advance,
+re-observation or restart renews it. An absent row is a first sighting; a read or write error is
+**fail-closed** (an age past the horizon, withheld at every tip, including below it), which withholds promptness only — the cadence path still
+attests when a quorum is reachable (W-N9-01). Rows are pruned only for work at or below the last
+finalized block, which cannot re-enter the unfinalized region without a safety violation. The scan
+takes the **newest** work-bearing block, so an expired side branch cannot mask newer work still inside
+its own window (premature quiet finality).
+
+**Red before, green after.** U1 committed both falsifiers against the pre-fix behaviour:
+`late_work_is_licensed_from_its_first_observation_and_expires_at_the_horizon` failed at tip 49 (still
+licensed), and `a_block_below_the_closed_round_is_history` failed on the covered block (not treated
+as history). After the fixes both are green, with
+`expired_work_does_not_mask_newer_work`, `an_unreadable_store_withholds_the_prompt_licence` and the
+store's reopen test as the controls. The #223 live shape is the positive control in both: work first
+seen at tip 33 is licensed at once, and the late-but-uncovered block is not history.
+
+**Acceptance.** Both arms ran at source head `2fe16f163` (image `rnode:local`
+`sha256:14bca137…`), recorded in `spec/audit/evidence/n583-attestation-policy-20261113/README.md`:
+the N=3 rejoin passes R1/R2/R3 (the returning validator reached the survivors' tip, its deploy
+finalised, no missing-justification refusals — the #223 shape kept live), and the N=4 arm
+(`devnet-fuzz` run 43518312643, `mode=final-gap-recovery recovery_case=n4`) records `n4=0` (the
+marker finalised on all four validators and retained through two epoch boundaries) and
+`n4-partition=0`. No live deployment, public validator, key use or consensus release is implied.
+
+**What this pass does not do.** It changes no block validity and no consensus interpretation of the
+proposer timestamp (#528). It does not persist the tap's per-sender `answered` map: that reset is a
+pacing bound, not the freshness property, and literal replays do not reach the tap. It does not close
+#33 or #428, and it is not evidence for #584's frozen live four-validator gate.

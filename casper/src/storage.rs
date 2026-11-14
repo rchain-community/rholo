@@ -100,6 +100,13 @@ pub fn rnode_db_mapping() -> Vec<(Db, LmdbEnvConfig)> {
             Db::new("finalized-store"),
             LmdbEnvConfig::new("dagstorage", 100 * GB),
         ),
+        // **When this node first saw each piece of unfinalised work** (#583). A local, non-consensus
+        // row per work block (hash → first-seen tip height), pruned below finality, so the small DAG
+        // environment is its natural home.
+        (
+            Db::new("work-seen-store"),
+            LmdbEnvConfig::new("dagstorage", 100 * GB),
+        ),
         // Deploys from blocks
         (
             Db::new("deploy-index"),

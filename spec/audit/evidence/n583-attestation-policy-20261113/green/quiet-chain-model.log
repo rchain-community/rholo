@@ -1,0 +1,13 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.31s
+     Running unittests src/lib.rs (target/debug/deps/rchain_casper-f30259b6c576b39a)
+
+running 6 tests
+test blocks::proposer::proposer::quiet_chain_tests::table ... ignored
+test blocks::proposer::proposer::quiet_chain_tests::the_licence_ends_at_the_horizon_and_the_work_does_not ... ok
+test blocks::proposer::proposer::quiet_chain_tests::on_the_round_snapshot_a_deploy_sent_to_one_validator_is_never_finalised ... ok
+test blocks::proposer::proposer::quiet_chain_tests::a_lost_quorum_does_not_storm ... ok
+test blocks::proposer::proposer::quiet_chain_tests::reading_only_the_work_from_the_seen_view_strands_the_genesis_signer ... ok
+test blocks::proposer::proposer::quiet_chain_tests::every_deploy_finalises_and_then_the_chain_is_quiet ... ok
+
+test result: ok. 5 passed; 0 failed; 1 ignored; 0 measured; 629 filtered out; finished in 20.60s
+

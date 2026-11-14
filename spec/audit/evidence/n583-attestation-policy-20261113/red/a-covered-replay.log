@@ -1,0 +1,26 @@
+   Compiling rchain-node v0.1.0 (/home/patrick/RNodeRust/.claude/worktrees/pr-567/node)
+   Compiling rchain-block-storage v0.1.0 (/home/patrick/RNodeRust/.claude/worktrees/pr-567/block-storage)
+   Compiling rchain-casper v0.1.0 (/home/patrick/RNodeRust/.claude/worktrees/pr-567/casper)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 46.78s
+warning: the following packages contain code that will be rejected by a future version of Rust: nom v4.2.3
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests src/lib.rs (target/debug/deps/rchain_node-68a90276a1ed8b63)
+
+running 1 test
+test runtime::node_runtime::attest_tap_gate_tests::a_block_below_the_closed_round_is_history ... FAILED
+
+failures:
+
+---- runtime::node_runtime::attest_tap_gate_tests::a_block_below_the_closed_round_is_history stdout ----
+
+thread 'runtime::node_runtime::attest_tap_gate_tests::a_block_below_the_closed_round_is_history' (1059793) panicked at node/src/runtime/node_runtime.rs:4551:9:
+a block strictly below the closed round, with its parent covered, is history
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    runtime::node_runtime::attest_tap_gate_tests::a_block_below_the_closed_round_is_history
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 389 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p rchain-node --lib`

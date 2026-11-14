@@ -1,0 +1,11 @@
+   Compiling rchain-block-storage v0.1.0 (/home/patrick/RNodeRust/.claude/worktrees/pr-567/block-storage)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.60s
+     Running unittests src/lib.rs (target/debug/deps/rchain_block_storage-42b1ad2d9797e8a8)
+
+running 3 tests
+test work_seen::tests::a_manager_that_cannot_open_the_store_surfaces_the_error ... ok
+test work_seen::tests::absent_keys_stay_in_their_slot ... ok
+test work_seen::tests::opening_the_store_again_finds_what_was_written ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 71 filtered out; finished in 0.00s
+

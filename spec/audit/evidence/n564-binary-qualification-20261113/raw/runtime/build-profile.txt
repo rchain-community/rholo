@@ -1,0 +1,1 @@
+debug profile, debug symbols disabled; qualification build, not a selected release candidate

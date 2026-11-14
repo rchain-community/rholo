@@ -148,8 +148,10 @@ python3 tools/live-gate.py check --run-dir target/n487-live-<run-id> \
     --preflight /secure/n487-preflight/preflight.json
 ```
 
-`check` re-derives G1–G5 from those records and the private #572 manifest; it does not trust the
-collector's `checks.ok` and cannot record G6. Exit 0 means "G1–G5 all PASS; the worksheet is
+`sample` writes a plain `SHA256SUMS` over its own files; after authoring the three records, hash them
+too (or pack the record, which hashes everything), because `check` treats a partial sums file as
+INCOMPLETE. `check` re-derives G1–G5 from those records and the private #572 manifest; it does not
+trust the collector's `checks.ok` and cannot record G6. Exit 0 means "G1–G5 all PASS; the worksheet is
 complete", 1 a FAIL, 3 an INCOMPLETE (missing evidence is never a pass), 2 a usage error. The report
 always carries `G6: PENDING`, `overall: NOT_A_VERDICT` and `execution_proven: false`. The named
 independent reviewer records G6.

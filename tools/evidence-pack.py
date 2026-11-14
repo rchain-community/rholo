@@ -19,8 +19,8 @@ What this does, and what it deliberately does not:
 
 Usage:
   python3 tools/evidence-pack.py pack --run-dir DIR --record spec/audit/evidence/<slug> \\
-      --gate-id <id> --verdict PASS|FAIL [--source-sha SHA] [--binary-sha256 HEX] [--run-url URL] \\
-      [--locality local-devnet|loopback-diagnostic|off-host-claim] [--copy|--move]
+      --gate-id <id> --verdict PASS|FAIL|INCONCLUSIVE|ABORTED [--source-sha SHA] [--binary-sha256 HEX] [--run-url URL] \\
+      [--locality local-devnet|loopback-diagnostic|off-host-claim|public-live] [--copy|--move]
   python3 tools/evidence-pack.py verify --record spec/audit/evidence/<slug>
 
 `pack` defaults to copying. `--move` exists for a scratch run directory and is refused when the
@@ -103,14 +103,16 @@ def run_url(explicit) -> tuple[str | None, str | None]:
     return f"{server}/{UPSTREAM}/actions/runs/{run_id}{suffix}", None
 
 
+VERDICTS = ("PASS", "FAIL", "INCONCLUSIVE", "ABORTED")
+
+
 def verdict_from(value) -> str | None:
     if not value:
         return None
     text = str(value).upper()
-    if text.startswith("PASS"):
-        return "PASS"
-    if text.startswith("FAIL"):
-        return "FAIL"
+    for verdict in VERDICTS:
+        if text.startswith(verdict):
+            return verdict
     return None
 
 
@@ -218,12 +220,14 @@ def cmd_pack(args) -> int:
     if url and not RUN_URL.match(url):
         fail(f"run URL is not an {UPSTREAM} actions run: {url}")
 
+    if args.verdict and not verdict_from(args.verdict):
+        fail(f"verdict {args.verdict!r} is not one of {', '.join(VERDICTS)}")
     verdict = verdict_from(args.verdict) or verdict_from(
         read_json(run_dir / "campaign.json").get("aggregate")
         or read_json(run_dir / "result.json").get("result")
     )
     if not verdict:
-        fail("no verdict: pass --verdict PASS|FAIL or write campaign.json/result.json")
+        fail(f"no verdict: pass --verdict {'|'.join(VERDICTS)} or write campaign.json/result.json")
     arms = arms_from(run_dir)
     failures = [arm for arm in arms if arm_verdict(arm) == "FAIL"]
     if verdict == "PASS" and failures:
@@ -267,7 +271,7 @@ def cmd_pack(args) -> int:
     )
     locality_line = (
         f"**Evidence locality.** `{args.locality}`" if args.locality else
-        "**Evidence locality.** <fill: local-devnet | loopback-diagnostic | off-host-claim>"
+        "**Evidence locality.** <fill: local-devnet | loopback-diagnostic | off-host-claim | public-live>"
     )
     (record / "README.md").write_text(
         README_TEMPLATE.format(
@@ -327,7 +331,7 @@ def cmd_verify(args) -> int:
         fail(f"README.md has {len(placeholders)} unresolved placeholder(s); author it first")
     verdict = verdict_from(manifest.get("verdict"))
     if not verdict:
-        fail("manifest verdict is absent or not PASS/FAIL")
+        fail(f"manifest verdict is absent or not one of {', '.join(VERDICTS)}")
     failures = [arm for arm in manifest.get("arms", []) if arm_verdict(arm) == "FAIL"]
     if verdict == "PASS" and failures:
         fail("PASS verdict beside a FAIL arm")
@@ -342,12 +346,12 @@ def main() -> int:
     pack.add_argument("--run-dir", required=True)
     pack.add_argument("--record", required=True)
     pack.add_argument("--gate-id", required=True)
-    pack.add_argument("--verdict", choices=["PASS", "FAIL"])
+    pack.add_argument("--verdict", choices=list(VERDICTS))
     pack.add_argument("--source-sha")
     pack.add_argument("--binary-sha256")
     pack.add_argument("--run-url")
     pack.add_argument("--locality",
-                      choices=["local-devnet", "loopback-diagnostic", "off-host-claim"])
+                      choices=["local-devnet", "loopback-diagnostic", "off-host-claim", "public-live"])
     pack.add_argument("--redact", action="append", default=[])
     pack.add_argument("--move", action="store_true")
     pack.set_defaults(func=cmd_pack)

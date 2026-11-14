@@ -14,6 +14,7 @@ Contract. A run record is a directory under `spec/audit/evidence/` containing a 
     **Evidence locality.** off-host-claim — <one line>
     **Evidence locality.** loopback-diagnostic — <one line>
     **Evidence locality.** local-devnet — <one line>
+    **Evidence locality.** public-live — <one line>
     **Evidence locality.** not-a-run — <one line>
 
 Checks:
@@ -46,7 +47,7 @@ EVIDENCE = ROOT / "spec/audit/evidence"
 
 RUN_ARTEFACTS = ("acceptance.json", "run.json", "result.json")
 RUN_PREFIXES = ("journal", "observations", "progress-samples")
-LABELS = ("off-host-claim", "loopback-diagnostic", "local-devnet", "not-a-run")
+LABELS = ("off-host-claim", "loopback-diagnostic", "local-devnet", "public-live", "not-a-run")
 ADVERTISED = [
     re.compile(r"rnode://[0-9a-zA-Z]+@(\[[^\]]+\]|[^\s?:/\"',}]+)"),
     re.compile(r"--(?:host|bootstrap-host)[=\s]+[\"']?(\[[^\]]+\]|[^\s\"',}]+)"),

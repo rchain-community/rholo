@@ -186,6 +186,14 @@ jobs:
         run: |
           python3 -m unittest discover -s tests -p test_release_pin_probe.py -v
 
+      - name: Live-gate and evidence-record contracts
+        # The #584 sampler/checker must never emit a verdict, and its negative controls (the #487
+        # false-settlement shape, a missed stage, one host under four names) must not rot.
+        run: |
+          python3 -m unittest discover -s tests -p test_live_gate.py -v
+          python3 -m unittest discover -s tests -p test_evidence_pack.py -v
+          python3 -m unittest discover -s tests -p test_evidence_locality.py -v
+
       - name: Type-system gate
         # The four **hard** classes only -- production `unwrap()`/`panic!`/`unsafe`, a silent fallible
         # conversion, a refinement surrendering its invariant. This is the one gate here that catches a

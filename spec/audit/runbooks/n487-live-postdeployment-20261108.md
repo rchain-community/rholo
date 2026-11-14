@@ -119,6 +119,54 @@ As of this refresh, **no live candidate, four-host installed digest set, approve
 
 These are external run inputs, not values for Aria to guess. Keep [#584](https://github.com/rhovision-org/rholo/issues/584) open until the actual live verdict.
 
+### 1.3. Sample the run and check G1–G5 with the live-gate tool
+
+[`tools/live-gate.py`](../../../tools/live-gate.py) is the instrument for A0–A4. `sample` is
+**read-only** (GET only): it never submits a deploy, restarts a node, signs anything or reads a key.
+The designated operator starts it before the sole submission and lets it run through the approved
+window; the one authorized submission remains the operator's action.
+
+```sh
+python3 tools/live-gate.py sample --plan /secure/n487-plan.json \
+    --out target/n487-live-<run-id> --interval 5 --duration 900
+```
+
+The private plan names the deploy id and four `{alias, base}` validators; it is never committed, and
+the run directory records aliases and endpoint digests rather than addresses. Each tick records
+`/health`, `/api/status`, `/api/last-finalized-block`, `/api/v1/finality-observation`,
+`/api/v1/deploy-status/{id}` and `/api/v1/deploy-settlement/{id}` on every alias, including 503s,
+timeouts and connection errors, with UTC, monotonic time, HTTP status, the exact body and its digest.
+
+After the window, author `submission.json` (the accepted-deploy receipt: deploy id, UTC, HTTP status
+and signed-payload digest), `claims.json` (the record's own settlement claim and basis) and
+`recovery.json` (the **named, approved recovery arm**, its window and commands,
+`accepted_deploys_before`/`after`, `final_stages`, `lost_deploys`, the own-key/self-replay halt
+observation and the post-recovery settlement), then:
+
+```sh
+python3 tools/live-gate.py check --run-dir target/n487-live-<run-id> \
+    --preflight /secure/n487-preflight/preflight.json
+```
+
+`sample` writes a plain `SHA256SUMS` over its own files; after authoring the three records, hash them
+too (or pack the record, which hashes everything), because `check` treats a partial sums file as
+INCOMPLETE. `check` re-derives G1–G5 from those records and the private #572 manifest; it does not
+trust the collector's `checks.ok` and cannot record G6. Exit 0 means "G1–G5 all PASS; the worksheet is
+complete", 1 a FAIL, 3 an INCOMPLETE (missing evidence is never a pass), 2 a usage error. The report
+always carries `G6: PENDING`, `overall: NOT_A_VERDICT` and `execution_proven: false`. The named
+independent reviewer records G6.
+
+### 1.4. Criterion map
+
+| Gate | Where it is evidenced |
+|---|---|
+| G1 installed pins | §1 and §1.1, re-derived by `live-gate check` |
+| G2 signed deploy lifecycle | A1–A3 samples plus the operator's `submission.json` |
+| G3 no false settlement | §0 contract, §2 negative safety check, `claims.json` |
+| G4 recovery without loss | the named recovery arm, `recovery.json`, post-recovery samples |
+| G5 independent observations | four aliases' samples, hashed and redacted under §4 |
+| G6 verdict | §4, by the named independent reviewer; never by a tool |
+
 ## 2. Arms / sampling plan — freeze these criteria before execution
 
 Keep this run **non-disruptive**. No deliberate validator shutdown, network partition, bond change or synthetic finality freeze on the public network. The exactly-2/3, recovery and partition negative controls have **already been exercised locally** in n487; they are not a license to recreate those failures in production.
@@ -130,6 +178,11 @@ Keep this run **non-disruptive**. No deliberate validator shutdown, network part
 | A2 — inclusion before finality | Continue 5-second samples until inclusion/terminal verdict or approved end of window | Inclusion block hash, height and timestamp; `ProcessedWithSuccess/Error`, `includedUnfinalized` / `finalityUnknown`, `settlementConfirmed`, local and independent finalized frontiers | No `settlementConfirmed=true` for an inclusion block lacking verified finality |
 | A3 — finalized and cross-checked | Continue at 5-second cadence until test deploy reaches `finalizedSuccess` (or an explicit failure/timeout); observe 60 more seconds after finalization | `finalizedSuccess` and `settlementConfirmed=true`; inclusion block finalized on independently queried validators with consistent finalized hash; finality frontier and sample IDs | PASS only when the transfer is genuinely finalized; execution success is insufficient |
 | A4 — recovery/retention check | Read-only audit of all submitted IDs and previously pooled work before and after the window | No missing accepted deploy, consistent finality observations, no false settlement, final raw captures | Evidence-only confirmation; do not force a network disruption to manufacture recovery |
+
+**G4 needs a named arm, not just A4.** The maintainers must choose and record the recovery arm (a
+restart or the runbook's chosen recovery) before GO, because A4 is deliberately read-only. If no
+restart occurs naturally and no arm was approved, G4 is **INCOMPLETE** — it is never inferred from
+ordinary operation.
 
 **Sampling and event model.** Capture the state transition as an ordered event stream with independent UTC timestamps on **each** node and the client. Persist HTTP status and response bodies, headers, observations, block identities, request IDs, boot IDs, node identity and endpoint version for each 5-second sample. Correlate by the **exact deploy signature/id and inclusion block hash**, not by balances or a coincidental block number. Sample all four; if a validator is inaccessible, state that explicitly instead of silently counting fewer.
 
@@ -157,14 +210,15 @@ If an operator-approved binary/configuration rollback becomes necessary, only th
 
 Publish a **redacted, reviewable** run record in `spec/audit/evidence/n487-live-postdeployment-<UTC-date-or-run-id>/` using the repository's `tools/evidence-pack.py` where applicable, with at minimum:
 
-- `README.md`: exact scope, human verdict, complete preflight pins, arms, observation times, limitations, non-claims, and any abnormal events.
-- `manifest.json` (`schema: 1`, `execution_proven: false`) and matching `SHA256SUMS.json`, checked by `python3 tools/evidence-pack.py verify --record <record>`; a conventional `SHA256SUMS` may be retained as well.
+- `README.md`: exact scope, human verdict, complete preflight pins, arms, observation times, limitations, non-claims, and any abnormal events. Declare `**Evidence locality.** public-live — <one line>`; this is a public live run, neither a local devnet nor an #428 M3 off-host claim.
+- `manifest.json` (`schema: 1`, `execution_proven: false`) and matching `SHA256SUMS.json`, checked by `python3 tools/evidence-pack.py verify --record <record>`; retain a conventional `SHA256SUMS` as well. The packed verdict is the reviewer's one of `PASS`, `FAIL`, `INCONCLUSIVE` or `ABORTED`.
+- `gate-report.json` from `python3 tools/live-gate.py check` (aliases only, always `G6: PENDING`): an input to the reviewer, not the verdict.
 - Source SHA, release/image/binary hashes, associated CI artifacts, genesis/bond digests, immutable four-validator membership, and operator/independent reviewer identities (redacting private endpoints/credentials).
 - Timestamped raw, redacted samples for `/health`, `/api/v1/finality-observation`, `/api/v1/deploy-status/{id}`, and `/api/v1/deploy-settlement/{id}` from all four validators, with gap/timeout information. Save the raw submission receipt and digest of the signed deploy without publishing signing material.
 - Inclusion block identity, finalized frontier/hash, explicit observed transitions, the negative safety assertion (never falsely settled), and post-window accepted-work audit.
 - Approved run window and go/no-go record; action log, abort/rollback decision and outcome, if applicable. Retain raw source securely and publish only reviewed redactions.
 
-**Do not call the record PASS because the digests verify**: the hash index attests file identity only. The reviewer must check the actual observed events independently and write a human verdict against the frozen criteria.
+**Do not call the record PASS because the digests verify**: the hash index attests file identity only. The reviewer must check the actual observed events independently and write a human verdict against the frozen criteria. Likewise, a `gate-report.json` whose five criteria all read PASS is a complete worksheet, not an acceptance: it never contains G6.
 
 ### Decision table
 

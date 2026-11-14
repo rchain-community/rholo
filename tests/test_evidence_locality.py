@@ -47,6 +47,13 @@ class EvidenceLocalityTests(unittest.TestCase):
     def check(self, readme, acceptance="{}"):
         return locality.check(self.record(readme, acceptance))
 
+    def test_a_public_live_record_is_a_declarable_locality(self):
+        problems = self.check(
+            "Public four-validator run; not an M3 off-host positive.\n"
+            "**Evidence locality.** `public-live` — the public four-validator chain.\n"
+        )
+        self.assertEqual(problems, [])
+
     def test_a_genuine_off_host_claim_with_dial_back_passes(self):
         problems = self.check(
             "M3 off-host positive.\n"

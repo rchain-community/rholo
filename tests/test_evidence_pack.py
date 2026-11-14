@@ -68,6 +68,18 @@ class EvidencePackTests(unittest.TestCase):
         with self.assertRaises(SystemExit):
             pack.cmd_verify(SimpleNamespace(record=str(self.record)))
 
+    def test_inconclusive_and_aborted_are_recorded(self):
+        for verdict in ("INCONCLUSIVE", "ABORTED"):
+            with self.subTest(verdict=verdict):
+                self.setUp()
+                self.assertEqual(self.packed(verdict=verdict), 0)
+                manifest = json.loads((self.record / "manifest.json").read_text())
+                self.assertEqual(manifest["verdict"], verdict)
+
+    def test_an_unknown_verdict_is_refused(self):
+        with self.assertRaises(SystemExit):
+            self.packed(verdict="GREEN")
+
     def test_a_pass_beside_a_fail_arm_is_refused(self):
         (self.run_dir / "result.json").write_text(
             json.dumps({"result": "PASS", "rounds": [{"cycle": 1, "result": "FAIL"}]})
